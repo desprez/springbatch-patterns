@@ -1,17 +1,23 @@
 # SpringBatch patterns
 
-This repository is for trainnig purpose. It show a full springboot SpringBatch integration using modular configuration to avoid bean name/type conflicts.
+This repository is for trainning purpose. It show a full springboot SpringBatch integration using modular configuration to avoid bean name/type conflicts.
 
 Each job can be lauch independently using **-Dspring.batch.job.names={jobname}** parameters. (see Eclipse launch configuation for other parameters) 
+
+It use **postgreSQL** database and **H2** for tests.
 
 ## Introduction
 
 ## Pattern 1 : Export Job
 
 ![alt text](./images/exportjob.svg "Export Job")
+
 [SimpleExportJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/exportjob/SimpleExportJobConfig.java)
-This is the simplest job configuration (no inovation here). 
+
+This is the simplest job configuration (no really inovation here). 
 One step use the reader / processor / writer pattern to read a database table and write the content "as is" to a comma separated flat file. 
+
+**Specificity :** the incrementalFilename method get an unique filename resource according to a file name and a job unique run identifier (Must be used in conjunction with RunIdIncrementer).
 
 ## Pattern 2 : Import Job
 
