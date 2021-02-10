@@ -1,8 +1,8 @@
 # SpringBatch patterns
 
-This repository is for trainning purpose. It show a full springboot SpringBatch integration using modular configuration to avoid bean name/type conflicts.
+This repository is for trainning purpose. It show a full Springboot SpringBatch integration using modular configuration to avoid bean name/type conflicts.
 
-Each job can be lauch independently using **-Dspring.batch.job.names={jobname}** parameters. (see Eclipse launch configuation for other parameters) 
+Each job can be launch independently using **-Dspring.batch.job.names={jobname}** parameter. (see Eclipse launch configurations for other parameters) 
 
 It use **postgreSQL** database and **H2** for tests.
 
