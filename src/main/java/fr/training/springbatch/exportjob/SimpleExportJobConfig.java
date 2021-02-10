@@ -65,9 +65,6 @@ public class SimpleExportJobConfig extends AbstractJobConfiguration {
 				.build();
 	}
 
-
-
-
 	/**
 	 * ItemReader is an abstract representation of how data is provided as input to
 	 * a Step. When the inputs are exhausted, the ItemReader returns null.
