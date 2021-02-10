@@ -17,7 +17,7 @@ It use **postgreSQL** database and **H2** for tests.
 This is the simplest job configuration (no really inovation here). 
 One step use the reader / processor / writer pattern to read a database table and write the content "as is" to a comma separated flat file. 
 
-**Specificity :** the incrementalFilename method get an unique filename resource according to a file name and a job unique run identifier (Must be used in conjunction with RunIdIncrementer).
+**Specificity :** the **incrementalFilename** method get an unique filename resource according to a file name and a job unique run identifier (Must be used in conjunction with RunIdIncrementer).
 
 ## Pattern 2 : Import Job
 
