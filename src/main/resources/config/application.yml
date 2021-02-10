@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/testdb
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: admin
+    initialization-mode: always
+
+  batch:
+    enabled: true  
+    initialize-schema: always
+
+logging:
+  level:
+    fr.training.springbatch: info
+    org.springframework.batch: info
+    org.springframework.boot.autoconfigure.batch: debug
+    
+application:
+  simple-export-step:
+    chunksize: 10    
