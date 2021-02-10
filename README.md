@@ -9,7 +9,7 @@ Each job can be lauch independently using **-Dspring.batch.job.names={jobname}**
 ## Pattern 1 : Export Job
 
 ![alt text](./images/exportjob.svg "Export Job")
-
+[SimpleExportJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/exportjob/SimpleExportJobConfig.java)
 This is the simplest job configuration (no inovation here). 
 One step use the reader / processor / writer pattern to read a database table and write the content "as is" to a comma separated flat file. 
 
