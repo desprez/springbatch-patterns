@@ -41,7 +41,7 @@ import fr.training.springbatch.synchrojob.component.MasterDetailReader;
 import fr.training.springbatch.synchrojob.component.TransactionAccumulator;
 
 /**
- * Using ItemAccumulator & MergeDataReader to "synchronize" 1 Table and 1 flat
+ * Using ItemAccumulator & MasterDetailReader to "synchronize" 1 Table and 1 flat
  * file who share the same key :
  * <ul>
  * <li>one master table</li>
@@ -62,18 +62,18 @@ public class Table2FileSynchroJobConfig extends AbstractJobConfiguration {
 	private DataSource dataSource;
 
 	@Bean
-	public Job db2FileSynchroJob(final Step file2FileSynchroStep /* injected by Spring */) {
+	public Job table2FileSynchroJob(final Step table2FileSynchroStep /* injected by Spring */) {
 		return jobBuilderFactory.get("table2filesynchro-job") //
 				.incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
 				.validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" },
 						new String[] {})) //
-				.start(file2FileSynchroStep) //
+				.start(table2FileSynchroStep) //
 				.listener(reportListener()) //
 				.build();
 	}
 
 	@Bean
-	public Step db2FileSynchroStep(final MasterDetailReader masterDetailReader,
+	public Step table2FileSynchroStep(final MasterDetailReader masterDetailReader,
 			final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
 
 		return stepBuilderFactory.get("table2filesynchro-step").<Customer, Customer>chunk(10) //

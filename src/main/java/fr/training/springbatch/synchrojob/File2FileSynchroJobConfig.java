@@ -36,7 +36,7 @@ import fr.training.springbatch.synchrojob.component.MasterDetailReader;
 import fr.training.springbatch.synchrojob.component.TransactionAccumulator;
 
 /**
- * Using ItemAccumulator & MergeDataReader to "synchronize" 2 flat files who
+ * Using ItemAccumulator & MasterDetailReader to "synchronize" 2 flat files who
  * share the same key :
  * <ul>
  * <li>one master file</li>
