@@ -35,6 +35,9 @@ The 1st Step (deleteStep) erase table records before the "load" Step. It use a *
 
 [File2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/File2FileSynchroJobConfig.java)
 
+This configuration may not be very usual but it can be interesting when you want to aggregate 2 files that share the same key. Typically with a master file and a detail file (ie Orders and OrderLines).
+This job configuation use a **MasterDetailReader** Class to drive a master accumulator (CustomerAccumulator) and au Detail accumulator (TransactionAccumulator). These classes inherit from **ItemAccumulator**
+
 ## Pattern 4 : Synchronize a file with a table
 
 ![alt text](./images/file2TableSynchroJob.svg "file2TableSynchroJob")
