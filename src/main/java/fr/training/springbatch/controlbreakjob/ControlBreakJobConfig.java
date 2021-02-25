@@ -59,7 +59,7 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 			final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
 
 		return stepBuilderFactory.get("controlbreak-step") //
-				.<List<Transaction>, TransactionSum>chunk(10) //
+				.<List<Transaction>, TransactionSum>chunk(15) //
 				.reader(controlBreakReader) //
 				.processor(processor()) //
 				.writer(transactionSumWriter) //

@@ -31,7 +31,7 @@ public class ControlBreakJobTest {
 	private JobLauncherTestUtils testUtils;
 
 	@Test
-	public void groupingRecordStep_should_produce_expected_file() throws Exception {
+	public void controlBreakStep_should_produce_expected_file() throws Exception {
 		// Given
 		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
 				.addString("transaction-file", TRANSACTION_FILE) //
