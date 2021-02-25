@@ -37,7 +37,7 @@ The 1st Step (deleteStep) erase table records before the "load" Step. It use a *
 
 This configuration may not be very usual but it can be interesting when you want to aggregate 2 files that share the same key. Typically with a master file and a detail file (ie Orders and OrderLines).
 
-This job configuation use a **MasterDetailReader** Class to drive a master accumulator (CustomerAccumulator) and au Detail accumulator (TransactionAccumulator). These classes inherit from **ItemAccumulator**, a géneric class used to define the sahred key between master and detail object.
+This job configuation use a **MasterDetailReader** Class to drive a master accumulator (CustomerAccumulator) and a Detail accumulator (TransactionAccumulator). These classes inherit from **ItemAccumulator**, a generic class used to define the shared key between master and detail objects.
 
 In this way, complete object should be filled entierely by the reader.
 
@@ -49,7 +49,7 @@ In this way, complete object should be filled entierely by the reader.
 
 [File2TableSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/File2TableSynchroJobConfig.java)
 
-This pattern is a little bit different from the previous one but works the same way. This time the reader, the master csv file is synchronized with a table which contains the detail data.
+This pattern is a little bit different from the previous one but works the same way. This time the reader, the master csv file is synchronized with a table which contains the detail datas.
 
 The **MasterDetailReader**, **TransactionAccumulator** and **CustomerAccumulator** classes are generic enough to be reused.
 
@@ -59,7 +59,7 @@ The **MasterDetailReader**, **TransactionAccumulator** and **CustomerAccumulator
 
 [Table2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/Table2FileSynchroJobConfig.java)
 
-Another variation of the previous patterns. This time, the "Master" data comes from a table in the database and the "Details" data comes from a file.
+Another variation of the previous patterns. This time, the "Master" data comes from a table in the database and the "Details" data comes from a csv file.
 
 ## Pattern 6 : Grouping file records
 
@@ -73,11 +73,16 @@ Another variation of the previous patterns. This time, the "Master" data comes f
 
 [SQLJoinSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/SQLJoinSynchroJobConfig.java)
 
+With this pattern, a grouping SQL query sumarize the transactions to compute the customer balance.
+
+No processor usage. 
+
 ## Pattern 8 : Control Break Job
 
 ![alt text](./images/controlBreakJob.svg "controlBreakJob")
 
 [ControlBreakJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/controlbreakjob/ControlBreakJobConfig.java)
 
+Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a BreakKeyStrategy to groups records that have same "group" key (ie the customer number).
 
 ## Pattern 9 : Staging Job
