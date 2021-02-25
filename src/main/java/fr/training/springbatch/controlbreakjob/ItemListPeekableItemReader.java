@@ -13,10 +13,12 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.support.SingleItemPeekableItemReader;
 
 /**
+ * An {@link ItemReader} that delivers a list as its item, storing up objects
+ * from the injected {@link ItemReader} that are part of the same group.
  *
- * @author PASCALDesprez
+ * Group membership is set using an injected {@link BreakKeyStrategy}.
  *
- * @param <T>
+ * @author Desprez
  */
 public class ItemListPeekableItemReader<T> implements ItemReader<List<T>>, ItemStream {
 

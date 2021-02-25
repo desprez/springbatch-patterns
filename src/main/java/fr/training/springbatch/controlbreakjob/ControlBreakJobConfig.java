@@ -28,6 +28,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.FileSystemResource;
 
+import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.dto.TransactionSum;
 import fr.training.springbatch.common.AbstractJobConfiguration;
@@ -35,6 +36,9 @@ import fr.training.springbatch.common.AbstractJobConfiguration;
 /**
  * This job groups all transactions by customer number and exports result to csv
  * file.
+ *
+ * It use an {@link ItemListPeekableItemReader} used to get a list of
+ * {@link Transaction} grouped by {@link Customer}
  *
  * @author Desprez
  */
