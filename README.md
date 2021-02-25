@@ -51,7 +51,7 @@ In this way, complete object should be filled entierely by the reader.
 
 This pattern is a little bit different from the previous one but works the same way. This time the reader, the master csv file is synchronized with a table which contains the detail data.
 
-The **MasterDetailReader**, **TransactionAccumulator** and **CustomerAccumulator** classes are generic enough to be reused. 
+The **MasterDetailReader**, **TransactionAccumulator** and **CustomerAccumulator** classes are generic enough to be reused.
 
 ## Pattern 5 : Synchronize a table with a with a file
 
@@ -59,7 +59,7 @@ The **MasterDetailReader**, **TransactionAccumulator** and **CustomerAccumulator
 
 [Table2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/Table2FileSynchroJobConfig.java)
 
-Another variation of the previous patterns. This time, the "Master" data comes from a table in the database and the "Details" data comes from a file. 
+Another variation of the previous patterns. This time, the "Master" data comes from a table in the database and the "Details" data comes from a file.
 
 ## Pattern 6 : Grouping file records
 
@@ -73,4 +73,11 @@ Another variation of the previous patterns. This time, the "Master" data comes f
 
 [SQLJoinSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/SQLJoinSynchroJobConfig.java)
 
-## Pattern 8 : Staging Job
+## Pattern 8 : Control Break Job
+
+![alt text](./images/controlBreakJob.svg "controlBreakJob")
+
+[ControlBreakJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/controlbreakjob/ControlBreakJobConfig.java)
+
+
+## Pattern 9 : Staging Job
