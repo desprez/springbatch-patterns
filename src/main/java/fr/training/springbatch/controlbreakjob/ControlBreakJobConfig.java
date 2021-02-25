@@ -1,4 +1,4 @@
-package fr.training.springbatch.synchrojob;
+package fr.training.springbatch.controlbreakjob;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -31,8 +31,6 @@ import org.springframework.core.io.FileSystemResource;
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.dto.TransactionSum;
 import fr.training.springbatch.common.AbstractJobConfiguration;
-import fr.training.springbatch.synchrojob.component.GroupReader;
-import fr.training.springbatch.synchrojob.component.TransactionAccumulator;
 
 /**
  * This job groups all transactions by customer number and exports result to csv
@@ -41,27 +39,28 @@ import fr.training.springbatch.synchrojob.component.TransactionAccumulator;
  * @author Desprez
  */
 @Configuration
-public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
+public class ControlBreakJobConfig extends AbstractJobConfiguration {
 
-	private static final Logger logger = LoggerFactory.getLogger(GroupingRecordsJobConfig.class);
+	private static final Logger logger = LoggerFactory.getLogger(ControlBreakJobConfig.class);
 
 	@Bean
-	public Job groupingRecordJob(final Step groupingRecordStep /* injected by Spring */) {
-		return jobBuilderFactory.get("groupingrecord-job") //
+	public Job controlBreakJob(final Step controlBreakStep /* injected by Spring */) {
+		return jobBuilderFactory.get("controlbreak-job") //
 				.incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
 				.validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" },
 						new String[] {})) //
-				.start(groupingRecordStep) //
+				.start(controlBreakStep) //
 				.listener(reportListener()) //
 				.build();
 	}
 
 	@Bean
-	public Step groupingRecordStep(final GroupReader<Transaction, String> groupReader,
+	public Step controlBreakStep(final ItemListPeekableItemReader<Transaction> controlBreakReader,
 			final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
 
-		return stepBuilderFactory.get("groupingrecord-step").<List<Transaction>, TransactionSum>chunk(10) //
-				.reader(groupReader) //
+		return stepBuilderFactory.get("controlbreak-step") //
+				.<List<Transaction>, TransactionSum>chunk(10) //
+				.reader(controlBreakReader) //
 				.processor(processor()) //
 				.writer(transactionSumWriter) //
 				.listener(reportListener()) //
@@ -69,11 +68,17 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 	}
 
 	@Bean(destroyMethod = "")
-	public GroupReader<Transaction, String> groupReader(final FlatFileItemReader<Transaction> transactionReader) {
+	public ItemListPeekableItemReader<Transaction> controlBreakReader(
+			final FlatFileItemReader<Transaction> transactionReader) {
 
-		final GroupReader<Transaction, String> groupReader = new GroupReader<Transaction, String>();
-		groupReader.setAccumulator(new TransactionAccumulator(transactionReader));
-
+		final ItemListPeekableItemReader<Transaction> groupReader = new ItemListPeekableItemReader<Transaction>();
+		groupReader.setDelegate(transactionReader);
+		groupReader.setBreakKeyStrategy(new BreakKeyStrategy<Transaction>() {
+			@Override
+			public boolean isSameGroup(final Transaction transaction1, final Transaction transaction2) {
+				return transaction1.getCustomerNumber().equals(transaction2.getCustomerNumber());
+			}
+		});
 		return groupReader;
 	}
 
@@ -138,6 +143,7 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 				.delimiter(";") //
 				.names(new String[] { "customerNumber", "balance" }) //
 				.build();
+
 	}
 
 }

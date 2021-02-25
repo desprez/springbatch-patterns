@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import fr.training.springbatch.controlbreakjob.ControlBreakJobConfig;
 import fr.training.springbatch.exportjob.SimpleExportJobConfig;
 import fr.training.springbatch.importjob.SimpleImportJobConfig;
 import fr.training.springbatch.purgejob.PurgeHistoryJob;
@@ -62,6 +63,11 @@ public class BatchApplication {
 	@Bean
 	public ApplicationContextFactory groupingRecordsJobContextFactory() {
 		return new GenericApplicationContextFactory(GroupingRecordsJobConfig.class);
+	}
+
+	@Bean
+	public ApplicationContextFactory controlBreakJobConfigJobContextFactory() {
+		return new GenericApplicationContextFactory(ControlBreakJobConfig.class);
 	}
 
 	@Bean
