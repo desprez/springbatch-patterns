@@ -18,4 +18,12 @@ logging:
     
 application:
   simple-export-step:
-    chunksize: 10    
+    chunksize: 10
+  simple-import-step:
+    chunksize: 10
+  file2filesynchro-step:
+    chunksize: 10
+  file2tablesynchro-step:
+    chunksize: 10
+  table2filesynchro-step:
+    chunksize: 10

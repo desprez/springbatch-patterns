@@ -18,8 +18,6 @@ import org.springframework.util.Assert;
  * @param <K> The class of the key value of the items being processed. Used for
  *        positioning the reader to a particular place in the input
  *
- *        Taken from
- *        https://www.desynit.com/dev-zone/java/list-merging-in-spring-batch/
  */
 public abstract class ItemAccumulator<T, K> implements ItemStream, InitializingBean {
 
@@ -219,6 +217,7 @@ public abstract class ItemAccumulator<T, K> implements ItemStream, InitializingB
 		this.reader = reader;
 	}
 
+	@Override
 	public void afterPropertiesSet() throws Exception {
 		Assert.notNull(reader, "reader must be set");
 	}

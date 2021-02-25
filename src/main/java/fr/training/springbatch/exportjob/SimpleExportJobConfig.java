@@ -34,7 +34,7 @@ import fr.training.springbatch.common.AbstractJobConfiguration;
 @Configuration
 public class SimpleExportJobConfig extends AbstractJobConfiguration {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleExportJobConfig.class);
+	private static final Logger logger = LoggerFactory.getLogger(SimpleExportJobConfig.class);
 
 	private static final String FILENAME = "simple-export.csv";
 
@@ -44,7 +44,7 @@ public class SimpleExportJobConfig extends AbstractJobConfiguration {
 	@Autowired
 	public DataSource dataSource;
 
-	@Bean(name = "simpleExportJob")
+	@Bean
 	public Job simpleExportJob(final Step exportStep) {
 		return jobBuilderFactory.get("simple-export-job") //
 				.validator(new DefaultJobParametersValidator(new String[] { "output-dir" }, new String[] {}))
@@ -93,17 +93,14 @@ public class SimpleExportJobConfig extends AbstractJobConfiguration {
 
 			@Override
 			public Transaction process(final Transaction transaction) throws Exception {
-				LOGGER.debug("Processing {}", transaction);
+				logger.debug("Processing {}", transaction);
 				return transaction;
 			}
 		};
 	}
 
 	/**
-	 * ItemWriter is the output of a Step. The writer writes one batch or chunk of
-	 * items at a time to the target system. ItemWriter has no knowledge of the
-	 * input it will receive next, only the item that was passed in its current
-	 * invocation.
+	 * ItemWriter is the output of a Step.
 	 *
 	 * @param incrementalFilename spring injected resource
 	 */
@@ -147,7 +144,7 @@ public class SimpleExportJobConfig extends AbstractJobConfiguration {
 		final String name = String.format("%s-%s.%s", baseFilename, runId, extension);
 		final File file = new File(dir, name);
 
-		LOGGER.info("fileName={}", file.getAbsoluteFile());
+		logger.info("fileName={}", file.getAbsoluteFile());
 		return new FileSystemResource(file);
 	}
 }

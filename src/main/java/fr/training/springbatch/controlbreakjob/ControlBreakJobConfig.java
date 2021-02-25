@@ -130,12 +130,16 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 				final double sum = items.stream().mapToDouble(x -> x.getAmount()).sum();
 				transactionSum.setCustomerNumber(items.get(0).getCustomerNumber());
 				transactionSum.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
-				logger.info(transactionSum.toString());
+				logger.debug(transactionSum.toString());
 				return transactionSum;
 			}
 		};
 	}
 
+	/**
+	 * @param outputFile the injected output file job parameter
+	 * @return a {@link FlatFileItemWriter} bean
+	 */
 	@StepScope // Mandatory for using jobParameters
 	@Bean
 	public FlatFileItemWriter<TransactionSum> transactionSumWriter(

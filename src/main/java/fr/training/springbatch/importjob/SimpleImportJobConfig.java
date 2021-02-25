@@ -37,12 +37,15 @@ import fr.training.springbatch.tools.tasklet.JdbcTasklet;
 @Configuration
 public class SimpleImportJobConfig extends AbstractJobConfiguration {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleImportJobConfig.class);
+	private static final Logger logger = LoggerFactory.getLogger(SimpleImportJobConfig.class);
+
+	@Value("${application.simple-import-step.chunksize:10}")
+	private int chunkSize;
 
 	@Autowired
 	private DataSource dataSource;
 
-	@Bean(name = "simpleImportJob")
+	@Bean
 	public Job simpleImportJob(final Step importStep) {
 		return jobBuilderFactory.get("simple-import-job") //
 				.incrementer(new RunIdIncrementer()) //
@@ -75,7 +78,7 @@ public class SimpleImportJobConfig extends AbstractJobConfiguration {
 	@Bean
 	public Step importStep(final ItemReader<Transaction> importReader) {
 		return stepBuilderFactory.get("simple-import-step") //
-				.<Transaction, Transaction>chunk(10) //
+				.<Transaction, Transaction>chunk(chunkSize) //
 				.reader(importReader) //
 				.processor(importProcessor()) //
 				.writer(importWriter()) //
@@ -105,7 +108,7 @@ public class SimpleImportJobConfig extends AbstractJobConfiguration {
 
 			@Override
 			public Transaction process(final Transaction transaction) throws Exception {
-				LOGGER.debug("Processing {}", transaction);
+				logger.debug("Processing {}", transaction);
 				return transaction;
 			}
 		};

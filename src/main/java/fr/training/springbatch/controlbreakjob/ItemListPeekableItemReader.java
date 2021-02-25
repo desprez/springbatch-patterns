@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemStreamException;
+import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -16,11 +15,13 @@ import org.springframework.batch.item.support.SingleItemPeekableItemReader;
  * An {@link ItemReader} that delivers a list as its item, storing up objects
  * from the injected {@link ItemReader} that are part of the same group.
  *
- * Group membership is set using an injected {@link BreakKeyStrategy}.
+ * Group membership must be defined using an injected {@link BreakKeyStrategy}.
+ *
+ * @param <T>
  *
  * @author Desprez
  */
-public class ItemListPeekableItemReader<T> implements ItemReader<List<T>>, ItemStream {
+public class ItemListPeekableItemReader<T> implements ItemStreamReader<List<T>> {
 
 	private SingleItemPeekableItemReader<T> delegate;
 

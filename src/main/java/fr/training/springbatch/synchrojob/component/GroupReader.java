@@ -11,6 +11,13 @@ import org.springframework.batch.item.UnexpectedInputException;
 
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
 
+/**
+ *
+ * @author PASCALDesprez
+ *
+ * @param <T> The class of the items to be processed
+ * @param <K> The class of the key value of the items being processed.
+ */
 public class GroupReader<T, K> implements ItemStreamReader<List<T>> {
 
 	private ItemAccumulator<T, K> accumulator;

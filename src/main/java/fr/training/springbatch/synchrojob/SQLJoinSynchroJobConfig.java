@@ -48,7 +48,7 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
 
 	@Bean
 	public Step sqlJoinSynchroStep(final JdbcCursorItemReader<Customer> jdbcCustomerReader,
-			final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
+			final ItemWriter<Customer> customerWriter /* injected by Spring */) {
 
 		return stepBuilderFactory.get("sqljoinsynchro-step") //
 				.<Customer, Customer>chunk(10) //
@@ -80,6 +80,10 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
 				}).build();
 	}
 
+	/**
+	 * @param outputFile the injected output file job parameter
+	 * @return a {@link FlatFileItemWriter} bean
+	 */
 	@StepScope // Mandatory for using jobParameters
 	@Bean
 	public FlatFileItemWriter<Customer> customerWriter(

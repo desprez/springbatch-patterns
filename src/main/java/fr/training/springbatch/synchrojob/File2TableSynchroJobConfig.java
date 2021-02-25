@@ -34,17 +34,18 @@ import fr.training.springbatch.common.AbstractJobConfiguration;
 import fr.training.springbatch.synchrojob.component.CustomerAccumulator;
 import fr.training.springbatch.synchrojob.component.MasterDetailReader;
 import fr.training.springbatch.synchrojob.component.TransactionAccumulator;
+import fr.training.springbatch.tools.synchro.ItemAccumulator;
 
 /**
- * Using ItemAccumulator & MasterDetailReader to "synchronize" 1 File and 1 table
- * who share the same key :
+ * Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 1
+ * File and 1 table who share the same "customer number" key.
  * <ul>
- * <li>one master file</li>
- * <li>one detail table</li>
+ * <li>one master file : customer csv file</li>
+ * <li>one detail table : transaction</li>
  * </ul>
  *
- * Datas from the detail table (amounts) are stored in the result (master) of
- * the reader.
+ * Datas from the detail file (transaction) are stored in the item (customer)
+ * returned by the "Master" reader.
  *
  * @author Desprez
  */
@@ -52,6 +53,9 @@ import fr.training.springbatch.synchrojob.component.TransactionAccumulator;
 public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 
 	private static final Logger logger = LoggerFactory.getLogger(File2TableSynchroJobConfig.class);
+
+	@Value("${application.file2tablesynchro-step.chunksize:10}")
+	private int chunkSize;
 
 	@Autowired
 	private DataSource dataSource;
@@ -71,7 +75,8 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 	public Step file2TableSynchroStep(final MasterDetailReader masterDetailReader,
 			final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
 
-		return stepBuilderFactory.get("file2tablesynchro-step").<Customer, Customer>chunk(10) //
+		return stepBuilderFactory.get("file2tablesynchro-step") //
+				.<Customer, Customer>chunk(chunkSize) //
 				.reader(masterDetailReader) //
 				.processor(processor()) //
 				.writer(customerWriter) //
@@ -79,8 +84,14 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 				.build();
 	}
 
-	// Delegate pattern reader
-	@Bean(destroyMethod="")
+	/**
+	 * Delegate pattern reader
+	 *
+	 * @param customerReader    the injected Customer {@link ItemReader} bean
+	 * @param transactionReader the injected Transaction {@link ItemReader} bean
+	 * @return a {@link MasterDetailReader} bean
+	 */
+	@Bean(destroyMethod = "")
 	public MasterDetailReader masterDetailReader(final ItemReader<Customer> customerReader,
 			final ItemReader<Transaction> transactionReader) {
 
@@ -91,10 +102,14 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 		return masterDetailReader;
 	}
 
+	/**
+	 * @param customerFile the injected customer file job parameter
+	 * @return a {@link FlatFileItemReader} bean
+	 */
 	@StepScope // Mandatory for using jobParameters
 	@Bean
 	public FlatFileItemReader<Customer> customerReader(
-			@Value("#{jobParameters['customer-file']}") final String customerFile /* injected by Spring */) {
+			@Value("#{jobParameters['customer-file']}") final String customerFile) {
 
 		return new FlatFileItemReaderBuilder<Customer>() //
 				.name("customerReader") //
@@ -110,6 +125,9 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 				}).build();
 	}
 
+	/**
+	 * @return a {@link JdbcCursorItemReader} bean
+	 */
 	@Bean
 	public JdbcCursorItemReader<Transaction> transactionReader() {
 
@@ -127,18 +145,27 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 				}).build();
 	}
 
+	/**
+	 * Processor that sum customer's transactions to compute his balance.
+	 *
+	 * @return the processor
+	 */
 	private ItemProcessor<Customer, Customer> processor() {
 		return new ItemProcessor<Customer, Customer>() {
 			@Override
 			public Customer process(final Customer customer) {
 				final double sum = customer.getTransactions().stream().mapToDouble(x -> x.getAmount()).sum();
 				customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
-				logger.info(customer.toString());
+				logger.debug(customer.toString());
 				return customer;
 			}
 		};
 	}
 
+	/**
+	 * @param outputFile the injected output file job parameter
+	 * @return a {@link FlatFileItemWriter} bean
+	 */
 	@StepScope // Mandatory for using jobParameters
 	@Bean
 	public FlatFileItemWriter<Customer> customerWriter(
