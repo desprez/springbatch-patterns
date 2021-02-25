@@ -36,7 +36,12 @@ The 1st Step (deleteStep) erase table records before the "load" Step. It use a *
 [File2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/File2FileSynchroJobConfig.java)
 
 This configuration may not be very usual but it can be interesting when you want to aggregate 2 files that share the same key. Typically with a master file and a detail file (ie Orders and OrderLines).
-This job configuation use a **MasterDetailReader** Class to drive a master accumulator (CustomerAccumulator) and au Detail accumulator (TransactionAccumulator). These classes inherit from **ItemAccumulator**
+
+This job configuation use a **MasterDetailReader** Class to drive a master accumulator (CustomerAccumulator) and au Detail accumulator (TransactionAccumulator). These classes inherit from **ItemAccumulator**, a géneric class used to define the sahred key between master and detail object.
+
+In this way, complete object should be filled entierely by the reader.
+
+**MasterDetailReader** uses the delegator pattern to delegate the reading to a specialized reader (flatfile, jdbc, ...or whatever)
 
 ## Pattern 4 : Synchronize a file with a table
 
@@ -44,11 +49,17 @@ This job configuation use a **MasterDetailReader** Class to drive a master accum
 
 [File2TableSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/File2TableSynchroJobConfig.java)
 
+This pattern is a little bit different from the previous one but works the same way. This time the reader, the master csv file is synchronized with a table which contains the detail data.
+
+The **MasterDetailReader**, **TransactionAccumulator** and **CustomerAccumulator** classes are generic enough to be reused. 
+
 ## Pattern 5 : Synchronize a table with a with a file
 
 ![alt text](./images/table2FileSynchroJob.svg "table2FileSynchroJob")
 
 [Table2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchrojob/Table2FileSynchroJobConfig.java)
+
+Another variation of the previous patterns. This time, the "Master" data comes from a table in the database and the "Details" data comes from a file. 
 
 ## Pattern 6 : Grouping file records
 
