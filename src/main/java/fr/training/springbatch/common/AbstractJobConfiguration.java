@@ -8,6 +8,10 @@ import org.springframework.context.annotation.Bean;
 import fr.training.springbatch.tools.listener.ItemCountListener;
 import fr.training.springbatch.tools.listener.JobReportListener;
 
+/**
+ * Abstract JobConfiguration class to factorize factories declarations and
+ * others beans used in all jobs.
+ */
 public abstract class AbstractJobConfiguration {
 
 	@Autowired

@@ -17,7 +17,7 @@ import org.springframework.batch.item.support.SingleItemPeekableItemReader;
  *
  * Group membership must be defined using an injected {@link BreakKeyStrategy}.
  *
- * @param <T>
+ * @param <T> The class of the items to be processed
  *
  * @author Desprez
  */

@@ -58,6 +58,12 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 				.build();
 	}
 
+	/**
+	 * @param controlBreakReader   the injected Transaction
+	 *                             {@link ItemListPeekableItemReader} bean.
+	 * @param transactionSumWriter the injected TransactionSum {@link ItemWriter}.
+	 * @return a Step Bean
+	 */
 	@Bean
 	public Step controlBreakStep(final ItemListPeekableItemReader<Transaction> controlBreakReader,
 			final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
@@ -122,6 +128,12 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 		return conversionService;
 	}
 
+	/**
+	 * Processor that sum customer's transactions to compute his balance, fill and
+	 * return new TransactionSum objects.
+	 *
+	 * @return the processor
+	 */
 	private ItemProcessor<List<Transaction>, TransactionSum> processor() {
 		return new ItemProcessor<List<Transaction>, TransactionSum>() {
 			@Override

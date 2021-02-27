@@ -60,8 +60,12 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 	@Autowired
 	private DataSource dataSource;
 
+	/**
+	 * @param file2TableSynchroStep the injected Step bean
+	 * @return the job bean
+	 */
 	@Bean
-	public Job file2TableSynchroJob(final Step file2TableSynchroStep /* injected by Spring */) {
+	public Job file2TableSynchroJob(final Step file2TableSynchroStep) {
 		return jobBuilderFactory.get("file2tablesynchro-job") //
 				.incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
 				.validator(new DefaultJobParametersValidator(new String[] { "customer-file", "output-file" },

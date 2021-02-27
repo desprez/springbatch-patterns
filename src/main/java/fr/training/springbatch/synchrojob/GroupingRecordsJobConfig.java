@@ -49,6 +49,10 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 	@Value("${application.groupingrecord-step.chunksize:10}")
 	private int chunkSize;
 
+	/**
+	 * @param groupingRecordStep the injected Step bean
+	 * @return the job bean
+	 */
 	@Bean
 	public Job groupingRecordJob(final Step groupingRecordStep /* injected by Spring */) {
 		return jobBuilderFactory.get("groupingrecord-job") //
@@ -61,7 +65,7 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 	}
 
 	/**
-	 * @param groupReader          the injected Transaction GroupReader
+	 * @param groupReader          the injected Transaction {@link GroupReader} bean.
 	 * @param transactionSumWriter the injected TransactionSum ItemWriter
 	 * @return a Step Bean
 	 */
@@ -81,7 +85,7 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 	/**
 	 * Delegate pattern reader
 	 *
-	 * @param transactionReader the injected Transaction {@link FlatFileItemReader}.
+	 * @param transactionReader the injected Transaction {@link FlatFileItemReader} bean.
 	 * @return a {@link GroupReader} bean
 	 */
 	@Bean(destroyMethod = "")
@@ -134,8 +138,8 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 	}
 
 	/**
-	 * Processor that sum customer's transactions to compute his balance and fill
-	 * new TransactionSum.
+	 * Processor that sum customer's transactions to compute his balance, fill and
+	 * return new TransactionSum objects.
 	 *
 	 * @return the processor
 	 */
@@ -155,7 +159,7 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 
 	/**
 	 * @param outputFile the injected output file job parameter
-	 * @return a TransactionSum FlatFileItemWriter bean
+	 * @return a TransactionSum {@link FlatFileItemReader} bean
 	 */
 	@StepScope // Mandatory for using jobParameters
 	@Bean

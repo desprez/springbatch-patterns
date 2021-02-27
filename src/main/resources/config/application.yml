@@ -1,3 +1,4 @@
+debug: false
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/testdb
@@ -15,7 +16,7 @@ logging:
     fr.training.springbatch: info
     org.springframework.batch: info
     org.springframework.boot.autoconfigure.batch: debug
-    
+
 application:
   simple-export-step:
     chunksize: 10

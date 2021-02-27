@@ -35,8 +35,12 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
 	@Autowired
 	private DataSource dataSource;
 
+	/**
+	 * @param sqlJoinSynchroStep the injected Step bean
+	 * @return the job bean
+	 */
 	@Bean
-	public Job sqlJoinSynchroJob(final Step sqlJoinSynchroStep /* injected by Spring */) {
+	public Job sqlJoinSynchroJob(final Step sqlJoinSynchroStep) {
 
 		return jobBuilderFactory.get("sqljoinsynchro-job") //
 				.incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
