@@ -146,7 +146,6 @@ public class SimpleImportJobConfig extends AbstractJobConfiguration {
 				.dataSource(dataSource)
 				.sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
 						+ "VALUES (:customerNumber, :number, :transactionDate, :amount )")
-				// .beanMapped() //
 				.itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Transaction>()) //
 				.build();
 	}
