@@ -2,8 +2,6 @@ package fr.training.springbatch.job.controlbreakjob;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -22,9 +20,6 @@ import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.FileSystemResource;
 
 import fr.training.springbatch.app.dto.Customer;
@@ -44,6 +39,9 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 public class ControlBreakJobConfig extends AbstractJobConfiguration {
 
 	private static final Logger logger = LoggerFactory.getLogger(ControlBreakJobConfig.class);
+
+	@Value("${application.controlbreak-step.chunksize:10}")
+	private int chunkSize;
 
 	@Bean
 	public Job controlBreakJob(final Step controlBreakStep /* injected by Spring */) {
@@ -67,7 +65,7 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 			final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
 
 		return stepBuilderFactory.get("controlbreak-step") //
-				.<List<Transaction>, TransactionSum>chunk(15) //
+				.<List<Transaction>, TransactionSum>chunk(chunkSize) //
 				.reader(controlBreakReader) //
 				.processor(processor()) //
 				.writer(transactionSumWriter) //
@@ -105,25 +103,9 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
 					{
 						setTargetType(Transaction.class);
-						setConversionService(createConversionService());
+						setConversionService(localDateConverter());
 					}
 				}).build();
-	}
-
-	/**
-	 * Converter to parse local date
-	 */
-	public ConversionService createConversionService() {
-		final DefaultConversionService conversionService = new DefaultConversionService();
-		DefaultConversionService.addDefaultConverters(conversionService);
-		conversionService.addConverter(new Converter<String, LocalDate>() {
-			@Override
-			public LocalDate convert(final String text) {
-				final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
-				return LocalDate.parse(text, formatter);
-			}
-		});
-		return conversionService;
 	}
 
 	/**

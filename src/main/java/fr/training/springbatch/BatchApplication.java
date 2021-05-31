@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 
 import fr.training.springbatch.job.controlbreakjob.ControlBreakJobConfig;
 import fr.training.springbatch.job.exportjob.SimpleExportJobConfig;
+import fr.training.springbatch.job.fixedjob.MultiFixedRecordJobConfig;
 import fr.training.springbatch.job.importjob.SimpleImportJobConfig;
 import fr.training.springbatch.job.purgejob.PurgeHistoryJob;
 import fr.training.springbatch.job.stagingjob.StagingJobConfig;
@@ -78,6 +79,11 @@ public class BatchApplication {
 	@Bean
 	public ApplicationContextFactory purgeHistoryJobContextFactory() {
 		return new GenericApplicationContextFactory(PurgeHistoryJob.class);
+	}
+
+	@Bean
+	public ApplicationContextFactory multiFixedRecordJobConfigContextFactory() {
+		return new GenericApplicationContextFactory(MultiFixedRecordJobConfig.class);
 	}
 
 }
