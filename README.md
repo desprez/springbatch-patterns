@@ -98,4 +98,6 @@ This pattern show the way to read and write a multirecords fixed lenght file (li
 
 TODO schema
 
-This pattern is a java configuration conversion of the [Spring-batch parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml) config
+[StagingJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/stagingjob/StagingJobConfig.java)
+
+This pattern is a java configuration adaptation of the [Spring-batch parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml) config
