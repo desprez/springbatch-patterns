@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
@@ -84,7 +85,7 @@ public class FullReportListener implements JobExecutionListener, StepExecutionLi
 	private String logDurationMessage(final Date endTime, final Date startTime) {
 		if (endTime != null && startTime != null) {
 			final long duration = endTime.getTime() - startTime.getTime();
-			//			return "Duration: " + DurationFormatUtils.formatDuration(duration, "HH:mm:ss", true) + NEW_LINE;
+			return "Duration: " + DurationFormatUtils.formatDuration(duration, "HH:mm:ss", true) + NEW_LINE;
 		}
 		return "";
 	}
@@ -92,7 +93,7 @@ public class FullReportListener implements JobExecutionListener, StepExecutionLi
 	@Override
 	public void beforeJob(final JobExecution jobExecution) {
 		LOGGER.info(SEPARATOR_LINE);
-		LOGGER.info(jobExecution.getJobInstance().getJobName() + " STARTING...");
+		LOGGER.info("{} STARTING...", jobExecution.getJobInstance().getJobName()  );
 	}
 
 	@Override

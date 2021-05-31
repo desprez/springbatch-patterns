@@ -75,7 +75,7 @@ Another variation of the previous patterns. This time, the "Master" data comes f
 
 With this pattern, a grouping SQL query sumarize the transactions to compute the customer balance.
 
-No processor usage. 
+No processor usage.
 
 ## Pattern 8 : Control Break Job
 
@@ -85,4 +85,11 @@ No processor usage.
 
 Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a BreakKeyStrategy to groups records that have same "group" key (ie the customer number).
 
-## Pattern 9 : Staging Job
+## Pattern 9 : Fixed Job
+
+[MultiFixedRecordJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/fixedjob/MultiFixedRecordJobConfig.java
+
+This pattern show the way to read and write a multirecords fixed lenght file (like COBOL files). This job use a **PatternMatchingCompositeLineMapper** to map line with a record Type (ie: 00 for header, 01 for details and 99 for footer.
+
+
+## Pattern 10 : Staging Job

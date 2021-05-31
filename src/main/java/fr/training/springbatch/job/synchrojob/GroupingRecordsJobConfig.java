@@ -2,8 +2,6 @@ package fr.training.springbatch.job.synchrojob;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -22,9 +20,6 @@ import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.FileSystemResource;
 
 import fr.training.springbatch.app.dto.Transaction;
@@ -63,7 +58,8 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 	}
 
 	/**
-	 * @param groupReader          the injected Transaction {@link GroupReader} bean.
+	 * @param groupReader          the injected Transaction {@link GroupReader}
+	 *                             bean.
 	 * @param transactionSumWriter the injected TransactionSum ItemWriter
 	 * @return a Step Bean
 	 */
@@ -83,7 +79,8 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 	/**
 	 * Delegate pattern reader
 	 *
-	 * @param transactionReader the injected Transaction {@link FlatFileItemReader} bean.
+	 * @param transactionReader the injected Transaction {@link FlatFileItemReader}
+	 *                          bean.
 	 * @return a {@link GroupReader} bean
 	 */
 	@Bean(destroyMethod = "")
@@ -114,25 +111,9 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
 					{
 						setTargetType(Transaction.class);
-						setConversionService(createConversionService());
+						setConversionService(localDateConverter());
 					}
 				}).build();
-	}
-
-	/**
-	 * Converter to parse local date
-	 */
-	public ConversionService createConversionService() {
-		final DefaultConversionService conversionService = new DefaultConversionService();
-		DefaultConversionService.addDefaultConverters(conversionService);
-		conversionService.addConverter(new Converter<String, LocalDate>() {
-			@Override
-			public LocalDate convert(final String text) {
-				final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
-				return LocalDate.parse(text, formatter);
-			}
-		});
-		return conversionService;
 	}
 
 	/**

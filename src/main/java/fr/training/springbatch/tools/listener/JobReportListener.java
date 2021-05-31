@@ -14,14 +14,14 @@ public class JobReportListener implements JobExecutionListener, StepExecutionLis
 
 	@Override
 	public void beforeJob(final JobExecution jobExecution) {
-		logger.info(jobExecution.getJobInstance().getJobName() + " STARTING...");
+		logger.info("{} STARTING...", jobExecution.getJobInstance().getJobName());
 	}
 
 	@Override
 	public void afterJob(final JobExecution jobExecution) {
-		logger.info(jobExecution.getJobInstance().getJobName() + " ENDING");
+		logger.info("{} ENDING", jobExecution.getJobInstance().getJobName());
 		for (final StepExecution stepExecution : jobExecution.getStepExecutions()) {
-			logger.info(stepExecution.getSummary()/*.replace(" ", "\n")*/);
+			logger.info(stepExecution.getSummary()/* .replace(" ", "\n") */);
 		}
 	}
 

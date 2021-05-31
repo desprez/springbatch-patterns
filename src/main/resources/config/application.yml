@@ -1,14 +1,14 @@
 debug: false
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/testdb
+    url: jdbc:postgresql://localhost:5432/batch-patterns
     driver-class-name: org.postgresql.Driver
     username: postgres
     password: admin
     initialization-mode: always
-
+    
   batch:
-    enabled: true  
+    enabled: true
     initialize-schema: always
 
 logging:
@@ -16,7 +16,6 @@ logging:
     fr.training.springbatch: info
     org.springframework.batch: info
     org.springframework.boot.autoconfigure.batch: debug
-
 application:
   simple-export-step:
     chunksize: 10
@@ -28,3 +27,10 @@ application:
     chunksize: 10
   table2filesynchro-step:
     chunksize: 10
+  groupingrecord-step:
+    chunksize: 10
+  controlbreak-step:
+    chunksize: 10
+  fixedjob:
+    chunksize: 10
+    transmitterCode: AP00325
