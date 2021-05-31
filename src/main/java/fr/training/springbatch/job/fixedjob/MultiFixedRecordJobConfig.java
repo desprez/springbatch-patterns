@@ -48,9 +48,14 @@ import fr.training.springbatch.job.fixedjob.model.Footer;
 import fr.training.springbatch.job.fixedjob.model.Header;
 
 /**
- * Job
+ * This job use a {@link PatternMatchingCompositeLineMapper} to map line with a
+ * record Type (ie: 00 for header, 01 for details and 99 for footer).
+ *
+ * It read a fixed lenght file and produce the same file for demonstration
+ * purpose.
  */
 public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
+
 	private static final Logger logger = LoggerFactory.getLogger(MultiFixedRecordJobConfig.class);
 
 	private static final String FOOTER_RECORD_TYPE = "99*";
@@ -59,6 +64,8 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
 
 	private static final String INPUTFILE_PARAMETER_NAME = "inputfile";
 	private static final String OUTPUTFILE_PARAMETER_NAME = "outputfile";
+	private static final String RECEIVER_CODE_PARAMETER = "receivercode";
+	private static final String CREATED_DATE_PARAMETER = "created-date";
 
 	@Value("${application.fixedjob.chunksize:10}")
 	private int chunkSize;
@@ -67,8 +74,8 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
 	public Job fixedJob(final Step validationStep, final Step processStep) {
 
 		return jobBuilderFactory.get("fixed-job") //
-				.validator(new DefaultJobParametersValidator(
-						new String[] { INPUTFILE_PARAMETER_NAME, OUTPUTFILE_PARAMETER_NAME }, new String[] {})) //
+				.validator(new DefaultJobParametersValidator(new String[] { INPUTFILE_PARAMETER_NAME,
+						OUTPUTFILE_PARAMETER_NAME, RECEIVER_CODE_PARAMETER, CREATED_DATE_PARAMETER }, new String[] {})) //
 				.incrementer(new RunIdIncrementer()) //
 				.start(validationStep) //
 				.next(processStep) //
