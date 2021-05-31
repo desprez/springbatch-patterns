@@ -89,7 +89,7 @@ Another way to return Transactions list from the reader (similar to groupingReco
 
 [MultiFixedRecordJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/fixedjob/MultiFixedRecordJobConfig.java
 
-This pattern show the way to read and write a multirecords fixed lenght file (like COBOL file). This job use a **PatternMatchingCompositeLineMapper** to map line with a record Type (ie 00 for header 01 for detil and 99 for footer.
+This pattern show the way to read and write a multirecords fixed lenght file (like COBOL files). This job use a **PatternMatchingCompositeLineMapper** to map line with a record Type (ie: 00 for header, 01 for details and 99 for footer.
 
 
 ## Pattern 10 : Staging Job
