@@ -1,8 +1,5 @@
 package fr.training.springbatch.job.stagingjob;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
@@ -27,9 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -123,25 +117,9 @@ public class StagingJobConfig extends AbstractJobConfiguration {
 				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
 					{
 						setTargetType(Transaction.class);
-						setConversionService(createConversionService());
+						setConversionService(localDateConverter());
 					}
 				}).build();
-	}
-
-	/**
-	 * Converter to parse local date
-	 */
-	public ConversionService createConversionService() {
-		final DefaultConversionService conversionService = new DefaultConversionService();
-		DefaultConversionService.addDefaultConverters(conversionService);
-		conversionService.addConverter(new Converter<String, LocalDate>() {
-			@Override
-			public LocalDate convert(final String text) {
-				final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
-				return LocalDate.parse(text, formatter);
-			}
-		});
-		return conversionService;
 	}
 
 	@Bean("fixedValidator")
