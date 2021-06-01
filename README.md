@@ -83,7 +83,7 @@ No processor usage.
 
 [ControlBreakJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/controlbreakjob/ControlBreakJobConfig.java)
 
-Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a BreakKeyStrategy to groups records that have same "group" key (ie the customer number).
+Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a _BreakKeyStrategy_ to groups records that have same "group" key (ie the customer number).
 
 ## Pattern 9 : Fixed Job
 
@@ -102,4 +102,4 @@ TODO schema
 
 This pattern is a java configuration adaptation of the original [Spring-batch parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml) config
 
-	The job reads data from the same file as the Import sample, but instead of writing it out directly it goes through a staging table, and the staging table is read in a multi-threaded step.
+_The job reads data from the same file as the **Import sample**, but instead of writing it out directly it goes through a staging table, and the staging table is read in a multi-threaded step._
