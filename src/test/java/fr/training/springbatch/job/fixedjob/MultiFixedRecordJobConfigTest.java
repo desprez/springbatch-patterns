@@ -25,7 +25,7 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 @RunWith(SpringRunner.class)
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class, MultiFixedRecordJobConfig.class }, properties = {
-		"spring.batch.job.enabled=false", "application.batch.transmitterCode=AP00325" })
+		"spring.batch.job.enabled=false", "application.batch.transmitterCode=AP99325" })
 public class MultiFixedRecordJobConfigTest {
 
 	private static final String OUTPUT_FILE_PATH = "target/fixedresult.txt";
@@ -40,7 +40,7 @@ public class MultiFixedRecordJobConfigTest {
 		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
 				.addString("inputfile", INPUT_FILE_PATH) //
 				.addString("outputfile", OUTPUT_FILE_PATH) //
-				.addString("receivercode", "AP22530") //
+				.addString("receivercode", "AP99530") //
 				.addDate("created-date", new SimpleDateFormat("yyyy-MM-dd").parse("2021-05-31")) //
 				.toJobParameters();
 		// When
