@@ -100,4 +100,6 @@ TODO schema
 
 [StagingJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/stagingjob/StagingJobConfig.java)
 
-This pattern is a java configuration adaptation of the [Spring-batch parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml) config
+This pattern is a java configuration adaptation of the original [Spring-batch parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml) config
+
+	The job reads data from the same file as the Import sample, but instead of writing it out directly it goes through a staging table, and the staging table is read in a multi-threaded step.
