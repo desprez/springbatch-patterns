@@ -39,7 +39,9 @@ import fr.training.springbatch.tools.staging.StagingItemReader;
 import fr.training.springbatch.tools.staging.StagingItemWriter;
 
 /**
- *
+ * This pattern is a java configuration adaptation of the [Spring-batch
+ * parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml)
+ * config.
  */
 public class StagingJobConfig extends AbstractJobConfiguration {
 

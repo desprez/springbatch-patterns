@@ -33,4 +33,4 @@ application:
     chunksize: 10
   fixedjob:
     chunksize: 10
-    transmitterCode: AP00325
+    transmitterCode: AP99325

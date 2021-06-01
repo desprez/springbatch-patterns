@@ -218,7 +218,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
 		final FixedLengthTokenizer tokenizer = new FixedLengthTokenizer();
 		tokenizer.setNames("recordType", "detailRecordCount");
 		tokenizer.setColumns(new Range(1, 2), // recordType
-				new Range(3, 12)// detailRecordCount
+				new Range(3, 12) // detailRecordCount
 				);
 		return tokenizer;
 	}
