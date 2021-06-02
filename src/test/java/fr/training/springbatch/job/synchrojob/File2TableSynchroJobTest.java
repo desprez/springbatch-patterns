@@ -30,7 +30,7 @@ public class File2TableSynchroJobTest {
 
 	private static final String CUSTOMER_FILE = "src/main/resources/csv/customer.csv";
 
-	private static final String EXPECTED_FILE = "src/test/resources/datas/customer-expected.csv";
+	private static final String EXPECTED_FILE = "src/test/resources/datas/csv/customer-expected.csv";
 
 	@Autowired
 	private JobLauncherTestUtils testUtils;

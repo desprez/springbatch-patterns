@@ -28,7 +28,7 @@ public class SQLJoinSynchroJobTest {
 
 	private static final String OUTPUT_FILE = "target/output/outputfile.csv";
 
-	private static final String EXPECTED_FILE = "src/test/resources/datas/customer-expected.csv";
+	private static final String EXPECTED_FILE = "src/test/resources/datas/csv/customer-expected.csv";
 
 	@Autowired
 	private JobLauncherTestUtils testUtils;

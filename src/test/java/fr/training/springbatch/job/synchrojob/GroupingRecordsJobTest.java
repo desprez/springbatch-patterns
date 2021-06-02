@@ -30,7 +30,7 @@ public class GroupingRecordsJobTest {
 
 	private static final String TRANSACTION_FILE = "src/main/resources/csv/transaction.csv";
 
-	private static final String EXPECTED_FILE = "src/test/resources/datas/transaction-sum-expected.csv";
+	private static final String EXPECTED_FILE = "src/test/resources/datas/csv/transaction-sum-expected.csv";
 
 	@Autowired
 	private JobLauncherTestUtils testUtils;
