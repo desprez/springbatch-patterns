@@ -96,7 +96,7 @@ This pattern show the way to read and write a multirecords fixed lenght file (li
 
 ## Pattern 10 : Staging Job
 
-TODO schema
+![alt text](./images/stagingJob.svg "stagingJob")
 
 [StagingJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/stagingjob/StagingJobConfig.java)
 
