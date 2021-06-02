@@ -26,9 +26,9 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 		SimpleExportJobConfig.class }, properties = "spring.batch.job.enabled=false")
 public class SimpleExportStepTest {
 
-	private static final String EXPECTED_FILE = "src/test/resources/datas/export-expected.csv";
 	private static final String OUTPUT_DIR = "target/output";
 	private static final String OUTPUT_FILE = OUTPUT_DIR + "/simple-export-null.csv";
+	private static final String EXPECTED_FILE = "src/test/resources/datas/csv/export-expected.csv";
 
 	@Autowired
 	private JobLauncherTestUtils testUtils;

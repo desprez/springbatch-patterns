@@ -85,9 +85,9 @@ No processor usage.
 
 Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a _BreakKeyStrategy_ to groups records that have same "group" key (ie the customer number).
 
-## Pattern 9 : Fixed Job
+## Pattern 9 : Multi records Fixed Job
 
-TODO schema
+![alt text](./images/multiFixedRecordJob.svg "multiFixedRecordJob")
 
 [MultiFixedRecordJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/fixedjob/MultiFixedRecordJobConfig.java)
 

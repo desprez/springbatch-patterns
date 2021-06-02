@@ -1,5 +1,8 @@
 package fr.training.springbatch.job.importjob;
 
+import java.io.File;
+import java.io.IOException;
+
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
@@ -27,6 +30,7 @@ import org.springframework.core.io.FileSystemResource;
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.listener.ItemCountListener;
+import fr.training.springbatch.tools.listener.RejectFileSkipListener;
 import fr.training.springbatch.tools.tasklet.JdbcTasklet;
 
 /**
@@ -46,7 +50,8 @@ public class SimpleImportJobConfig extends AbstractJobConfiguration {
 	public Job simpleImportJob(final Step importStep) {
 		return jobBuilderFactory.get("simple-import-job") //
 				.incrementer(new RunIdIncrementer()) //
-				.validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})) //
+				.validator(
+						new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
 				.start(deleteStep()) //
 				.next(importStep) //
 				.listener(reportListener()) //
@@ -74,14 +79,20 @@ public class SimpleImportJobConfig extends AbstractJobConfiguration {
 
 	@Bean
 	public Step importStep(final ItemReader<Transaction> importReader, //
-			final ItemWriter<Transaction> importWriter) {
+			final ItemWriter<Transaction> importWriter,
+			final RejectFileSkipListener<Transaction, Transaction> rejectListener) {
 
 		return stepBuilderFactory.get("simple-import-step") //
 				.<Transaction, Transaction>chunk(chunkSize) //
 				.reader(importReader) //
 				.processor(importProcessor()) //
 				.writer(importWriter) //
+				.faultTolerant() //
+				//.skipPolicy(new AlwaysSkipItemSkipPolicy())
+				.skipLimit(100) //
+				.skip(RuntimeException.class)
 				.listener(progressListener()) //
+				.listener(rejectListener) //
 				.build();
 	}
 
@@ -142,6 +153,14 @@ public class SimpleImportJobConfig extends AbstractJobConfiguration {
 						+ "VALUES (:customerNumber, :number, :transactionDate, :amount )")
 				.itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Transaction>()) //
 				.build();
+	}
+
+	@StepScope // Mandatory for using jobParameters
+	@Bean
+	public RejectFileSkipListener<Transaction, Transaction> rejectListener(
+			@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
+
+		return new RejectFileSkipListener<Transaction, Transaction>(new File(rejectfile));
 	}
 
 }

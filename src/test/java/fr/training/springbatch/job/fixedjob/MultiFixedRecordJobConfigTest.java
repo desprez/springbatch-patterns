@@ -29,7 +29,7 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 public class MultiFixedRecordJobConfigTest {
 
 	private static final String OUTPUT_FILE_PATH = "target/fixedresult.txt";
-	private static final String INPUT_FILE_PATH = "src/test/resources/datas/multirecordfile.txt";
+	private static final String INPUT_FILE_PATH = "src/test/resources/datas/fixed/multirecordfile.txt";
 
 	@Autowired
 	private JobLauncherTestUtils testUtils;
