@@ -86,4 +86,9 @@ public class BatchApplication {
 		return new GenericApplicationContextFactory(MultiFixedRecordJobConfig.class);
 	}
 
+	/*	@Bean
+	public ApplicationContextFactory complexmlJobConfigContextFactory() {
+		return new GenericApplicationContextFactory(ComplexmlJobConfig.class);
+	}*/
+
 }
