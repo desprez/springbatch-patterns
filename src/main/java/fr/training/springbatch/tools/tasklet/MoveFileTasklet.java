@@ -3,6 +3,7 @@ package fr.training.springbatch.tools.tasklet;
 import static org.springframework.util.Assert.notNull;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
@@ -27,8 +28,15 @@ public class MoveFileTasklet implements Tasklet {
 	public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 		checkParameters();
 
+		final Path destinationPath = Paths.get(targetDirectory);
+		if (!Files.isDirectory(destinationPath)) {
+			Files.createDirectory(destinationPath);
+		}
+
 		Files.move(Paths.get(sourceDirectory + filename), Paths.get(targetDirectory + filename),
 				StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+
+		contribution.incrementWriteCount(1);
 
 		return RepeatStatus.FINISHED;
 	}
