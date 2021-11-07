@@ -106,4 +106,6 @@ _The job reads data from the same file as the **Import sample**, but instead of 
 
 This job use :
 - ItemCountListener for Logging the count of items processed at a specified interval.
-- 
+- StagingItemWriter that fill BATCH_STAGING table with serialized items.
+- StagingItemProcessor that marks the input row as 'processed'.
+- StagingItemReader that read the BATCH_STAGING table for record not processed.
