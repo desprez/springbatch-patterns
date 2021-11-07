@@ -103,3 +103,9 @@ This pattern show the way to read and write a multirecords fixed lenght file (li
 This pattern is a java configuration adaptation of the original [Spring-batch parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml) config
 
 _The job reads data from the same file as the **Import sample**, but instead of writing it out directly it goes through a staging table, and the staging table is read in a multi-threaded step._
+
+This job use :
+- ItemCountListener for Logging the count of items processed at a specified interval.
+- StagingItemWriter that fill BATCH_STAGING table with serialized items.
+- StagingItemProcessor that marks the input row as 'processed'.
+- StagingItemReader that read the BATCH_STAGING table for record not processed.
