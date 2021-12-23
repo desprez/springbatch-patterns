@@ -19,7 +19,7 @@ import org.springframework.batch.test.MetaDataInstanceFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-public class CompressTaskletTest {
+class CompressTaskletTest {
 
 	private static Resource csvFilesPath = new ClassPathResource("csv");
 	private static File outputDir = new File("target/compresstasklet");

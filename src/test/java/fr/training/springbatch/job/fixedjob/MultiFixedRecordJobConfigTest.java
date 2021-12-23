@@ -4,8 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.text.SimpleDateFormat;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
@@ -17,16 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class, MultiFixedRecordJobConfig.class }, properties = {
 		"spring.batch.job.enabled=false", "application.batch.transmitterCode=AP99325" })
-public class MultiFixedRecordJobConfigTest {
+class MultiFixedRecordJobConfigTest {
 
 	private static final String OUTPUT_FILE_PATH = "target/fixedresult.txt";
 	private static final String INPUT_FILE_PATH = "src/test/resources/datas/fixed/multirecordfile.txt";
@@ -35,7 +32,7 @@ public class MultiFixedRecordJobConfigTest {
 	private JobLauncherTestUtils testUtils;
 
 	@Test
-	public void fixedJob_should_success() throws Exception {
+	void fixedJob_should_success() throws Exception {
 		// Given
 		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
 				.addString("inputfile", INPUT_FILE_PATH) //

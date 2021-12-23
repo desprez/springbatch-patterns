@@ -20,7 +20,7 @@ import org.springframework.core.io.ClassPathResource;
 /**
  * Test upon DecompressTasklet class
  */
-public class DecompressTaskletTest {
+class DecompressTaskletTest {
 
 	private static final String[] EXPECTED_CONTENT = new String[] { //
 			"PRODUCT_ID,NAME,DESCRIPTION,PRICE", //

@@ -23,7 +23,7 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class,
 		StagingJobConfig.class }, properties = "spring.batch.job.enabled=false")
-public class StagingJobTest {
+class StagingJobTest {
 
 	@Autowired
 	private JobLauncherTestUtils jobLauncherTestUtils;

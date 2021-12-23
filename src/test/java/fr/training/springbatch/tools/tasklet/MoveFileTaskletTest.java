@@ -23,7 +23,7 @@ class MoveFileTaskletTest {
 	private static File outputDir = new File("target/movefiletasklet/");
 
 	@BeforeEach
-	public void cleanup() throws IOException {
+	void cleanup() throws IOException {
 		if (outputDir.exists()) {
 			FileUtils.deleteDirectory(outputDir);
 		}

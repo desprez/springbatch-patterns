@@ -18,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
-
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class,
 		DailyJobConfig.class }, properties = "spring.batch.job.enabled=false")
