@@ -8,8 +8,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -24,7 +24,7 @@ public class CompressTaskletTest {
 	private static Resource csvFilesPath = new ClassPathResource("csv");
 	private static File outputDir = new File("target/compresstasklet");
 
-	@Before
+	@BeforeEach
 	public void createOutputDir() throws IOException {
 		if (outputDir.exists()) {
 			FileUtils.deleteDirectory(outputDir);

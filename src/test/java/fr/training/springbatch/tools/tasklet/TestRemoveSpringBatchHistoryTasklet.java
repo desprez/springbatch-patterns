@@ -6,8 +6,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
@@ -22,7 +21,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
 
@@ -31,9 +29,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
  *
  */
 @ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = { BatchTestConfiguration.class }, properties = "spring.batch.job.enabled=false")
-public class TestRemoveSpringBatchHistoryTasklet {
+class TestRemoveSpringBatchHistoryTasklet {
 
 	@Autowired
 	protected JobExplorer jobExplorer;
@@ -45,7 +42,7 @@ public class TestRemoveSpringBatchHistoryTasklet {
 	private JdbcTemplate jdbcTemplate;
 
 	@Test
-	public void execute() throws Exception {
+	void execute() throws Exception {
 		// 1. Prepare test dataset
 		final Resource sqlScript = new ClassPathResource("datas/tasklet/TestRemoveSpringBatchHistoryTasklet.sql");
 		// The JdbcTestUtils is using the deprecated SimpleJdbcTemplate, so we don't

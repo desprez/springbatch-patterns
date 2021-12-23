@@ -2,8 +2,7 @@ package fr.training.springbatch.job.synchrojob;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
@@ -15,16 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class,
 		GroupingRecordsJobConfig.class }, properties = "spring.batch.job.enabled=false")
-public class GroupingRecordsJobTest {
+class GroupingRecordsJobTest {
 
 	private static final String OUTPUT_FILE = "target/output/outputfile.csv";
 
@@ -36,7 +33,7 @@ public class GroupingRecordsJobTest {
 	private JobLauncherTestUtils testUtils;
 
 	@Test
-	public void groupingRecordStep_should_produce_expected_file() throws Exception {
+	void groupingRecordStep_should_produce_expected_file() throws Exception {
 		// Given
 		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
 				.addString("transaction-file", TRANSACTION_FILE) //

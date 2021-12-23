@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -18,11 +18,11 @@ import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.batch.test.MetaDataInstanceFactory;
 
-public class CopyFileTaskletTest {
+class CopyFileTaskletTest {
 
 	private static File outputDir = new File("target/copyfiletasklet/");
 
-	@Before
+	@BeforeEach
 	public void cleanup() throws IOException {
 		if (outputDir.exists()) {
 			FileUtils.deleteDirectory(outputDir);
