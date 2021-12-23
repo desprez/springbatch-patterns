@@ -6,8 +6,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepContribution;
@@ -17,17 +17,15 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.batch.test.MetaDataInstanceFactory;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@RunWith(SpringRunner.class)
-public class RestServiceTaskletTest {
+class RestServiceTaskletTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(RestServiceTaskletTest.class);
 
 	@Test
-	public void execute_GET_method_with_existing_resource_should_success() throws Exception {
+	void execute_GET_method_with_existing_resource_should_success() throws Exception {
 		// Given
 		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 
@@ -47,8 +45,8 @@ public class RestServiceTaskletTest {
 		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
 	}
 
-	@Test(expected = UnexpectedJobExecutionException.class)
-	public void execute_GET_method_with_unknown_resource_should_fails() throws Exception {
+	@Test
+	void execute_GET_method_with_unknown_resource_should_fails() throws Exception {
 		// Given
 		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 
@@ -61,15 +59,16 @@ public class RestServiceTaskletTest {
 		tasklet.setContentType("application/json");
 		tasklet.afterPropertiesSet();
 
-		// When
-		final RepeatStatus status = tasklet.execute(contribution, context);
-
 		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+		Assertions.assertThrows(UnexpectedJobExecutionException.class, () -> {
+			// When
+			tasklet.execute(contribution, context);
+		});
+
 	}
 
 	@Test
-	public void execute_POST_method_should_success() throws Exception {
+	void execute_POST_method_should_success() throws Exception {
 		// Given
 		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 

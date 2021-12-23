@@ -1,4 +1,4 @@
-package fr.training.springbatch;
+package fr.training.springbatch.boot;
 
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.support.ApplicationContextFactory;
@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 import fr.training.springbatch.job.controlbreakjob.ControlBreakJobConfig;
+import fr.training.springbatch.job.dailyjob.DailyJobConfig;
 import fr.training.springbatch.job.exportjob.SimpleExportJobConfig;
 import fr.training.springbatch.job.fixedjob.MultiFixedRecordJobConfig;
 import fr.training.springbatch.job.importjob.SimpleImportJobConfig;
@@ -86,9 +87,9 @@ public class BatchApplication {
 		return new GenericApplicationContextFactory(MultiFixedRecordJobConfig.class);
 	}
 
-	/*	@Bean
-	public ApplicationContextFactory complexmlJobConfigContextFactory() {
-		return new GenericApplicationContextFactory(ComplexmlJobConfig.class);
-	}*/
+	@Bean
+	public ApplicationContextFactory dailyJobConfigContextFactory() {
+		return new GenericApplicationContextFactory(DailyJobConfig.class);
+	}
 
 }

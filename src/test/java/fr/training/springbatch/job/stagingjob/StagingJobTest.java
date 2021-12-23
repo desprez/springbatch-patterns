@@ -4,8 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.sql.DataSource;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
@@ -16,17 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.jdbc.JdbcTestUtils;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class,
 		StagingJobConfig.class }, properties = "spring.batch.job.enabled=false")
-public class StagingJobTest {
+class StagingJobTest {
 
 	@Autowired
 	private JobLauncherTestUtils jobLauncherTestUtils;
@@ -39,7 +36,7 @@ public class StagingJobTest {
 	}
 
 	@Test
-	public void stagingjob_should_proccess_all_batch_staging_table_records() throws Exception {
+	void stagingjob_should_proccess_all_batch_staging_table_records() throws Exception {
 		final int before = JdbcTestUtils.countRowsInTable(jdbcTemplate, "BATCH_STAGING");
 
 		final JobParameters jobParameters = new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())

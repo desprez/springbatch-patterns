@@ -8,7 +8,8 @@ import java.io.File;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -19,7 +20,7 @@ import org.springframework.core.io.ClassPathResource;
 /**
  * Test upon DecompressTasklet class
  */
-public class DecompressTaskletTest {
+class DecompressTaskletTest {
 
 	private static final String[] EXPECTED_CONTENT = new String[] { //
 			"PRODUCT_ID,NAME,DESCRIPTION,PRICE", //
@@ -34,7 +35,7 @@ public class DecompressTaskletTest {
 	};
 
 	@Test
-	public void execute_with_valide_archive_should_success() throws Exception {
+	void execute_with_valide_archive_should_success() throws Exception {
 		// Given
 		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 		final StepContribution contribution = new StepContribution(stepExecution);
@@ -59,8 +60,8 @@ public class DecompressTaskletTest {
 		assertThat(FileUtils.readLines(output, Charset.defaultCharset()).toArray(), equalTo(EXPECTED_CONTENT));
 	}
 
-	@Test(expected = IllegalStateException.class) // Then
-	public void execute_with_corrupted_archive_should_fail() throws Exception {
+	@Test
+	void execute_with_corrupted_archive_should_fail() throws Exception {
 		// Given
 		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 		final StepContribution contribution = new StepContribution(stepExecution);
@@ -76,7 +77,11 @@ public class DecompressTaskletTest {
 		tasklet.setTargetDirectory(outputDir.getAbsolutePath());
 		tasklet.setTargetFile("products.txt");
 
-		// When
-		tasklet.execute(contribution, context);
+		// Then
+		Assertions.assertThrows(IllegalStateException.class, () -> {
+			// When
+			tasklet.execute(contribution, context);
+		});
+
 	}
 }

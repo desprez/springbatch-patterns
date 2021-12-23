@@ -10,7 +10,8 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.tasklet.RemoveSpringBatchHistoryTasklet;
 
 /**
- *
+ * This job use the {@link RemoveSpringBatchHistoryTasklet} to remove the old
+ * entries in the Spring-batch metadatas tables.
  */
 public class PurgeHistoryJob extends AbstractJobConfiguration {
 
@@ -23,7 +24,7 @@ public class PurgeHistoryJob extends AbstractJobConfiguration {
 		final Step purgeHistoryStep = stepBuilderFactory.get("purgehistorystep") //
 				.tasklet(new RemoveSpringBatchHistoryTasklet() {
 					{
-						setHistoricRetentionMonth(1);
+						setHistoryRetentionMonth(1);
 						setJdbcTemplate(jdbcTemplate);
 					}
 				}).build();

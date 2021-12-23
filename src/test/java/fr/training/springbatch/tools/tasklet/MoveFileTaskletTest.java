@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -18,12 +18,12 @@ import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.batch.test.MetaDataInstanceFactory;
 
-public class MoveFileTaskletTest {
+class MoveFileTaskletTest {
 
 	private static File outputDir = new File("target/movefiletasklet/");
 
-	@Before
-	public void cleanup() throws IOException {
+	@BeforeEach
+	void cleanup() throws IOException {
 		if (outputDir.exists()) {
 			FileUtils.deleteDirectory(outputDir);
 		}
@@ -31,7 +31,7 @@ public class MoveFileTaskletTest {
 	}
 
 	@Test
-	public void execute_with_existing_file_should_success() throws Exception {
+	void execute_with_existing_file_should_success() throws Exception {
 		// Given
 		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 		final StepContribution contribution = new StepContribution(stepExecution);

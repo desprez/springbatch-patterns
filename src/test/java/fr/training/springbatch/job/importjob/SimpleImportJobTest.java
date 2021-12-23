@@ -7,9 +7,8 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
@@ -20,23 +19,22 @@ import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class,
 		SimpleImportJobConfig.class }, properties = "spring.batch.job.enabled=false")
-public class SimpleImportJobTest {
+class SimpleImportJobTest {
 
 	private static final String REJECT_FILE_PATH = "target/output/reject.csv";
+
 	@Autowired
 	private JobLauncherTestUtils testUtils;
 
-	@Before
-	public void cleanUp() throws IOException {
+	@BeforeEach
+	void cleanUp() throws IOException {
 		final File rejectFile = new File(REJECT_FILE_PATH);
 		if (rejectFile.exists()) {
 			FileUtils.deleteQuietly(rejectFile);
