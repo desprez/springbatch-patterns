@@ -27,7 +27,7 @@ One step use the reader / processor / writer pattern to read a database table an
 
 Another job configuration that read a file to fill a table like an ETL (extract, transform and load).
 
-The 1st Step (deleteStep) erase table records before the "load" Step. It use a **JdbcTasklet** to execute SQL command against the table.
+The 1st Step (deleteStep) erase table records before the "load" Step. It use a **JdbcTasklet** (from Pivotal) to execute SQL command against the table.
 
 ## Pattern 3 : Synchronize 2 files (master/detail)
 
@@ -83,7 +83,7 @@ No processor usage.
 
 [ControlBreakJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/controlbreakjob/ControlBreakJobConfig.java)
 
-Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a _BreakKeyStrategy_ to groups records that have same "group" key (ie the customer number).
+Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a __Strategy pattern__ (see [BreakKeyStrategy.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/controlbreakjob/BreakKeyStrategy.java)) to groups records that have same "group" key (ie the customer number) in a easy configurable way (to sum records in this example).
 
 ## Pattern 9 : Multi records Fixed Job
 
@@ -109,3 +109,42 @@ This job use :
 - StagingItemWriter that fill BATCH_STAGING table with serialized items.
 - StagingItemProcessor that marks the input row as 'processed'.
 - StagingItemReader that read the BATCH_STAGING table for record not processed.
+
+## Pattern 11 : Daily Job
+
+[DailyJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/dailyjob/DailyJobConfig.java)
+
+This pattern show how to configure a job that run once per day and prevent to not be launch twice.
+
+## Some usefull tools can be used in patterns
+
+### Tasklets
+All the classes below _have a JUnit test_ that shows how they work.
+
+- [RemoveSpringBatchHistoryTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/RemoveSpringBatchHistoryTasklet.java) updated version of the [Antoine Rey's original](https://github.com/arey/spring-batch-toolkit/blob/master/src/main/java/com/javaetmoi/core/batch/tasklet/RemoveSpringBatchHistoryTasklet.java)
+
+
+- [AnalyzePGTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/AnalyzePGTasklet.java) to force **PostgreSQL** to _Analyse_ the given tables after heavy loading.
+
+
+- [GatherStatisticTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/GatherStatisticTasklet.java) to force **Oracle** to _Gather Statistics_ for the given tables after heavy loading.
+
+
+- [CompressTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/CompressTasklet.java) to **zip file** in a Step (before send it for example)
+
+
+- [DecompressTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/DecompressTasklet.java) to **unzip file** in a Step (after received it for example)
+
+
+- [RestServiceTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/RestServiceTasklet.java) usefull if you have to **call Rest Service** in jobs.
+
+
+- [CopyFileTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/CopyFileTasklet.java) to copy file in another folder.
+
+
+- [MoveFileTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/MoveFileTasklet.java) to move file in another folder.
+
+
+- [MoveFilesTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/MoveFilesTasklet.java) to move files in another folder.
+
+
