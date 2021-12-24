@@ -19,7 +19,8 @@ import org.springframework.context.annotation.Bean;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 
 /**
- *
+ * This job is configured to run once per day and prevent to not be launch
+ * twice.
  */
 public class DailyJobConfig extends AbstractJobConfiguration {
 
