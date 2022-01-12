@@ -11,7 +11,6 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -49,7 +48,7 @@ public class SimpleImportJobConfig extends AbstractJobConfiguration {
 	@Bean
 	public Job simpleImportJob(final Step importStep) {
 		return jobBuilderFactory.get("simple-import-job") //
-				.incrementer(new RunIdIncrementer()) //
+				//				.incrementer(new RunIdIncrementer()) //
 				.validator(
 						new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
 				.start(deleteStep()) //

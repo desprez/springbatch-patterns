@@ -1,8 +1,18 @@
 debug: false
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
- 
+   datasource:
+      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
+      driver-class-name: org.h2.Driver
+      username: sa
+      password: null
+   mail:
+      host: 127.0.0.1
+      port: 3025 # default protocol port + 3000 as offset
+      protocol: smtp   
+      password: springboot
+      username: duke
+      test-connection: true
+      
+logging:
+  level:
+    org.springframework.jdbc: warn

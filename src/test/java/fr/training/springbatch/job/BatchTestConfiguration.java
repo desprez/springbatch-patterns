@@ -12,12 +12,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Test base configuration for all job tests.
  */
 @Configuration
-@EnableAutoConfiguration
+@EnableAutoConfiguration/*(exclude = MailSenderAutoConfiguration.class)*/
 @EnableBatchProcessing
 public class BatchTestConfiguration {
 
 	/**
-	 * Define JdbcTemplate can be used for checking if DB records has been processed well.
+	 * Define JdbcTemplate can be used for checking if DB records has been processed
+	 * well.
 	 *
 	 * @param dataSource injected by spring
 	 * @return a jdbcTemplate
