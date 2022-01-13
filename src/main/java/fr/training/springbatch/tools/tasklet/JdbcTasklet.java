@@ -20,8 +20,8 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
@@ -41,7 +41,7 @@ import org.springframework.util.Assert;
  */
 public class JdbcTasklet implements Tasklet, InitializingBean {
 
-	private static final Log logger = LogFactory.getLog(JdbcTasklet.class);
+	private static final Logger log = LoggerFactory.getLogger(AnalyzePGTasklet.class);
 
 	private NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -107,18 +107,18 @@ public class JdbcTasklet implements Tasklet, InitializingBean {
 		final ExitStatus exitStatus = stepExecution.getExitStatus();
 
 		if (sql.trim().toUpperCase().startsWith("SELECT")) {
-			logger.debug("Executing: " + sql);
+			log.debug("Executing: " + sql);
 			final List<Map<String, Object>> result = jdbcTemplate.queryForList(sql,
 					new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
 			final String msg = "Result: " + result;
-			logger.debug(msg);
+			log.debug(msg);
 			stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
 		} else {
-			logger.debug("Updating : " + sql);
+			log.debug("Updating : " + sql);
 			final int updated = jdbcTemplate.update(sql,
 					new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
 			final String msg = "Updated: " + updated + " rows";
-			logger.debug(msg);
+			log.debug(msg);
 			stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
 		}
 		return RepeatStatus.FINISHED;

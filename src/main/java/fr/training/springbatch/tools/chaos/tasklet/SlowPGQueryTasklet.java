@@ -27,7 +27,7 @@ public class SlowPGQueryTasklet implements Tasklet {
 
 	private Duration duration = Duration.ofSeconds(60); // Default 1 minute
 
-	private String waitingMessage = "slowQueryTasklet is waiting for {} second # {}";
+	private String waitingMessage = "Sending slow query # {} for {} second ";
 
 	private long maxQueries = 1; // Default 1 query
 
@@ -35,16 +35,43 @@ public class SlowPGQueryTasklet implements Tasklet {
 
 	private JdbcTemplate jdbcTemplate;
 
+	private Mode mode = Mode.FIXED;
+
+	public enum Mode {
+		FIXED, RANDOM, RAMPUP
+	}
+
 	@Override
 	public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 		notNull(jdbcTemplate, "jdbcTemplate is required");
 		queryCount++;
-		logger.info(waitingMessage, duration.getSeconds(), queryCount);
-		jdbcTemplate.execute(String.format(SLOW_PG_QUERY_COMMAND, duration.getSeconds()));
+
+		final long seconds = computeQueryDuration();
+
+		logger.info(waitingMessage + mode, queryCount, seconds);
+
+		jdbcTemplate.execute(String.format(SLOW_PG_QUERY_COMMAND, seconds));
+
 		if (queryCount < maxQueries) {
 			return RepeatStatus.CONTINUABLE;
 		}
 		return RepeatStatus.FINISHED;
+	}
+
+	private long computeQueryDuration() {
+		if (Mode.RANDOM.equals(mode)) {
+			return randomizeSeconds(duration.getSeconds());
+
+		} else if (Mode.RAMPUP.equals(mode)) {
+			return duration.getSeconds() / maxQueries * queryCount;
+
+		} else {
+			return duration.getSeconds();
+		}
+	}
+
+	private long randomizeSeconds(final long max) {
+		return 1 + (long) (Math.random() * (max - 1));
 	}
 
 	public void setDuration(final Duration seconds) {
@@ -57,6 +84,10 @@ public class SlowPGQueryTasklet implements Tasklet {
 
 	public void setMaxQueries(final long maxQueries) {
 		this.maxQueries = maxQueries;
+	}
+
+	public void setMode(final Mode mode) {
+		this.mode = mode;
 	}
 
 	public void setJdbcTemplate(final JdbcTemplate jdbcTemplate) {

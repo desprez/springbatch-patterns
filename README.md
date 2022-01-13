@@ -147,4 +147,40 @@ All the classes below _have a JUnit test_ that shows how they work.
 
 - [MoveFilesTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/MoveFilesTasklet.java) to move files in another folder.
 
+### Chaos testing Tasklets
+
+These tasklet can be used to simulate fails during batch execution.
+
+- [BipolarTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/chaos/tasklet/BipolarTasklet.java) that throw exception on odd runs.
+
+
+- [RandomFailTasket.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/chaos/tasklet/RandomFailTasket.java) used to mimimic unstable process.
+
+
+- [SlowPGQueryTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/chaos/tasklet/SlowPGQueryTasklet.java) used to mimimic slow PosgreSQL queries.
+
+
+- [WaitingTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/chaos/tasklet/WaitingTasklet.java) used to mimimic long duration process. Display countdown.
+
+
+### Listeners
+
+TO DO
+
+### JobParametersValidators
+
+TO DO
+
+### Readers
+
+TO DO
+
+### Writers
+
+TO DO
+
+### Processors
+
+TO DO
+
 

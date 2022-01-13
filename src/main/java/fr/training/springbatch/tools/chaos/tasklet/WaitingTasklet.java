@@ -18,7 +18,7 @@ import org.springframework.batch.repeat.RepeatStatus;
  */
 public class WaitingTasklet implements Tasklet {
 
-	private static final Logger logger = LoggerFactory.getLogger(WaitingTasklet.class);
+	private static final Logger log = LoggerFactory.getLogger(WaitingTasklet.class);
 
 	private static final int ONE_SECOND = 1000;
 
@@ -29,12 +29,12 @@ public class WaitingTasklet implements Tasklet {
 	@Override
 	public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext)
 			throws Exception {
-		logger.info(waitingMessage, duration);
+		log.info(waitingMessage, duration);
 		for (Long i = duration.getSeconds(); i >= 0; i--) {
 			if (i == 0) {
-				logger.info("GO");
+				log.info("GO");
 			} else {
-				logger.info("{}", i);
+				log.info("{}", i);
 			}
 			Thread.sleep(ONE_SECOND);
 		}
