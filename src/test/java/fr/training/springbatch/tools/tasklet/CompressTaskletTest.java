@@ -1,8 +1,6 @@
 package fr.training.springbatch.tools.tasklet;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +45,7 @@ class CompressTaskletTest {
 		final RepeatStatus status = tasklet.execute(contribution, context);
 
 		// Then
-		assertThat(status, equalTo(RepeatStatus.FINISHED));
+		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
 		final File file = new File(archiveFilename);
 		assertThat(file).exists();
 	}

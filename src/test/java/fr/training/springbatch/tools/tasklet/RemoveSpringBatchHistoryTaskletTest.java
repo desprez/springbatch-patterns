@@ -30,7 +30,7 @@ import fr.training.springbatch.job.BatchTestConfiguration;
  */
 @ActiveProfiles("test")
 @SpringBootTest(classes = { BatchTestConfiguration.class }, properties = "spring.batch.job.enabled=false")
-class TestRemoveSpringBatchHistoryTasklet {
+class RemoveSpringBatchHistoryTaskletTest {
 
 	@Autowired
 	protected JobExplorer jobExplorer;
