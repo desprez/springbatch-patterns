@@ -2,15 +2,15 @@ package fr.training.springbatch.app.dto;
 
 public class TransactionSum {
 
-	private String customerNumber;
+	private Long customerNumber;
 
 	private double balance;
 
-	public String getCustomerNumber() {
+	public Long getCustomerNumber() {
 		return customerNumber;
 	}
 
-	public void setCustomerNumber(final String customerNumber) {
+	public void setCustomerNumber(final Long customerNumber) {
 		this.customerNumber = customerNumber;
 	}
 

@@ -119,6 +119,7 @@ public class JdbcTasklet implements Tasklet, InitializingBean {
 					new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
 			final String msg = "Updated: " + updated + " rows";
 			log.debug(msg);
+			contribution.incrementWriteCount(updated);
 			stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
 		}
 		return RepeatStatus.FINISHED;

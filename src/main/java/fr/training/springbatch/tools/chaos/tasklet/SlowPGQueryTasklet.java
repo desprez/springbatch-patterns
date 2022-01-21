@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.core.step.tasklet.StoppableTasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -19,7 +19,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  *
  * @author Desprez
  */
-public class SlowPGQueryTasklet implements Tasklet {
+public class SlowPGQueryTasklet implements StoppableTasklet {
 
 	private static final Logger logger = LoggerFactory.getLogger(SlowPGQueryTasklet.class);
 
@@ -37,6 +37,8 @@ public class SlowPGQueryTasklet implements Tasklet {
 
 	private Mode mode = Mode.FIXED;
 
+	private boolean stopped = false;
+
 	public enum Mode {
 		FIXED, RANDOM, RAMPUP
 	}
@@ -53,9 +55,15 @@ public class SlowPGQueryTasklet implements Tasklet {
 		jdbcTemplate.execute(String.format(SLOW_PG_QUERY_COMMAND, seconds));
 
 		if (queryCount < maxQueries) {
-			return RepeatStatus.CONTINUABLE;
+			return RepeatStatus.continueIf(!stopped);
 		}
 		return RepeatStatus.FINISHED;
+	}
+
+	@Override
+	public void stop() {
+		logger.info("Stop requested");
+		stopped = true;
 	}
 
 	private long computeQueryDuration() {

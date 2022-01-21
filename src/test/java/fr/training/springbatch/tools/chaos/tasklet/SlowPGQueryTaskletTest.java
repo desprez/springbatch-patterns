@@ -43,7 +43,6 @@ class SlowPGQueryTaskletTest {
 		slowPGQueryTasklet.setMaxQueries(2);
 		slowPGQueryTasklet.setJdbcTemplate(jdbcTemplate);
 
-
 		// When
 		RepeatStatus status = slowPGQueryTasklet.execute(contrib, context);
 

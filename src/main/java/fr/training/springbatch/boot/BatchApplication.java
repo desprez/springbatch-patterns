@@ -8,18 +8,20 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import fr.training.springbatch.job.controlbreakjob.ControlBreakJobConfig;
-import fr.training.springbatch.job.dailyjob.DailyJobConfig;
-import fr.training.springbatch.job.exportjob.SimpleExportJobConfig;
-import fr.training.springbatch.job.fixedjob.MultiFixedRecordJobConfig;
-import fr.training.springbatch.job.importjob.SimpleImportJobConfig;
-import fr.training.springbatch.job.purgejob.PurgeHistoryJob;
-import fr.training.springbatch.job.stagingjob.StagingJobConfig;
-import fr.training.springbatch.job.synchrojob.File2FileSynchroJobConfig;
-import fr.training.springbatch.job.synchrojob.File2TableSynchroJobConfig;
-import fr.training.springbatch.job.synchrojob.GroupingRecordsJobConfig;
-import fr.training.springbatch.job.synchrojob.SQLJoinSynchroJobConfig;
-import fr.training.springbatch.job.synchrojob.Table2FileSynchroJobConfig;
+import fr.training.springbatch.job.controlbreak.ControlBreakJobConfig;
+import fr.training.springbatch.job.daily.DailyJobConfig;
+import fr.training.springbatch.job.extract.SimpleExtractJobConfig;
+import fr.training.springbatch.job.extract.processindicatorjob.ExtractProcessIndicatorJobConfig;
+import fr.training.springbatch.job.fixedsize.MultiFixedRecordJobConfig;
+import fr.training.springbatch.job.load.SimpleLoadJobConfig;
+import fr.training.springbatch.job.partition.jdbc.JDBCPartitionJobConfig;
+import fr.training.springbatch.job.purge.PurgeHistoryJobConfig;
+import fr.training.springbatch.job.staging.StagingJobConfig;
+import fr.training.springbatch.job.synchro.File2FileSynchroJobConfig;
+import fr.training.springbatch.job.synchro.File2TableSynchroJobConfig;
+import fr.training.springbatch.job.synchro.GroupingRecordsJobConfig;
+import fr.training.springbatch.job.synchro.SQLJoinSynchroJobConfig;
+import fr.training.springbatch.job.synchro.Table2FileSynchroJobConfig;
 
 @SpringBootApplication
 @EnableBatchProcessing(modular = true)
@@ -33,13 +35,13 @@ public class BatchApplication {
 	}
 
 	@Bean
-	public ApplicationContextFactory simpleExportJobContextFactory() {
-		return new GenericApplicationContextFactory(SimpleExportJobConfig.class);
+	public ApplicationContextFactory simpleExtractJobContextFactory() {
+		return new GenericApplicationContextFactory(SimpleExtractJobConfig.class);
 	}
 
 	@Bean
-	public ApplicationContextFactory simpleImportJobContextFactory() {
-		return new GenericApplicationContextFactory(SimpleImportJobConfig.class);
+	public ApplicationContextFactory simpleLoadJobContextFactory() {
+		return new GenericApplicationContextFactory(SimpleLoadJobConfig.class);
 	}
 
 	@Bean
@@ -79,7 +81,7 @@ public class BatchApplication {
 
 	@Bean
 	public ApplicationContextFactory purgeHistoryJobContextFactory() {
-		return new GenericApplicationContextFactory(PurgeHistoryJob.class);
+		return new GenericApplicationContextFactory(PurgeHistoryJobConfig.class);
 	}
 
 	@Bean
@@ -92,4 +94,13 @@ public class BatchApplication {
 		return new GenericApplicationContextFactory(DailyJobConfig.class);
 	}
 
+	@Bean
+	public ApplicationContextFactory partitionJobConfigContextFactory() {
+		return new GenericApplicationContextFactory(JDBCPartitionJobConfig.class);
+	}
+
+	@Bean
+	public ApplicationContextFactory exportProcessIndicatorJobConfigContextFactory() {
+		return new GenericApplicationContextFactory(ExtractProcessIndicatorJobConfig.class);
+	}
 }
