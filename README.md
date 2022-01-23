@@ -24,7 +24,7 @@ One step use the reader / processor / writer pattern to read a database table an
 ![alt text](./images/simpleLoadJob.svg "Load Job")
 
 [SimpleLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/load/SimpleLoadJobConfig.java)
- 
+
 Another job configuration that read a file to fill a table like an ETL (extract, transform and load).
 
 The 1st Step (deleteStep) erase table records before the "load" Step. It use a **JdbcTasklet** (from Pivotal) to execute SQL command against the table.
@@ -120,9 +120,24 @@ This pattern show how to configure a job that run once per day and prevent to no
 
 [MultiFilesLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/load/MultiFilesLoadJobConfig.java)
 
+This Job load Transaction csv files present in a directory sequentialy insert each read line in a Transaction Table. It use **MultiResourceItemReader** class to loop over all files found and delegate the file loading the to a reader.
+
 ## Pattern 13 : Extract with Process Indicator Job
 
-[ExtractProcessIndicatorJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/processindicatorjob/ExtractProcessIndicatorJobConfig.java)
+[ExtractProcessIndicatorJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/processindicator/ExtractProcessIndicatorJobConfig.java)
+
+This pattern use a process indicator to flag processed records (unlike the staging job Processed Column is present in the table)
+
+## Pattern 14 : File Partition Job
+
+[FilePartitionJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/partition/file/FilePartitionJobConfig.java)
+
+This pattern use **MultiResourcePartitioner** to create partitions upon files presents in a folder.
+
+## Pattern 15 : Jdbc partition Job
+
+[JDBCPartitionJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/partition/jdbc/JDBCPartitionJobConfig.java)
+
 
 ## Some usefull tools can be used in patterns
 

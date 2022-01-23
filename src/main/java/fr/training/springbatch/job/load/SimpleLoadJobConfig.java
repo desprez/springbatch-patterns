@@ -37,7 +37,7 @@ import fr.training.springbatch.tools.tasklet.JdbcTasklet;
  * Transaction Table.
  *
  * Nota : the deleteStep is for testing purpose to remove existing Transaction
- * records before insertig new lines.
+ * records before inserting new lines.
  *
  * @author desprez
  */
