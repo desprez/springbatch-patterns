@@ -1,8 +1,6 @@
 package fr.training.springbatch.tools.tasklet;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -56,8 +54,8 @@ class DecompressTaskletTest {
 
 		// Then
 		final File output = new File(outputDir, "products.txt");
-		assertThat(output.exists(), is(true));
-		assertThat(FileUtils.readLines(output, Charset.defaultCharset()).toArray(), equalTo(EXPECTED_CONTENT));
+		assertThat(output).exists();
+		assertThat(FileUtils.readLines(output, Charset.defaultCharset()).toArray()).isEqualTo(EXPECTED_CONTENT);
 	}
 
 	@Test

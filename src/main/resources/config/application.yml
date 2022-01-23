@@ -16,11 +16,12 @@ logging:
     fr.training.springbatch: info
     org.springframework.batch: info
     org.springframework.boot.autoconfigure.batch: debug
+    org.springframework.jdbc: warn
     
 application:
-  simple-export-step:
+  simple-extract-step:
     chunksize: 10
-  simple-import-step:
+  simple-load-step:
     chunksize: 10
   file2filesynchro-step:
     chunksize: 10

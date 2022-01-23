@@ -77,7 +77,7 @@ public class FileExistDeciderJobConfig {
 		return new ListItemReader<>(Arrays.asList("Line 1", "Line 2", "Line 3", "Line 4", "Line 5", "Line 6"));
 	}
 
-	@StepScope
+	@StepScope // Mandatory for using jobParameters
 	@Bean
 	public FlatFileItemWriter<String> itemWriter(@Value("#{jobParameters['output-file']}") final String fileName) {
 		return new FlatFileItemWriterBuilder<String>() //

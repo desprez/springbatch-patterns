@@ -1,6 +1,8 @@
 package fr.training.springbatch.app.dto;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,13 +13,14 @@ public class Customer implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private String number;
+	private Long number;
 	private String firstName;
 	private String lastName;
 	private String address;
 	private String city;
 	private String state;
 	private String postCode;
+	private LocalDate birthDate;
 
 	// computed
 	private List<Transaction> transactions = new ArrayList<Transaction>();
@@ -29,7 +32,7 @@ public class Customer implements Serializable {
 		// java bean tools expected constructor
 	}
 
-	public Customer(final String number, final String firstName, final String lastName, final String address,
+	public Customer(final long number, final String firstName, final String lastName, final String address,
 			final String city, final String state, final String postCode) {
 		super();
 		this.number = number;
@@ -59,11 +62,11 @@ public class Customer implements Serializable {
 		this.transactions = transactions;
 	}
 
-	public String getNumber() {
+	public Long getNumber() {
 		return number;
 	}
 
-	public void setNumber(final String number) {
+	public void setNumber(final Long number) {
 		this.number = number;
 	}
 
@@ -115,6 +118,14 @@ public class Customer implements Serializable {
 		this.postCode = postCode;
 	}
 
+	public LocalDate getBirthDate() {
+		return birthDate;
+	}
+
+	public void setBirthDate(final LocalDate birthDate) {
+		this.birthDate = birthDate;
+	}
+
 	public void setTransactions(final List<Transaction> transactions) {
 		this.transactions = transactions;
 	}
@@ -149,6 +160,20 @@ public class Customer implements Serializable {
 		.append(", balance=").append(balance) //
 		.append("]");
 		return builder.toString();
+	}
+
+	public Customer increaseAmountBy(final BigDecimal sum) {
+		final Customer newCustomer = new Customer();
+		newCustomer.number = number;
+		//		newCustomer.balance = balance.add(sum);
+		newCustomer.firstName = firstName;
+		newCustomer.lastName = lastName;
+		newCustomer.address = address;
+		newCustomer.city = city;
+		newCustomer.state = state;
+		newCustomer.postCode = postCode;
+
+		return newCustomer;
 	}
 
 }

@@ -29,7 +29,7 @@ import org.springframework.util.StringUtils;
  * </p>
  *
  * @see https://jira.springsource.org/browse/BATCH-1747
- * @author arey
+ * @author arey, desprez (using LocalDateTime instead java.util.date).
  *
  */
 public class RemoveSpringBatchHistoryTasklet implements Tasklet, InitializingBean {

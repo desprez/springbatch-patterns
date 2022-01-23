@@ -9,7 +9,7 @@ public class Transaction implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private String customerNumber;
+	private Long customerNumber;
 	private String number;
 	private LocalDate transactionDate;
 	private Double amount;
@@ -20,11 +20,11 @@ public class Transaction implements Serializable {
 
 	}
 
-	public String getCustomerNumber() {
+	public Long getCustomerNumber() {
 		return customerNumber;
 	}
 
-	public void setCustomerNumber(final String customerNumber) {
+	public void setCustomerNumber(final Long customerNumber) {
 		this.customerNumber = customerNumber;
 	}
 

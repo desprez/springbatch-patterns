@@ -16,3 +16,4 @@ spring:
 logging:
   level:
     org.springframework.jdbc: warn
+    fr.training.springbatch: info
