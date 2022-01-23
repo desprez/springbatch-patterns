@@ -1,4 +1,4 @@
-package fr.training.springbatch.job.extract.processindicatorjob;
+package fr.training.springbatch.job.extract.processindicator;
 
 import java.io.IOException;
 import java.io.Writer;

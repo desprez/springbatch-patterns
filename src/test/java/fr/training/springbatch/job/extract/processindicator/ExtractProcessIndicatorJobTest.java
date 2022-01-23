@@ -18,7 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.jdbc.JdbcTestUtils;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
-import fr.training.springbatch.job.extract.processindicatorjob.ExtractProcessIndicatorJobConfig;
+import fr.training.springbatch.job.extract.processindicator.ExtractProcessIndicatorJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest
