@@ -12,7 +12,7 @@ It use **postgreSQL** database and **H2** for tests.
 
 ![alt text](./images/simpleExtractJob.svg "Extract Job")
 
-[SimpleExportJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/extract/SimpleExtractJobConfig.java)
+[SimpleExportJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/SimpleExtractJobConfig.java)
 
 This is the simplest job configuration (no really inovation here).
 One step use the reader / processor / writer pattern to read a database table and write the content "as is" to a comma separated flat file.
@@ -23,8 +23,8 @@ One step use the reader / processor / writer pattern to read a database table an
 
 ![alt text](./images/simpleLoadJob.svg "Load Job")
 
-[SimpleLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/load/SimpleLoadJobConfig.java)
-
+[SimpleLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/load/SimpleLoadJobConfig.java)
+ 
 Another job configuration that read a file to fill a table like an ETL (extract, transform and load).
 
 The 1st Step (deleteStep) erase table records before the "load" Step. It use a **JdbcTasklet** (from Pivotal) to execute SQL command against the table.
@@ -33,7 +33,7 @@ The 1st Step (deleteStep) erase table records before the "load" Step. It use a *
 
 ![alt text](./images/file2FileSynchroJob.svg "file2FileSynchroJob")
 
-[File2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchro/File2FileSynchroJobConfig.java)
+[File2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/synchro/File2FileSynchroJobConfig.java)
 
 This configuration may not be very usual but it can be interesting when you want to aggregate 2 files that share the same key. Typically with a master file and a detail file (ie Orders and OrderLines).
 
@@ -47,7 +47,7 @@ In this way, complete object should be filled entierely by the reader.
 
 ![alt text](./images/file2TableSynchroJob.svg "file2TableSynchroJob")
 
-[File2TableSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchro/File2TableSynchroJobConfig.java)
+[File2TableSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/synchro/File2TableSynchroJobConfig.java)
 
 This pattern is a little bit different from the previous one but works the same way. This time the reader, the master csv file is synchronized with a table which contains the detail datas.
 
@@ -57,7 +57,7 @@ The **MasterDetailReader**, **TransactionAccumulator** and **CustomerAccumulator
 
 ![alt text](./images/table2FileSynchroJob.svg "table2FileSynchroJob")
 
-[Table2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchro/Table2FileSynchroJobConfig.java)
+[Table2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/Table2FileSynchroJobConfig.java)
 
 Another variation of the previous patterns. This time, the "Master" data comes from a table in the database and the "Details" data comes from a csv file.
 
@@ -65,13 +65,13 @@ Another variation of the previous patterns. This time, the "Master" data comes f
 
 ![alt text](./images/groupingRecordJob.svg "groupingRecordJob")
 
-[GroupingRecordsJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchro/GroupingRecordsJobConfig.java)
+[GroupingRecordsJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/GroupingRecordsJobConfig.java)
 
 ## Pattern 7 : Grouping tables records (with SQL)
 
 ![alt text](./images/sqlJoinSynchroJob.svg "sqlJoinSynchroJob")
 
-[SQLJoinSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/synchro/SQLJoinSynchroJobConfig.java)
+[SQLJoinSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/synchro/SQLJoinSynchroJobConfig.java)
 
 With this pattern, a grouping SQL query sumarize the transactions to compute the customer balance.
 
@@ -81,7 +81,7 @@ No processor usage.
 
 ![alt text](./images/controlBreakJob.svg "controlBreakJob")
 
-[ControlBreakJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/controlbreak/ControlBreakJobConfig.java)
+[ControlBreakJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/controlbreak/ControlBreakJobConfig.java)
 
 Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a __Strategy pattern__ (see [BreakKeyStrategy.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/controlbreak/BreakKeyStrategy.java)) to groups records that have same "group" key (ie the customer number) in a easy configurable way (to sum records in this example).
 
@@ -115,6 +115,14 @@ This job use :
 [DailyJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/daily/DailyJobConfig.java)
 
 This pattern show how to configure a job that run once per day and prevent to not be launch twice.
+
+## Pattern 12 : Multi files Load Job
+
+[MultiFilesLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/load/MultiFilesLoadJobConfig.java)
+
+## Pattern 13 : Extract with Process Indicator Job
+
+[ExtractProcessIndicatorJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/processindicatorjob/ExtractProcessIndicatorJobConfig.java)
 
 ## Some usefull tools can be used in patterns
 

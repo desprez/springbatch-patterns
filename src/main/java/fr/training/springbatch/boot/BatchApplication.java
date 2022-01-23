@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 import fr.training.springbatch.job.controlbreak.ControlBreakJobConfig;
 import fr.training.springbatch.job.daily.DailyJobConfig;
 import fr.training.springbatch.job.extract.SimpleExtractJobConfig;
-import fr.training.springbatch.job.extract.processindicatorjob.ExtractProcessIndicatorJobConfig;
+import fr.training.springbatch.job.extract.processindicator.ExtractProcessIndicatorJobConfig;
 import fr.training.springbatch.job.fixedsize.MultiFixedRecordJobConfig;
 import fr.training.springbatch.job.load.SimpleLoadJobConfig;
 import fr.training.springbatch.job.partition.jdbc.JDBCPartitionJobConfig;
