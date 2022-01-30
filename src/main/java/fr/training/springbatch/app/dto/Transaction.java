@@ -14,10 +14,18 @@ public class Transaction implements Serializable {
 	private LocalDate transactionDate;
 	private Double amount;
 
-	private final DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+	private final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
 	public Transaction() {
 
+	}
+
+	public Transaction(final Long customerNumber, final String number, final LocalDate transactionDate,
+			final Double amount) {
+		this.customerNumber = customerNumber;
+		this.number = number;
+		this.transactionDate = transactionDate;
+		this.amount = amount;
 	}
 
 	public Long getCustomerNumber() {

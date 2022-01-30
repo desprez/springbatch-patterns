@@ -5,7 +5,9 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.listener.StepExecutionListenerSupport;
 
 /**
- * Programmatically checks the metadata for no items processed and cause failure
+ * Programmatically checks the metadata for no items processed and cause step failure.
+ *
+ * To be used when the absence of items to read is not a normal case
  */
 public class NoWorkFoundStepExecutionListener extends StepExecutionListenerSupport {
 
@@ -14,7 +16,7 @@ public class NoWorkFoundStepExecutionListener extends StepExecutionListenerSuppo
 		if (stepExecution.getReadCount() == 0) {
 			return ExitStatus.FAILED;
 		}
-		return null;
+		return stepExecution.getExitStatus();
 	}
 
 }

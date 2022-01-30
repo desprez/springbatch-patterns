@@ -115,7 +115,7 @@ public class File2FileSynchroJobConfig extends AbstractJobConfiguration {
 				.resource(new FileSystemResource(customerFile)) //
 				.delimited() //
 				.delimiter(";") //
-				.names(new String[] { "number", "firstName", "lastName", "address", "city", "state", "postCode" }) //
+				.names("number", "firstName", "lastName", "address", "city", "state", "postCode") //
 				.linesToSkip(1) //
 				.targetType(Customer.class) //
 				.build();
@@ -131,7 +131,7 @@ public class File2FileSynchroJobConfig extends AbstractJobConfiguration {
 				.resource(new FileSystemResource(transactionFile)) //
 				.delimited() //
 				.delimiter(";") //
-				.names(new String[] { "customerNumber", "number", "transactionDate", "amount" }) //
+				.names("customerNumber", "number", "transactionDate", "amount") //
 				.linesToSkip(1) //
 				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
 					{
@@ -171,8 +171,7 @@ public class File2FileSynchroJobConfig extends AbstractJobConfiguration {
 				.resource(new FileSystemResource(outputFile)) //
 				.delimited() //
 				.delimiter(";") //
-				.names(new String[] { "number", "firstName", "lastName", "address", "city", "state", "postCode",
-				"balance" })
+				.names("number", "firstName", "lastName", "address", "city", "state", "postCode", "balance") //
 				.build();
 
 	}

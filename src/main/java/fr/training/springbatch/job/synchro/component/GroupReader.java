@@ -12,11 +12,13 @@ import org.springframework.batch.item.UnexpectedInputException;
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
 
 /**
- *
- * @author PASCALDesprez
+ * This ItemReader reads items packets that share the same key and returns lists
+ * of items. It's use the {@link ItemAccumulator}
  *
  * @param <T> The class of the items to be processed
  * @param <K> The class of the key value of the items being processed.
+ *
+ * @author Desprez
  */
 public class GroupReader<T, K> implements ItemStreamReader<List<T>> {
 

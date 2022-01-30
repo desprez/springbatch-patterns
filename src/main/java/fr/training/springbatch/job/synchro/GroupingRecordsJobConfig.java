@@ -106,7 +106,7 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 				.resource(new FileSystemResource(transactionFile)) //
 				.delimited() //
 				.delimiter(";") //
-				.names(new String[] { "customerNumber", "number", "transactionDate", "amount" }) //
+				.names("customerNumber", "number", "transactionDate", "amount") //
 				.linesToSkip(1) //
 				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
 					{
@@ -149,7 +149,7 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
 				.resource(new FileSystemResource(outputFile)) //
 				.delimited() //
 				.delimiter(";") //
-				.names(new String[] { "customerNumber", "balance" }) //
+				.names("customerNumber", "balance") //
 				.build();
 	}
 

@@ -11,7 +11,7 @@ public class ExceptionThrowingProcessor<T> implements ItemProcessor<T, T> {
 
 	private int counter = 0;
 
-	private int throwExceptionOnNumber = 12;
+	private int throwExceptionOnNumber = Integer.MAX_VALUE;
 
 	@Override
 	public T process(final T item) throws Exception {

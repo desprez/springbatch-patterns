@@ -54,12 +54,12 @@
 			<artifactId>spring-web</artifactId>
 		</dependency>
 
-<!-- Needed for sending Emails
+		<!-- Needed for sending Emails -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
--->
+
 		<!-- For Springboot tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -80,14 +80,14 @@
 			<scope>test</scope>
 		</dependency>
 
-<!-- For sending Emails tests
+		<!-- For sending Emails tests -->
 		<dependency>
 			<groupId>com.icegreen</groupId>
 			<artifactId>greenmail-junit5</artifactId>
 			<version>1.6.5</version>
 			<scope>test</scope>
 		</dependency>
--->
+
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>

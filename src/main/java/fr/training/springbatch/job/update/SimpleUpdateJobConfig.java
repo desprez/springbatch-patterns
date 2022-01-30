@@ -109,7 +109,7 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
 				.resource(new FileSystemResource(inputFile)) //
 				.delimited() //
 				.delimiter(";") //
-				.names(new String[] { "number", "birthDate" }) //
+				.names("number", "birthDate") //
 				.linesToSkip(1) //
 				.fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {
 					{
@@ -123,8 +123,7 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
 	public JdbcBatchItemWriter<Customer> updateWriter() {
 
 		return new JdbcBatchItemWriterBuilder<Customer>() //
-				.dataSource(dataSource)
-				.sql("UPDATE Customer SET birth_date = :birthDate WHERE number = :number")
+				.dataSource(dataSource).sql("UPDATE Customer SET birth_date = :birthDate WHERE number = :number")
 				.itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Customer>()) //
 				.build();
 	}

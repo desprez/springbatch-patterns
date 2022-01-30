@@ -95,8 +95,7 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
 				.resource(new FileSystemResource(outputFile)) //
 				.delimited() //
 				.delimiter(";") //
-				.names(new String[] { "number", "firstName", "lastName", "address", "city", "state", "postCode",
-				"balance" })
+				.names("number", "firstName", "lastName", "address", "city", "state", "postCode", "balance") //
 				.build();
 
 	}

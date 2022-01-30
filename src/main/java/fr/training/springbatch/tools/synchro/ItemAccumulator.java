@@ -18,6 +18,8 @@ import org.springframework.util.Assert;
  * @param <K> The class of the key value of the items being processed. Used for
  *        positioning the reader to a particular place in the input
  *
+ * @author Jeremy Yearron
+ * @author Desprez (fix)
  */
 public abstract class ItemAccumulator<T, K> implements ItemStream, InitializingBean {
 

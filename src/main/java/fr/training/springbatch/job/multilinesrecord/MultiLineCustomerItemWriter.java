@@ -1,4 +1,4 @@
-package fr.training.springbatch.job.synchro.component;
+package fr.training.springbatch.job.multilinesrecord;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +23,10 @@ public class MultiLineCustomerItemWriter implements ItemWriter<Customer>, ItemSt
 		final List<String> lines = new ArrayList<>();
 
 		for (final Customer c : items) {
-			lines.add(joinString(c.getNumber().toString(), "C", c.getFirstName(), c.getLastName()));
-			lines.add(joinString(c.getNumber().toString(), "A", c.getAddress(), c.getCity(), c.getPostCode(), c.getState()));
+			lines.add(joinString(c.getNumber().toString(), "C", c.getFirstName(), c.getLastName(), c.getAddress(), c.getCity(), c.getPostCode(), c.getState()));
 
 			for (final Transaction t : c.getTransactions()) {
-				lines.add(joinString(c.getNumber().toString(), "T", t.getNumber().toString(), t.getDateString(), t.getAmount().toString()));
+				lines.add(joinString(c.getNumber().toString(), "T", t.getNumber().toString(), t.getTransactionDate().toString(), t.getAmount().toString()));
 			}
 		}
 		delegate.write(lines);

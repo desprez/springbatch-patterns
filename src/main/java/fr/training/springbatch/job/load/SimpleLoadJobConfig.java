@@ -137,7 +137,7 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
 				.resource(new FileSystemResource(inputFile)) //
 				.delimited() //
 				.delimiter(";") //
-				.names(new String[] { "customerNumber", "number", "transactionDate", "amount" }) //
+				.names("customerNumber", "number", "transactionDate", "amount") //
 				.linesToSkip(1) //
 				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
 					{

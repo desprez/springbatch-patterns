@@ -3,6 +3,7 @@ package fr.training.springbatch.app.dto;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,8 @@ public class Customer implements Serializable {
 	private String state;
 	private String postCode;
 	private LocalDate birthDate;
+
+	private int age;
 
 	// computed
 	private List<Transaction> transactions = new ArrayList<Transaction>();
@@ -165,7 +168,7 @@ public class Customer implements Serializable {
 	public Customer increaseAmountBy(final BigDecimal sum) {
 		final Customer newCustomer = new Customer();
 		newCustomer.number = number;
-		//		newCustomer.balance = balance.add(sum);
+		// newCustomer.balance = balance.add(sum);
 		newCustomer.firstName = firstName;
 		newCustomer.lastName = lastName;
 		newCustomer.address = address;
@@ -174,6 +177,14 @@ public class Customer implements Serializable {
 		newCustomer.postCode = postCode;
 
 		return newCustomer;
+	}
+
+	public void computeAge() {
+		age = Period.between(birthDate, LocalDate.now()).getYears();
+	}
+
+	public int getAge() {
+		return age;
 	}
 
 }

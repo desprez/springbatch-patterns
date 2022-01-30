@@ -84,16 +84,16 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
 				.listener(fileNameListener).build();
 	}
 
-	@Bean
 	@StepScope // Mandatory for using jobParameters
+	@Bean
 	public OutputFileListener fileNameListener(@Value("#{jobParameters['output-path']}") final String outputPath) {
 		final OutputFileListener listener = new OutputFileListener();
-		listener.setPath(outputPath); /* \"file:./target/output/file/\" */
+		listener.setPath(outputPath);
 		return listener;
 	}
 
-	@Bean
 	@StepScope // Mandatory for using jobParameters
+	@Bean
 	public FlatFileItemReader<Customer> itemReader(@Value("#{stepExecutionContext['fileName']}") final String fileName)
 			throws MalformedURLException {
 		logger.info("fileName {}", fileName);

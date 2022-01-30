@@ -67,6 +67,8 @@ Another variation of the previous patterns. This time, the "Master" data comes f
 
 [GroupingRecordsJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/GroupingRecordsJobConfig.java)
 
+This pattern reads items packets that share the same key and returns lists that can be summed or whatever... (this is a "read  many and write one" example)
+
 ## Pattern 7 : Grouping tables records (with SQL)
 
 ![alt text](./images/sqlJoinSynchroJob.svg "sqlJoinSynchroJob")

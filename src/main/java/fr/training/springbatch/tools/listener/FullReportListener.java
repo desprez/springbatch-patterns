@@ -1,10 +1,11 @@
 package fr.training.springbatch.tools.listener;
 
-import java.util.Date;
+import static org.springframework.batch.core.metrics.BatchMetrics.calculateDuration;
+import static org.springframework.batch.core.metrics.BatchMetrics.formatDuration;
+
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
@@ -43,7 +44,8 @@ public class FullReportListener implements JobExecutionListener, StepExecutionLi
 			final Entry<String, JobParameter> entry = iter.next();
 			jobReport.append("  " + entry.getKey() + "=" + entry.getValue() + NEW_LINE);
 		}
-		jobReport.append(logDurationMessage(jobExecution.getEndTime(), jobExecution.getStartTime()));
+		jobReport.append(" executed in ")
+		.append(formatDuration(calculateDuration(jobExecution.getStartTime(), jobExecution.getEndTime())));
 
 		for (final StepExecution stepExecution : jobExecution.getStepExecutions()) {
 			jobReport.append(logStep(stepExecution));
@@ -68,32 +70,17 @@ public class FullReportListener implements JobExecutionListener, StepExecutionLi
 		stepReport.append("Skip count: " + stepExecution.getSkipCount() + NEW_LINE);
 		stepReport.append("Rollbacks: " + stepExecution.getRollbackCount() + NEW_LINE);
 		stepReport.append("Filter: " + stepExecution.getFilterCount() + NEW_LINE);
-		stepReport.append(logDurationMessage(stepExecution.getEndTime(), stepExecution.getStartTime()));
+		stepReport.append("Duration: "
+				+ formatDuration(calculateDuration(stepExecution.getStartTime(), stepExecution.getEndTime())));
 		stepReport.append(SEPARATOR_LINE + NEW_LINE);
 
 		return stepReport.toString();
 	}
 
-	/**
-	 * Compute and log Job/Step duration message according to his startTime /
-	 * endTime.
-	 *
-	 * @param endTime   Job/Step endtime
-	 * @param startTime Job/Step startTime
-	 * @return a duration message
-	 */
-	private String logDurationMessage(final Date endTime, final Date startTime) {
-		if (endTime != null && startTime != null) {
-			final long duration = endTime.getTime() - startTime.getTime();
-			return "Duration: " + DurationFormatUtils.formatDuration(duration, "HH:mm:ss", true) + NEW_LINE;
-		}
-		return "";
-	}
-
 	@Override
 	public void beforeJob(final JobExecution jobExecution) {
 		LOGGER.info(SEPARATOR_LINE);
-		LOGGER.info("{} STARTING...", jobExecution.getJobInstance().getJobName()  );
+		LOGGER.info("{} STARTING...", jobExecution.getJobInstance().getJobName());
 	}
 
 	@Override
