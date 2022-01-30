@@ -8,6 +8,9 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
+/**
+ * Send Email implementation of the NotificationService.
+ */
 public class EmailNotificationService implements NotificationService {
 
 	private final JavaMailSender mailSender;
