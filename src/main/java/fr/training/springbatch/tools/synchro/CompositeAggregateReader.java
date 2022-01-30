@@ -15,17 +15,17 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 /**
- *
- *
+ * An {@link ItemReader} able able to read 2 files simultaneously and to
+ * synchronize in order to return an aggregate. <b>The 2 files must share the same
+ * key and must be sorted on this key.</b>
  *
  * @param <M> The master Item Type
  * @param <S> The slave Item Type
- * @param <T> the type of the master item key
+ * @param <K> the type of the master item key
  *
  * @author Desprez
  */
-public class CompositeAggregateReader<M, S, T> extends AbstractItemStreamItemReader<M>
-implements InitializingBean {
+public class CompositeAggregateReader<M, S, K> extends AbstractItemStreamItemReader<M> implements InitializingBean {
 
 	private static final Logger log = LoggerFactory.getLogger(CompositeAggregateReader.class);
 
@@ -35,9 +35,9 @@ implements InitializingBean {
 
 	private SingleItemPeekableItemReader<S> peekableItemReader;
 
-	private Function<M, T> masterKeyExtractor;
+	private Function<M, K> masterKeyExtractor;
 
-	private Function<S, T> slaveKeyExtractor;
+	private Function<S, K> slaveKeyExtractor;
 
 	private BiConsumer<M, S> masterAccumulator;
 
@@ -49,7 +49,7 @@ implements InitializingBean {
 		if (item == null) {
 			return null;
 		}
-		final T masterKey = masterKeyExtractor.apply(item);
+		final K masterKey = masterKeyExtractor.apply(item);
 
 		while (true) {
 			final S possibleRelatedObject = peekableItemReader.peek();
@@ -57,11 +57,11 @@ implements InitializingBean {
 				return item;
 			}
 
-			final T slaveKey = slaveKeyExtractor.apply(possibleRelatedObject);
+			final K slaveKey = slaveKeyExtractor.apply(possibleRelatedObject);
 
 			// logic to determine if next line in slave file relates to same Master object
 			@SuppressWarnings("unchecked")
-			final int match = ((Comparable<T>) slaveKey).compareTo(masterKey);
+			final int match = ((Comparable<K>) slaveKey).compareTo(masterKey);
 
 			log.info("MasterKey {}, slaveKey {} match {}", masterKey, slaveKey, match);
 
@@ -130,7 +130,7 @@ implements InitializingBean {
 	 *
 	 * @param masterKeyExtractor
 	 */
-	public void setMasterKeyExtractor(final Function<M, T> masterKeyExtractor) {
+	public void setMasterKeyExtractor(final Function<M, K> masterKeyExtractor) {
 		this.masterKeyExtractor = masterKeyExtractor;
 	}
 
@@ -138,7 +138,7 @@ implements InitializingBean {
 	 *
 	 * @param slaveKeyExtractor
 	 */
-	public void setSlaveKeyExtractor(final Function<S, T> slaveKeyExtractor) {
+	public void setSlaveKeyExtractor(final Function<S, K> slaveKeyExtractor) {
 		this.slaveKeyExtractor = slaveKeyExtractor;
 	}
 
