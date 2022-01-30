@@ -14,14 +14,13 @@ class CompositeAggregateReaderTest {
 
 	private static final String FOOS = "1;foo1\n" + "2;foo2\n" + "3;foo3\n" + "4;foo4\n";
 
-
 	final Bar bar1 = new Bar("bar1", 1);
 	final Bar bar2 = new Bar("bar2", 2);
 	final Bar bar3 = new Bar("bar3", 2);
 	final Bar bar4 = new Bar("bar4", 4);
 	final Bar bar5 = new Bar("bar5", 4);
 
-	private static final String BARS = "bar0;0\n" +  "bar1;1\n" + "bar2;2\n" + "bar3;2\n" + "bar4;4\n" + "bar5;4\n";
+	private static final String BARS = "bar0;0\n" + "bar1;1\n" + "bar2;2\n" + "bar3;2\n" + "bar4;4\n" + "bar5;4\n";
 
 	private CompositeAggregateReader<Foo, Bar, Integer> compositeAggregateItemReader;
 
@@ -52,7 +51,6 @@ class CompositeAggregateReaderTest {
 		compositeAggregateItemReader.setMasterItemReader(getFooItemReader());
 		compositeAggregateItemReader.setMasterKeyExtractor(Foo::getId);
 		compositeAggregateItemReader.setMasterAccumulator(Foo::addBar);
-
 
 		compositeAggregateItemReader.setSlaveItemReader(getBarItemReader());
 		compositeAggregateItemReader.setSlaveKeyExtractor(Bar::getFooId);
@@ -95,7 +93,8 @@ class CompositeAggregateReaderTest {
 			// When
 			compositeAggregateItemReader.afterPropertiesSet();
 		});
-		compositeAggregateItemReader.setSlaveItemReader(null);;
+		compositeAggregateItemReader.setSlaveItemReader(null);
+		;
 		Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			// When
 			compositeAggregateItemReader.afterPropertiesSet();
@@ -116,6 +115,5 @@ class CompositeAggregateReaderTest {
 		assertThat(item.getName()).isEqualTo(expectedName);
 		assertThat(item.getBars()).containsExactly(values);
 	}
-
 
 }

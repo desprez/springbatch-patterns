@@ -15,9 +15,11 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 /**
+ * <p>
  * An {@link ItemReader} able able to read 2 files simultaneously and to
- * synchronize in order to return an aggregate. <b>The 2 files must share the same
- * key and must be sorted on this key.</b>
+ * synchronize in order to return an aggregate.
+ * </p>
+ * <b>The 2 files must share the same key and must be sorted on this key.</b>
  *
  * @param <M> The master Item Type
  * @param <S> The slave Item Type
@@ -106,19 +108,22 @@ public class CompositeAggregateReader<M, S, K> extends AbstractItemStreamItemRea
 	}
 
 	/**
-	 * Establishes the {@link AbstractItemStreamItemReader<I>} reader that will read
-	 * base items.
+	 * Establishes the {@link AbstractItemStreamItemReader<M>} reader that will read
+	 * master items.
 	 *
-	 * @param reader {@link AbstractItemStreamItemReader<I>} reader that will read
-	 *               base items.
+	 * @param reader {@link AbstractItemStreamItemReader<M>} reader that will read
+	 *               master items.
 	 */
 	public void setMasterItemReader(final AbstractItemStreamItemReader<M> masterItemReader) {
 		this.masterItemReader = masterItemReader;
 	}
 
 	/**
+	 * Establishes the {@link AbstractItemStreamItemReader<S>} reader that will read
+	 * slave items.
 	 *
-	 * @param slaveItemReader
+	 * @param reader {@link AbstractItemStreamItemReader<S>} reader that will read
+	 *               slave items.
 	 */
 	public void setSlaveItemReader(final AbstractItemStreamItemReader<S> slaveItemReader) {
 		this.slaveItemReader = slaveItemReader;
@@ -127,25 +132,31 @@ public class CompositeAggregateReader<M, S, K> extends AbstractItemStreamItemRea
 	}
 
 	/**
+	 * The {@link Function<M, K>} used to extract the key of the master item.
 	 *
-	 * @param masterKeyExtractor
+	 * @param masterKeyExtractor {@link Function<M, K>} used to extract the key of
+	 *                           the master item.
 	 */
 	public void setMasterKeyExtractor(final Function<M, K> masterKeyExtractor) {
 		this.masterKeyExtractor = masterKeyExtractor;
 	}
 
 	/**
+	 * The {@link Function<S, K>} used to extract the key of the slave item.
 	 *
-	 * @param slaveKeyExtractor
+	 * @param slaveKeyExtractor {@link Function<S, K>} used to extract the key of
+	 *                          the slave item.
 	 */
 	public void setSlaveKeyExtractor(final Function<S, K> slaveKeyExtractor) {
 		this.slaveKeyExtractor = slaveKeyExtractor;
 	}
 
 	/**
-	 * BiConsumer function to add the slave Item to the master Item.
+	 * The {@link BiConsumer<M, S>} function to add the slave Item to the master
+	 * Item.
 	 *
-	 * @param masterAccumulator
+	 * @param masterAccumulator {@link BiConsumer<M, S>} function to add the slave Item to the master
+	 * Item.
 	 */
 	public void setMasterAccumulator(final BiConsumer<M, S> masterAccumulator) {
 		this.masterAccumulator = masterAccumulator;
