@@ -1,10 +1,5 @@
 package fr.training.springbatch.tools.tasklet;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepContribution;
@@ -48,13 +43,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 public class SqlExecutingTasklet implements Tasklet {
 
-	private static final Logger log = LoggerFactory.getLogger(SqlExecutingTasklet.class);
+	private static final Logger logger = LoggerFactory.getLogger(SqlExecutingTasklet.class);
 
 	private final static String EXECUTION_COUNT = "sql.execution.count";
 
 	private JdbcTemplate jdbcTemplate;
 	private final ExecutionContextUserSupport ecSupport;
-	private String[] sqls;
+	private String[] sqlCommands;
 	private int count = 0;
 	private ExecutionContext executionContext;
 
@@ -65,26 +60,15 @@ public class SqlExecutingTasklet implements Tasklet {
 	@Override
 	public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 		count = getCount();
-		final String sql = sqls[count];
+		final String sqlCommand = sqlCommands[count];
 
-		if (sql.trim().toUpperCase().startsWith("SELECT")) {
-			final int updateCount = jdbcTemplate.update(sql);
-			contribution.incrementWriteCount(updateCount);
-		} else {
-			// jdbcTemplate.execute(sql);
+		logger.info("executing : {}", sqlCommand);
 
-			final List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
-			final String msg = "Result: " + result;
-			log.info(msg);
-		}
+		jdbcTemplate.execute(sqlCommand);
 
 		incrementCount();
 
-		return RepeatStatus.continueIf(count < sqls.length);
-	}
-
-	public void setDataSource(final DataSource dataSource) {
-		jdbcTemplate = new JdbcTemplate(dataSource);
+		return RepeatStatus.continueIf(count < sqlCommands.length);
 	}
 
 	public int getCount() {
@@ -97,12 +81,15 @@ public class SqlExecutingTasklet implements Tasklet {
 		executionContext.putInt(ecSupport.getKey(EXECUTION_COUNT), ++count);
 	}
 
-	public void setSqls(final String... sqls) {
-		this.sqls = sqls;
+	public void setJdbcTemplate(final JdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
+	}
+
+	public void setSqlCommands(final String... sqlCommands) {
+		this.sqlCommands = sqlCommands;
 	}
 
 	public void setExecutionContext(final ExecutionContext executionContext) {
 		this.executionContext = executionContext;
 	}
-
 }
