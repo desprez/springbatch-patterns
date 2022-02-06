@@ -50,7 +50,7 @@ class CompositeAggregateReaderTest {
 
 		compositeAggregateItemReader.setMasterItemReader(getFooItemReader());
 		compositeAggregateItemReader.setMasterKeyExtractor(Foo::getId);
-		compositeAggregateItemReader.setMasterAccumulator(Foo::addBar);
+		compositeAggregateItemReader.setMasterAggregator(Foo::addBar);
 
 		compositeAggregateItemReader.setSlaveItemReader(getBarItemReader());
 		compositeAggregateItemReader.setSlaveKeyExtractor(Bar::getFooId);
@@ -83,28 +83,32 @@ class CompositeAggregateReaderTest {
 
 	@Test
 	void testAfterPropertiesSet() {
+		// Given
 		compositeAggregateItemReader.setMasterItemReader(null);
 		Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			// When
 			compositeAggregateItemReader.afterPropertiesSet();
 		});
+		// Given
 		compositeAggregateItemReader.setMasterKeyExtractor(null);
 		Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			// When
 			compositeAggregateItemReader.afterPropertiesSet();
 		});
+		// Given
 		compositeAggregateItemReader.setSlaveItemReader(null);
-		;
 		Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			// When
 			compositeAggregateItemReader.afterPropertiesSet();
 		});
+		// Given
 		compositeAggregateItemReader.setSlaveKeyExtractor(null);
 		Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			// When
 			compositeAggregateItemReader.afterPropertiesSet();
 		});
-		compositeAggregateItemReader.setMasterAccumulator(null);
+		// Given
+		compositeAggregateItemReader.setMasterAggregator(null);
 		Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			// When
 			compositeAggregateItemReader.afterPropertiesSet();

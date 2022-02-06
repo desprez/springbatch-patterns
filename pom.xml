@@ -60,6 +60,12 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
+		<!-- Needed for http upload / download -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+		</dependency>
+
 		<!-- For Springboot tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -80,13 +86,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- For sending Emails tests -->
-		<dependency>
-			<groupId>com.icegreen</groupId>
-			<artifactId>greenmail-junit5</artifactId>
-			<version>1.6.5</version>
-			<scope>test</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -105,6 +104,15 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>com.integralblue</groupId>
+			<artifactId>log4jdbc-spring-boot-starter</artifactId>
+			<version>2.0.0</version>
+			<scope>test</scope>
+		</dependency>
+
+
 
 	</dependencies>
 

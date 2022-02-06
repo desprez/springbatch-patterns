@@ -6,7 +6,6 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -38,7 +37,6 @@ public class MultiFilesLoadJobConfig extends AbstractJobConfiguration {
 	@Bean
 	public Job multiLoadJob(final Step multiLoadStep) {
 		return jobBuilderFactory.get("multi-load-job") //
-				.incrementer(new RunIdIncrementer()) //
 				.validator(new DefaultJobParametersValidator(new String[] { "input-path" }, new String[] {})) //
 				.start(multiLoadStep) //
 				.build();

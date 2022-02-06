@@ -15,7 +15,8 @@ import org.springframework.batch.item.support.SingleItemPeekableItemReader;
  * An {@link ItemReader} that delivers a list as its item, storing up objects
  * from the injected {@link ItemReader} that are part of the same group.
  *
- * Group membership must be defined using an injected {@link BreakKeyStrategy}.
+ * Group membership must be defined using an injected {@link BreakKeyStrategy}
+ * that encapsulate the logic.
  *
  * @param <T> The class of the items to be processed
  *

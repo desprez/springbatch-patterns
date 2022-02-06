@@ -55,3 +55,14 @@ CREATE TABLE new_customer
      birth_date DATE,
      PRIMARY KEY (number)
   );
+
+DROP TABLE IF EXISTS yesterday_stock;
+
+CREATE TABLE yesterday_stock
+  (
+     number     BIGINT NOT NULL,
+     label      VARCHAR(50),
+     PRIMARY KEY (number)
+  );
+
+

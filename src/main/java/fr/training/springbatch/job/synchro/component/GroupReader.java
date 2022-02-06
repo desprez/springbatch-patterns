@@ -20,7 +20,7 @@ import fr.training.springbatch.tools.synchro.ItemAccumulator;
  *
  * @author Desprez
  */
-public class GroupReader<T, K> implements ItemStreamReader<List<T>> {
+public class GroupReader<T, K extends Comparable<K>> implements ItemStreamReader<List<T>> {
 
 	private ItemAccumulator<T, K> accumulator;
 

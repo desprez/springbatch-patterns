@@ -16,18 +16,25 @@ import org.springframework.util.Assert;
 
 /**
  * <p>
- * An {@link ItemReader} able able to read 2 files simultaneously and to
- * synchronize in order to return an aggregate.
+ * An {@link ItemReader} be able to use 2 StreamReaders (Files or whatever class
+ * implements {@link AbstractItemStreamItemReader}) simultaneously and to
+ * synchronize them in order to return an aggregate.
  * </p>
- * <b>The 2 files must share the same key and must be sorted on this key.</b>
+ * <b>The 2 Streams must share the same key and must be ordered on this key.</b>
  *
- * @param <M> The master Item Type
+ * <p>
+ * <b>not</b> thread-safe because the undernline used
+ * {@link SingleItemPeekableItemReader } is not.
+ * </p>
+ *
+ * @param <M> The master Item Type (the aggregate root)
  * @param <S> The slave Item Type
  * @param <K> the type of the master item key
  *
  * @author Desprez
  */
-public class CompositeAggregateReader<M, S, K> extends AbstractItemStreamItemReader<M> implements InitializingBean {
+public class CompositeAggregateReader<M, S, K extends Comparable<K>> extends AbstractItemStreamItemReader<M>
+implements InitializingBean {
 
 	private static final Logger log = LoggerFactory.getLogger(CompositeAggregateReader.class);
 
@@ -41,7 +48,7 @@ public class CompositeAggregateReader<M, S, K> extends AbstractItemStreamItemRea
 
 	private Function<S, K> slaveKeyExtractor;
 
-	private BiConsumer<M, S> masterAccumulator;
+	private BiConsumer<M, S> masterAggregator;
 
 	@Override
 	public M read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
@@ -54,27 +61,26 @@ public class CompositeAggregateReader<M, S, K> extends AbstractItemStreamItemRea
 		final K masterKey = masterKeyExtractor.apply(item);
 
 		while (true) {
-			final S possibleRelatedObject = peekableItemReader.peek();
-			if (possibleRelatedObject == null) {
+			final S possibleRelatedItem = peekableItemReader.peek();
+			if (possibleRelatedItem == null) {
 				return item;
 			}
 
-			final K slaveKey = slaveKeyExtractor.apply(possibleRelatedObject);
+			final K slaveKey = slaveKeyExtractor.apply(possibleRelatedItem);
 
 			// logic to determine if next line in slave file relates to same Master object
-			@SuppressWarnings("unchecked")
-			final int match = ((Comparable<K>) slaveKey).compareTo(masterKey);
+			final int keyComparison = slaveKey.compareTo(masterKey);
 
-			log.info("MasterKey {}, slaveKey {} match {}", masterKey, slaveKey, match);
+			log.trace("MasterKey {}, slaveKey {} match {}", masterKey, slaveKey, keyComparison);
 
-			if (match == 0) {
-				// keys are equals : accumulate slave item
-				masterAccumulator.accept(item, peekableItemReader.read());
-			} else if (match > 0) {
-				// Slave key is greater than master key : go back to the master reader
+			if (keyComparison == 0) {
+				// keys are equals : accumulate the slave item
+				masterAggregator.accept(item, peekableItemReader.read());
+			} else if (keyComparison > 0) {
+				// Slave key is greater than master key : aggregate is complete, return it
 				return item;
 			} else {
-				// Slave key is lower than master key : find Slave forward
+				// Slave key is lower than master key : find Slave item forward
 				peekableItemReader.read();
 			}
 		}
@@ -102,7 +108,7 @@ public class CompositeAggregateReader<M, S, K> extends AbstractItemStreamItemRea
 	public void afterPropertiesSet() throws Exception {
 		Assert.notNull(masterItemReader, "The 'masterItemReader' may not be null");
 		Assert.notNull(masterKeyExtractor, "The 'masterKeyExtractor' may not be null");
-		Assert.notNull(masterAccumulator, "The 'masterAccumulator' may not be null");
+		Assert.notNull(masterAggregator, "The 'masterAggregator' may not be null");
 		Assert.notNull(slaveItemReader, "The 'slaveItemReader' may not be null");
 		Assert.notNull(slaveKeyExtractor, "The 'slaveKeyExtractor' may not be null");
 	}
@@ -152,14 +158,19 @@ public class CompositeAggregateReader<M, S, K> extends AbstractItemStreamItemRea
 	}
 
 	/**
-	 * The {@link BiConsumer<M, S>} function to add the slave Item to the master
+	 * The {@link BiConsumer<M, S>} function to add/set the slave Item to the master
 	 * Item.
+	 * <p>
+	 * Typicaly a collection <b>add method</b> if the relation between master &
+	 * slave items is one-to-many and a <b>set method</b> if the relation between
+	 * master & slave items is one-to-one.
+	 * </p>
 	 *
-	 * @param masterAccumulator {@link BiConsumer<M, S>} function to add the slave Item to the master
-	 * Item.
+	 * @param masterAggregator {@link BiConsumer<M, S>} function to add the slave
+	 *                         Item to the master Item.
 	 */
-	public void setMasterAccumulator(final BiConsumer<M, S> masterAccumulator) {
-		this.masterAccumulator = masterAccumulator;
+	public void setMasterAggregator(final BiConsumer<M, S> masterAggregator) {
+		this.masterAggregator = masterAggregator;
 	}
 
 }

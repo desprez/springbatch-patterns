@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 
 import fr.training.springbatch.job.controlbreak.ControlBreakJobConfig;
 import fr.training.springbatch.job.daily.DailyJobConfig;
+import fr.training.springbatch.job.explore.ExploreJobConfig;
 import fr.training.springbatch.job.extract.SimpleExtractJobConfig;
 import fr.training.springbatch.job.extract.processindicator.ExtractProcessIndicatorJobConfig;
 import fr.training.springbatch.job.fixedsize.MultiFixedRecordJobConfig;
@@ -100,7 +101,12 @@ public class BatchApplication {
 	}
 
 	@Bean
-	public ApplicationContextFactory exportProcessIndicatorJobConfigContextFactory() {
+	public ApplicationContextFactory extractProcessIndicatorJobConfigContextFactory() {
 		return new GenericApplicationContextFactory(ExtractProcessIndicatorJobConfig.class);
+	}
+
+	@Bean
+	public ApplicationContextFactory exploreJobConfigContextFactory() {
+		return new GenericApplicationContextFactory(ExploreJobConfig.class);
 	}
 }

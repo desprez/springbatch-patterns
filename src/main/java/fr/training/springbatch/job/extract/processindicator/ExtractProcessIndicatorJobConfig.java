@@ -11,12 +11,10 @@ import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -81,7 +79,6 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
 				.processor(processedMarker()) //
 				.writer(csvFileWriter) //
 				.listener(reportListener()) //
-				.listener(chunkListener()) //
 				.build();
 	}
 
@@ -144,28 +141,6 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
 			public Transaction process(final Transaction item) throws Exception {
 				markAsProcessed(item);
 				return item;
-			}
-		};
-	}
-
-	private ChunkListener chunkListener() {
-		return new ChunkListener() {
-
-			@Override
-			public void beforeChunk(final ChunkContext context) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void afterChunkError(final ChunkContext context) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void afterChunk(final ChunkContext context) {
-				log.info("ChunkContext {}", context);
 			}
 		};
 	}

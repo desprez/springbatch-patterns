@@ -11,7 +11,6 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
@@ -24,10 +23,8 @@ import org.springframework.core.io.FileSystemResource;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.job.synchro.component.CustomerAccumulator;
 import fr.training.springbatch.job.synchro.component.MasterDetailReader;
-import fr.training.springbatch.job.synchro.component.TransactionAccumulator;
+import fr.training.springbatch.tools.synchro.CompositeAggregateReader;
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
 
 /**
@@ -43,7 +40,7 @@ import fr.training.springbatch.tools.synchro.ItemAccumulator;
  *
  * @author Desprez
  */
-public class File2FileSynchroJobConfig extends AbstractJobConfiguration {
+public class File2FileSynchroJobConfig extends AbstractSynchroJob {
 
 	private static final Logger logger = LoggerFactory.getLogger(File2FileSynchroJobConfig.class);
 
@@ -71,7 +68,7 @@ public class File2FileSynchroJobConfig extends AbstractJobConfiguration {
 	 * @return a Step Bean
 	 */
 	@Bean
-	public Step file2FileSynchroStep(final MasterDetailReader masterDetailReader,
+	public Step file2FileSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
 			final ItemWriter<Customer> customerWriter) {
 
 		return stepBuilderFactory.get("file2filesynchro-step") //
@@ -81,24 +78,6 @@ public class File2FileSynchroJobConfig extends AbstractJobConfiguration {
 				.writer(customerWriter) //
 				.listener(reportListener()) //
 				.build();
-	}
-
-	/**
-	 * Delegate pattern reader
-	 *
-	 * @param customerReader    the injected Customer {@link ItemReader} bean
-	 * @param transactionReader the injected Transaction {@link ItemReader} bean
-	 * @return a {@link MasterDetailReader} bean
-	 */
-	@Bean(destroyMethod = "")
-	public MasterDetailReader masterDetailReader(final ItemReader<Customer> customerReader,
-			final ItemReader<Transaction> transactionReader) {
-
-		final MasterDetailReader masterDetailReader = new MasterDetailReader();
-		masterDetailReader.setMasterAccumulator(new CustomerAccumulator(customerReader));
-		masterDetailReader.setDetailAccumulator(new TransactionAccumulator(transactionReader));
-
-		return masterDetailReader;
 	}
 
 	/**

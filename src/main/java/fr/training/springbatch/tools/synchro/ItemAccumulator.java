@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
  * @author Jeremy Yearron
  * @author Desprez (fix)
  */
-public abstract class ItemAccumulator<T, K> implements ItemStream, InitializingBean {
+public abstract class ItemAccumulator<T, K extends Comparable<K>> implements ItemStream, InitializingBean {
 
 	private ItemReader<T> reader;
 
@@ -29,7 +29,6 @@ public abstract class ItemAccumulator<T, K> implements ItemStream, InitializingB
 	private List<T> lastItemList;
 
 	public ItemAccumulator(final ItemReader<T> reader) {
-		super();
 		this.reader = reader;
 	}
 
@@ -52,9 +51,8 @@ public abstract class ItemAccumulator<T, K> implements ItemStream, InitializingB
 	 * @param key  key value
 	 * @return true if the item matches or is greater than the key, otherwise false.
 	 */
-	@SuppressWarnings("unchecked")
 	public boolean checkPositionKey(final T item, final K key) {
-		return getKey(item) == null || ((Comparable<K>) getKey(item)).compareTo(key) < 0;
+		return getKey(item) == null || getKey(item).compareTo(key) < 0;
 	}
 
 	/**
@@ -97,13 +95,12 @@ public abstract class ItemAccumulator<T, K> implements ItemStream, InitializingB
 	 * @return List of items
 	 * @throws Exception
 	 */
-	@SuppressWarnings("unchecked")
 	public List<T> readNextItems(final K key) throws Exception {
 
 		// If haven't read first record yet, then do that now.
 		if (lastItem == null) {
 			lastItem = reader.read();
-		} else if (((Comparable<K>) getKey(lastItem)).compareTo(key) > 0) {
+		} else if (getKey(lastItem).compareTo(key) > 0) {
 			return new ArrayList<T>(0);
 		}
 

@@ -41,7 +41,7 @@ import org.springframework.util.Assert;
  */
 public class JdbcTasklet implements Tasklet, InitializingBean {
 
-	private static final Logger log = LoggerFactory.getLogger(AnalyzePGTasklet.class);
+	private static final Logger log = LoggerFactory.getLogger(JdbcTasklet.class);
 
 	private NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -105,25 +105,42 @@ public class JdbcTasklet implements Tasklet, InitializingBean {
 
 		final StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
 		final ExitStatus exitStatus = stepExecution.getExitStatus();
-
-		if (sql.trim().toUpperCase().startsWith("SELECT")) {
+		String msg = "";
+		if (isSelect(sql)) {
 			log.debug("Executing: " + sql);
 			final List<Map<String, Object>> result = jdbcTemplate.queryForList(sql,
 					new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
-			final String msg = "Result: " + result;
-			log.debug(msg);
-			stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
-		} else {
+			msg = "Result: " + result;
+		} else if (isUpdate(sql)) {
 			log.debug("Updating : " + sql);
 			final int updated = jdbcTemplate.update(sql,
 					new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
-			final String msg = "Updated: " + updated + " rows";
-			log.debug(msg);
 			contribution.incrementWriteCount(updated);
-			stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
+			msg = "Updated: " + updated + " rows";
 		}
+		log.debug(msg);
+		stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
+
 		return RepeatStatus.FINISHED;
 
+	}
+
+	/**
+	 *
+	 * @param sqlCommand
+	 * @return
+	 */
+	private boolean isUpdate(final String sqlCommand) {
+		final String upperCaseCommand = sqlCommand.trim().toUpperCase();
+		return upperCaseCommand.startsWith("UPDATE") || upperCaseCommand.startsWith("DELETE");
+	}
+
+	/**
+	 * @param sqlCommand
+	 * @return
+	 */
+	private static boolean isSelect(final String sqlCommand) {
+		return sqlCommand.trim().toUpperCase().startsWith("SELECT");
 	}
 
 }

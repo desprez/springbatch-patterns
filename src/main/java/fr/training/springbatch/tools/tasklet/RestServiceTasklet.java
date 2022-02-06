@@ -69,7 +69,6 @@ public class RestServiceTasklet implements Tasklet, InitializingBean {
 
 			// if ok, return HttpStatus
 			if (code.is2xxSuccessful()) {
-
 				// Put response body to job execution context to share it with others steps
 				chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext()
 				.put("responseBody", responseEntity.getBody());
@@ -81,7 +80,6 @@ public class RestServiceTasklet implements Tasklet, InitializingBean {
 			throw new UnexpectedJobExecutionException("Service responded with an error code: " + code);
 		} catch (final HttpClientErrorException e) {
 			stepcontribution.setExitStatus(ExitStatus.FAILED);
-			// e.printStackTrace();
 			throw new UnexpectedJobExecutionException(e.getMessage());
 		}
 	}

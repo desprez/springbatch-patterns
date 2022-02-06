@@ -2,6 +2,8 @@ package fr.training.springbatch.job.synchro;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -13,10 +15,13 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
-import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.batch.item.database.Order;
+import org.springframework.batch.item.database.PagingQueryProvider;
+import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
+import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
@@ -26,13 +31,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.job.synchro.component.CustomerAccumulator;
 import fr.training.springbatch.job.synchro.component.MasterDetailReader;
-import fr.training.springbatch.job.synchro.component.TransactionAccumulator;
+import fr.training.springbatch.tools.synchro.CompositeAggregateReader;
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
 
 /**
@@ -48,7 +52,7 @@ import fr.training.springbatch.tools.synchro.ItemAccumulator;
  *
  * @author Desprez
  */
-public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
+public class File2TableSynchroJobConfig extends AbstractSynchroJob {
 
 	private static final Logger logger = LoggerFactory.getLogger(File2TableSynchroJobConfig.class);
 
@@ -63,7 +67,7 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 	 * @return the job bean
 	 */
 	@Bean
-	public Job file2TableSynchroJob(final Step file2TableSynchroStep) {
+	public Job file2TableSynchroJob(final Step file2TableSynchroStep /* injected by Spring */) {
 		return jobBuilderFactory.get("file2tablesynchro-job") //
 				.incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
 				.validator(new DefaultJobParametersValidator(new String[] { "customer-file", "output-file" },
@@ -73,8 +77,13 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 				.build();
 	}
 
+	/**
+	 * @param masterDetailReader the injected {@link MasterDetailReader} bean
+	 * @param customerWriter     the injected {@link FlatFileItemWriter} bean
+	 * @return a Step bean
+	 */
 	@Bean
-	public Step file2TableSynchroStep(final MasterDetailReader masterDetailReader,
+	public Step file2TableSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
 			final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
 
 		return stepBuilderFactory.get("file2tablesynchro-step") //
@@ -84,24 +93,6 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 				.writer(customerWriter) //
 				.listener(reportListener()) //
 				.build();
-	}
-
-	/**
-	 * Delegate pattern reader
-	 *
-	 * @param customerReader    the injected Customer {@link ItemReader} bean
-	 * @param transactionReader the injected Transaction {@link ItemReader} bean
-	 * @return a {@link MasterDetailReader} bean
-	 */
-	@Bean(destroyMethod = "")
-	public MasterDetailReader masterDetailReader(final ItemReader<Customer> customerReader,
-			final ItemReader<Transaction> transactionReader) {
-
-		final MasterDetailReader masterDetailReader = new MasterDetailReader();
-		masterDetailReader.setMasterAccumulator(new CustomerAccumulator(customerReader));
-		masterDetailReader.setDetailAccumulator(new TransactionAccumulator(transactionReader));
-
-		return masterDetailReader;
 	}
 
 	/**
@@ -130,21 +121,54 @@ public class File2TableSynchroJobConfig extends AbstractJobConfiguration {
 	/**
 	 * @return a {@link JdbcCursorItemReader} bean
 	 */
-	@Bean
-	public JdbcCursorItemReader<Transaction> transactionReader() {
+	//	@Bean
+	//	public JdbcCursorItemReader<Transaction> transactionReader() {
+	//
+	//		return new JdbcCursorItemReaderBuilder<Transaction>() //
+	//				.dataSource(dataSource) //
+	//				.name("transactionReader") //
+	//				.sql("SELECT * FROM TRANSACTION ORDER BY CUSTOMER_NUMBER") //
+	//				.rowMapper((rs, rowNum) -> {
+	//					final Transaction transaction = new Transaction();
+	//					transaction.setCustomerNumber(rs.getLong("CUSTOMER_NUMBER"));
+	//					transaction.setNumber(rs.getString("NUMBER"));
+	//					transaction.setTransactionDate(rs.getDate("TRANSACTION_DATE").toLocalDate());
+	//					transaction.setAmount(rs.getDouble("AMOUNT"));
+	//					return transaction;
+	//				}).build();
+	//	}
 
-		return new JdbcCursorItemReaderBuilder<Transaction>() //
-				.dataSource(dataSource) //
+
+	@Bean
+	public JdbcPagingItemReader<Transaction> transactionReader(final DataSource dataSource,
+			final PagingQueryProvider queryProvider) {
+
+		return new JdbcPagingItemReaderBuilder<Transaction>() //
 				.name("transactionReader") //
-				.sql("SELECT * FROM TRANSACTION ORDER BY CUSTOMER_NUMBER") //
-				.rowMapper((rs, rowNum) -> {
-					final Transaction transaction = new Transaction();
-					transaction.setCustomerNumber(rs.getLong("CUSTOMER_NUMBER"));
-					transaction.setNumber(rs.getString("NUMBER"));
-					transaction.setTransactionDate(rs.getDate("TRANSACTION_DATE").toLocalDate());
-					transaction.setAmount(rs.getDouble("AMOUNT"));
-					return transaction;
-				}).build();
+				.dataSource(dataSource) //
+				.pageSize(100) //
+				.queryProvider(queryProvider)//
+				.rowMapper(new BeanPropertyRowMapper<>(Transaction.class)) //
+				.build();
+
+	}
+
+	@Bean
+	public SqlPagingQueryProviderFactoryBean queryProvider(final DataSource dataSource) {
+		final SqlPagingQueryProviderFactoryBean provider = new SqlPagingQueryProviderFactoryBean();
+
+		provider.setDataSource(dataSource);
+		provider.setSelectClause("SELECT customer_number, number, amount, transaction_date");
+		provider.setFromClause("FROM Transaction");
+		provider.setSortKeys(sortByCustomerNumberAsc());
+
+		return provider;
+	}
+
+	private Map<String, Order> sortByCustomerNumberAsc() {
+		final Map<String, Order> sortConfiguration = new LinkedHashMap<>();
+		sortConfiguration.put("customer_number", Order.ASCENDING);
+		return sortConfiguration;
 	}
 
 	/**
