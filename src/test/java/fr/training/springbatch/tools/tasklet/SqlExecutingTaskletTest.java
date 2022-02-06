@@ -37,7 +37,7 @@ class SqlExecutingTaskletTest {
 
 		final SqlExecutingTasklet tasklet = new SqlExecutingTasklet();
 		tasklet.setJdbcTemplate(jdbcTemplate);
-		tasklet.setSqlCommands("CREATE TABLE Foo;", "DROP TABLE Foo;");
+		tasklet.setSqlCommands("CREATE TABLE Foo;", "DROP TABLE Bar;");
 
 		// When
 		RepeatStatus status = tasklet.execute(contribution, context);
@@ -53,11 +53,11 @@ class SqlExecutingTaskletTest {
 
 		verify(jdbcTemplate, times(2)).execute(captor.capture());
 		assertThat(captor.getAllValues().get(0)).isEqualTo("CREATE TABLE Foo;");
-		assertThat(captor.getAllValues().get(1)).isEqualTo("DROP TABLE Foo;");
+		assertThat(captor.getAllValues().get(1)).isEqualTo("DROP TABLE Bar;");
 	}
 
 	@Test
-	void execute_should_restart_on_last_position() throws Exception {
+	void execute_should_restart_on_last_saved_position() throws Exception {
 		// Given
 		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 		final ExecutionContext executionContext = new ExecutionContext();
@@ -68,7 +68,7 @@ class SqlExecutingTaskletTest {
 
 		final SqlExecutingTasklet tasklet = new SqlExecutingTasklet();
 		tasklet.setJdbcTemplate(jdbcTemplate);
-		tasklet.setSqlCommands("CREATE TABLE Foo;", "DROP TABLE Foo;");
+		tasklet.setSqlCommands("CREATE TABLE Foo;", "DROP TABLE Bar;");
 
 		// When
 		final RepeatStatus status = tasklet.execute(contribution, context);
@@ -77,7 +77,7 @@ class SqlExecutingTaskletTest {
 		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
 
 		verify(jdbcTemplate, times(1)).execute(captor.capture());
-		assertThat(captor.getAllValues().get(0)).isEqualTo("DROP TABLE Foo;");
+		assertThat(captor.getAllValues().get(0)).isEqualTo("DROP TABLE Bar;");
 	}
 
 }

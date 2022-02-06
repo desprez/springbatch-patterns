@@ -24,9 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  *
  * 	final SqlExecutingTasklet tasklet = new SqlExecutingTasklet();
  * 	tasklet.tasklet.setJdbcTemplate(jdbcTemplate);
- * 	tasklet.setSqlCommands("INSERT INTO Transaction(customer_number, number, transaction_date, amount) VALUES (1, '17878496', '2022-09-12', 99.55)",
- * "INSERT INTO Transaction(customer_number, number, transaction_date, amount) VALUES (2, '17888399', '2022-05-30', 11.75)"
- * );
+ * 	tasklet.setSqlCommands("CREATE TABLE Foo;", "DROP TABLE bar;");
  *
  * 	return tasklet;
  * }
