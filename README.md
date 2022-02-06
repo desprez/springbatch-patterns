@@ -140,6 +140,16 @@ This pattern use **MultiResourcePartitioner** to create partitions upon files pr
 
 [JDBCPartitionJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/partition/jdbc/JDBCPartitionJobConfig.java)
 
+## Pattern 16 : Compute Delta Job
+
+![alt text](./images/computeDeltaJob.svg "computeDeltaJob")
+
+[ComputeDeltaJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/computedelta/ComputeDeltaJobConfig.java)
+
+Imagine that you receive a different file every day from your partner with all the data.
+
+And that you have to update your system with the added or deleted data, this is exactly what this job does, it compute the delta between the file recevied at day N-1 with the file received at day N (usually used in companies that use files to transmit data).
+
 
 ## Some usefull tools can be used in patterns
 
