@@ -11,7 +11,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * A {@link Tasklet} that run a given SQL queries list. The executionContext is
+ * A {@link Tasklet} that run a given SQL queries/commands list. The executionContext is
  * use to store the execution status (postion in the SQL list) that allow to be
  * restartable.
  *
@@ -33,7 +33,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * </pre>
  *
  * @author Morten Andersen-Gott
- * @author Desprez
+ * @author Desprez (simplify a lot)
  */
 public class SqlExecutingTasklet implements Tasklet {
 
