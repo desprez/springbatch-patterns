@@ -14,7 +14,6 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
-import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.batch.test.MetaDataInstanceFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,15 +31,12 @@ class SqlExecutingTaskletTest {
 	void execute_should_success() throws Exception {
 		// Given
 		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
-		final ExecutionContext executionContext = new ExecutionContext();
-		stepExecution.setExecutionContext(executionContext);
 		final StepContribution contribution = new StepContribution(stepExecution);
 		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
 		final SqlExecutingTasklet tasklet = new SqlExecutingTasklet();
 		tasklet.setJdbcTemplate(jdbcTemplate);
 		tasklet.setSqlCommands("CREATE TABLE Foo;", "DROP TABLE Foo;");
-		tasklet.setExecutionContext(executionContext);
 
 		// When
 		RepeatStatus status = tasklet.execute(contribution, context);

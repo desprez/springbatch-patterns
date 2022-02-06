@@ -19,20 +19,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Example :
  *
  * <pre>
- * &#64;StepScope // Mandatory for using stepExecution
  * &#64;Bean
- * public SqlExecutingTasklet sqlExecutingTasklet(final DataSource dataSource,
- * 		&#64;Value("#{stepExecution['executionContext']}") final ExecutionContext executionContext) {
+ * public SqlExecutingTasklet sqlExecutingTasklet() {
  *
  * 	final SqlExecutingTasklet tasklet = new SqlExecutingTasklet();
- * 	tasklet.setDataSource(dataSource);
- * 	tasklet.setExecutionContext(executionContext);
- * 	final List<String> sqls = new ArrayList<>();
- * 	sqls.add(
- * 			"INSERT INTO Transaction(customer_number, number, transaction_date, amount) VALUES (1, '17878496', '2022-09-12', 99.55)");
- * 	sqls.add(
- * 			"INSERT INTO Transaction(customer_number, number, transaction_date, amount) VALUES (2, '17888399', '2022-05-30', 11.75)");
- * 	tasklet.setSqls(sqls);
+ * 	tasklet.tasklet.setJdbcTemplate(jdbcTemplate);
+ * 	tasklet.setSqlCommands("INSERT INTO Transaction(customer_number, number, transaction_date, amount) VALUES (1, '17878496', '2022-09-12', 99.55)",
+ * "INSERT INTO Transaction(customer_number, number, transaction_date, amount) VALUES (2, '17888399', '2022-05-30', 11.75)"
+ * );
  *
  * 	return tasklet;
  * }
@@ -51,7 +45,6 @@ public class SqlExecutingTasklet implements Tasklet {
 	private final ExecutionContextUserSupport ecSupport;
 	private String[] sqlCommands;
 	private int count = 0;
-	private ExecutionContext executionContext;
 
 	public SqlExecutingTasklet() {
 		ecSupport = new ExecutionContextUserSupport(SqlExecutingTasklet.class.getSimpleName());
@@ -59,25 +52,28 @@ public class SqlExecutingTasklet implements Tasklet {
 
 	@Override
 	public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-		count = getCount();
+		count = getCount(getExecutionContext(chunkContext));
 		final String sqlCommand = sqlCommands[count];
 
 		logger.info("executing : {}", sqlCommand);
-
 		jdbcTemplate.execute(sqlCommand);
 
-		incrementCount();
+		incrementCount(getExecutionContext(chunkContext));
 
 		return RepeatStatus.continueIf(count < sqlCommands.length);
 	}
 
-	public int getCount() {
+	private ExecutionContext getExecutionContext(final ChunkContext chunkContext) {
+		return chunkContext.getStepContext().getStepExecution().getExecutionContext();
+	}
+
+	public int getCount(final ExecutionContext executionContext) {
 		return executionContext.containsKey(ecSupport.getKey(EXECUTION_COUNT))
 				? executionContext.getInt(ecSupport.getKey(EXECUTION_COUNT))
 						: 0;
 	}
 
-	public void incrementCount() {
+	public void incrementCount(final ExecutionContext executionContext) {
 		executionContext.putInt(ecSupport.getKey(EXECUTION_COUNT), ++count);
 	}
 
@@ -89,7 +85,4 @@ public class SqlExecutingTasklet implements Tasklet {
 		this.sqlCommands = sqlCommands;
 	}
 
-	public void setExecutionContext(final ExecutionContext executionContext) {
-		this.executionContext = executionContext;
-	}
 }
