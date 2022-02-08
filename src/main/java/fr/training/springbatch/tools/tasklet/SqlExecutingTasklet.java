@@ -48,6 +48,12 @@ public class SqlExecutingTasklet implements Tasklet {
 		ecSupport = new ExecutionContextUserSupport(SqlExecutingTasklet.class.getSimpleName());
 	}
 
+	public SqlExecutingTasklet(final JdbcTemplate jdbcTemplate, final String... sqlCommands) {
+		this();
+		this.jdbcTemplate = jdbcTemplate;
+		this.sqlCommands = sqlCommands;
+	}
+
 	@Override
 	public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 		count = getCount(getExecutionContext(chunkContext));

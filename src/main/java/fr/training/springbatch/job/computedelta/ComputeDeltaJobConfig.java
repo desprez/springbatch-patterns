@@ -23,7 +23,6 @@ import org.springframework.batch.item.database.support.SqlPagingQueryProviderFac
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.support.builder.CompositeItemWriterBuilder;
-import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +32,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import fr.training.springbatch.app.dto.Stock;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.tasklet.SqlExecutingTasklet;
 import fr.training.springbatch.tools.writer.ConsoleItemWriter;
 import fr.training.springbatch.tools.writer.NoOpWriter;
 
@@ -77,12 +77,8 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
 		final String createSql = "CREATE TABLE today_stock(number BIGINT NOT NULL, label VARCHAR(50), PRIMARY KEY (number));";
 
 		return stepBuilderFactory.get("swap-step") //
-				.tasklet((contribution, chunkContext) -> {
-
-					jdbcTemplate.execute(createSql);
-
-					return RepeatStatus.FINISHED;
-				}).build();
+				.tasklet(new SqlExecutingTasklet(jdbcTemplate, createSql)) //
+				.build();
 	}
 
 	/**
@@ -236,14 +232,8 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
 		final String renameSql = "ALTER TABLE today_stock RENAME TO yesterday_stock;";
 
 		return stepBuilderFactory.get("swap-step") //
-				.tasklet((contribution, chunkContext) -> {
-
-					jdbcTemplate.execute(dropSql);
-
-					jdbcTemplate.execute(renameSql);
-
-					return RepeatStatus.FINISHED;
-				}).build();
+				.tasklet(new SqlExecutingTasklet(jdbcTemplate, dropSql, renameSql)) //
+				.build();
 	}
 
 }
