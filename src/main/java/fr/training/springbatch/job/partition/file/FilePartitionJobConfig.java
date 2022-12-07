@@ -81,7 +81,8 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
 				.reader(itemReader) //
 				.processor(processor) //
 				.writer(itemWriter) //
-				.listener(fileNameListener).build();
+				.listener(fileNameListener) //
+				.build();
 	}
 
 	@StepScope // Mandatory for using jobParameters

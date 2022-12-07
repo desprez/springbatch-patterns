@@ -46,10 +46,10 @@ public class ItemListPeekableItemReader<T> implements ItemStreamReader<List<T>> 
 				return records;
 			}
 
-			if (breakKeyStrategy.isSameGroup(item, possibleSameGroupItem)) {
-				records.add(delegate.read());
-			} else {
+			if (breakKeyStrategy.isKeyBreak(item, possibleSameGroupItem)) {
 				return records;
+			} else {
+				records.add(delegate.read());
 			}
 		}
 	}

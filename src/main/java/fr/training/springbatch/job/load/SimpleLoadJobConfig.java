@@ -95,7 +95,8 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
 				.faultTolerant() //
 				// .skipPolicy(new AlwaysSkipItemSkipPolicy())
 				.skipLimit(100) //
-				.skip(RuntimeException.class).listener(progressListener()) //
+				.skip(RuntimeException.class) //
+				.listener(progressListener()) //
 				.listener(rejectListener) //
 				.build();
 	}
