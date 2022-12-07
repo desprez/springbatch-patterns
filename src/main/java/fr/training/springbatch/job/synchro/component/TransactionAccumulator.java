@@ -7,13 +7,13 @@ import fr.training.springbatch.tools.synchro.ItemAccumulator;
 
 public class TransactionAccumulator extends ItemAccumulator<Transaction, Long> {
 
-	public TransactionAccumulator(final ItemReader<Transaction> reader) {
-		super(reader);
-	}
+    public TransactionAccumulator(final ItemReader<Transaction> reader) {
+        super(reader);
+    }
 
-	@Override
-	public Long getKey(final Transaction item) {
-		return item.getCustomerNumber();
-	}
+    @Override
+    public Long getKey(final Transaction item) {
+        return item.getCustomerNumber();
+    }
 
 }

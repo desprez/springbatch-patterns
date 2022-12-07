@@ -26,63 +26,63 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 class BipolarTaskletTest {
 
-	@Test
-	void jobExecutionWithJavaConfig() throws Exception {
-		// Given
-		final ApplicationContext context = new AnnotationConfigApplicationContext(TestJobConfiguration.class);
+    @Test
+    void jobExecutionWithJavaConfig() throws Exception {
+        // Given
+        final ApplicationContext context = new AnnotationConfigApplicationContext(TestJobConfiguration.class);
 
-		final JobLauncherTestUtils testUtils = context.getBean(JobLauncherTestUtils.class);
+        final JobLauncherTestUtils testUtils = context.getBean(JobLauncherTestUtils.class);
 
-		// When launch job one time
-		JobExecution execution = testUtils.launchJob();
+        // When launch job one time
+        JobExecution execution = testUtils.launchJob();
 
-		// then it fails
-		assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
+        // then it fails
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
 
-		// When launch job an another time
-		execution = testUtils.launchJob();
+        // When launch job an another time
+        execution = testUtils.launchJob();
 
-		// then it pass
-		assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-	}
+        // then it pass
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    }
 
-	@Configuration
-	@EnableBatchProcessing
-	public static class TestJobConfiguration {
+    @Configuration
+    @EnableBatchProcessing
+    public static class TestJobConfiguration {
 
-		@Autowired
-		public JobBuilderFactory jobBuilderFactory;
+        @Autowired
+        public JobBuilderFactory jobBuilderFactory;
 
-		@Autowired
-		public StepBuilderFactory stepBuilderFactory;
+        @Autowired
+        public StepBuilderFactory stepBuilderFactory;
 
-		@Bean
-		public Step step() {
-			return stepBuilderFactory.get("step1") //
-					.tasklet(bipolarTasklet()) //
-					.build();
-		}
+        @Bean
+        public Step step() {
+            return stepBuilderFactory.get("step1") //
+                    .tasklet(bipolarTasklet()) //
+                    .build();
+        }
 
-		@Bean
-		public Job job() {
-			return jobBuilderFactory.get("job") //
-					.incrementer(new RunIdIncrementer()) //
-					.flow(step()) //
-					.end() //
-					.build();
-		}
+        @Bean
+        public Job job() {
+            return jobBuilderFactory.get("job") //
+                    .incrementer(new RunIdIncrementer()) //
+                    .flow(step()) //
+                    .end() //
+                    .build();
+        }
 
-		@Bean
-		public BipolarTasklet bipolarTasklet() {
-			return new BipolarTasklet();
-		}
+        @Bean
+        public BipolarTasklet bipolarTasklet() {
+            return new BipolarTasklet();
+        }
 
-		@Bean
-		public JobLauncherTestUtils testUtils() {
-			final JobLauncherTestUtils jobLauncherTestUtils = new JobLauncherTestUtils();
-			jobLauncherTestUtils.setJob(job());
-			return jobLauncherTestUtils;
-		}
-	}
+        @Bean
+        public JobLauncherTestUtils testUtils() {
+            final JobLauncherTestUtils jobLauncherTestUtils = new JobLauncherTestUtils();
+            jobLauncherTestUtils.setJob(job());
+            return jobLauncherTestUtils;
+        }
+    }
 
 }

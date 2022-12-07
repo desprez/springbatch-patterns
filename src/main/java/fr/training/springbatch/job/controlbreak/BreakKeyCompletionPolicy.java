@@ -8,72 +8,67 @@ import org.springframework.batch.repeat.context.RepeatContextSupport;
 import org.springframework.batch.repeat.policy.CompletionPolicySupport;
 
 /**
- * using a custom CompletionPolicy and a PeekableItemReader. The idea behind the
- * code is to peek next item, perform next element read and check from value
- * change. When a value change happens return true from
- * CompletionPolicy.isComplete().
+ * using a custom CompletionPolicy and a PeekableItemReader. The idea behind the code is to peek next item, perform next element read and check from value
+ * change. When a value change happens return true from CompletionPolicy.isComplete().
  *
  *
  * Important: this policy must be registered as step listener!
  */
 public class BreakKeyCompletionPolicy<T> extends CompletionPolicySupport {
 
-	private BreakKeyCompletionContext cc;
+    private BreakKeyCompletionContext cc;
 
-	private PeekableItemReader<T> reader;
+    private PeekableItemReader<T> reader;
 
-	// Strategy used to check for value break
-	private BreakKeyStrategy<T> breakKeyStrategy;
+    // Strategy used to check for value break
+    private BreakKeyStrategy<T> breakKeyStrategy;
 
+    @Override
+    public boolean isComplete(final RepeatContext context) {
+        return cc.isComplete();
+    }
 
-	@Override
-	public boolean isComplete(final RepeatContext context) {
-		return cc.isComplete();
-	}
+    @Override
+    public RepeatContext start(final RepeatContext context) {
+        context.setAttribute("current", null);
+        cc = new BreakKeyCompletionContext(context);
+        return cc;
+    }
 
-	@Override
-	public RepeatContext start(final RepeatContext context) {
-		context.setAttribute("current", null);
-		cc = new BreakKeyCompletionContext(context);
-		return cc;
-	}
+    /**
+     * Context contains current element ("current" property" and manage next element. Null next element is treated as a key break
+     */
+    protected class BreakKeyCompletionContext extends RepeatContextSupport {
+        public BreakKeyCompletionContext(final RepeatContext context) {
+            super(context);
+        }
 
-	/**
-	 * Context contains current element ("current" property" and manage next
-	 * element. Null next element is treated as a key break
-	 */
-	protected class BreakKeyCompletionContext extends RepeatContextSupport {
-		public BreakKeyCompletionContext(final RepeatContext context) {
-			super(context);
-		}
+        public boolean isComplete() {
+            final Object next;
+            try {
+                next = reader.peek();
+            } catch (final Exception e) {
+                throw new NonTransientResourceException("Unable to peek", e);
+            }
+            if (null == next) {
+                return true;
+            }
+            boolean keyBreak = breakKeyStrategy.isKeyBreak((T) getAttribute("current"), (T) next);
+            return keyBreak;
+        }
+    }
 
-		public boolean isComplete() {
-			final Object next;
-			try {
-				next = reader.peek();
-			} catch (final Exception e) {
-				throw new NonTransientResourceException("Unable to peek", e);
-			}
-			if (null == next) {
-				return true;
-			}
-			boolean keyBreak = breakKeyStrategy.isKeyBreak((T) getAttribute("current"), (T) next);
-			return keyBreak;
-		}
-	}
+    @AfterRead
+    public void afterRead(final Object item) {
+        cc.setAttribute("current", item);
+    }
 
-	@AfterRead
-	public void afterRead(final Object item) {
-		cc.setAttribute("current", item);
-	}
+    public void setReader(final PeekableItemReader<T> forseeingReader) {
+        reader = forseeingReader;
+    }
 
-	public void setReader(final PeekableItemReader<T> forseeingReader) {
-		reader = forseeingReader;
-	}
-
-	public void setBreakKeyStrategy(final BreakKeyStrategy<T> breakKeyStrategy) {
-		this.breakKeyStrategy = breakKeyStrategy;
-	}
-
+    public void setBreakKeyStrategy(final BreakKeyStrategy<T> breakKeyStrategy) {
+        this.breakKeyStrategy = breakKeyStrategy;
+    }
 
 }

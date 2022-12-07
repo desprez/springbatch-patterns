@@ -1,4 +1,5 @@
 package fr.training.springbatch.tools.incrementer;
+
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersIncrementer;

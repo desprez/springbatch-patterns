@@ -17,24 +17,22 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		SimpleExtractJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, SimpleExtractJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class SimpleExtractJobTest {
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void launch_SimpleExtractJob_nominal_should_success() throws Exception {
-		// Given
+    @Test
+    void launch_SimpleExtractJob_nominal_should_success() throws Exception {
+        // Given
 
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-				.addString("output-dir", "target/output") //
-				.toJobParameters();
-		// When
-		final JobExecution jobExec = testUtils.launchJob(jobParameters);
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-	}
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("output-dir", "target/output") //
+                .toJobParameters();
+        // When
+        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    }
 
 }

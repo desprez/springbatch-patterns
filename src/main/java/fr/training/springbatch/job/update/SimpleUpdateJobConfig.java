@@ -36,104 +36,102 @@ import fr.training.springbatch.tools.listener.RejectFileSkipListener;
  */
 public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
 
-	private static final Logger logger = LoggerFactory.getLogger(SimpleUpdateJobConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleUpdateJobConfig.class);
 
-	@Value("${application.simple-update-step.chunksize:10}")
-	private int chunkSize;
+    @Value("${application.simple-update-step.chunksize:10}")
+    private int chunkSize;
 
-	@Autowired
-	private DataSource dataSource;
+    @Autowired
+    private DataSource dataSource;
 
-	@Bean
-	public Job simpleImportJob(final Step updateStep) {
-		return jobBuilderFactory.get("simple-update-job") //
-				.incrementer(new RunIdIncrementer()) //
-				.validator(
-						new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
-				.start(updateStep) //
-				.listener(reportListener()) //
-				.build();
-	}
+    @Bean
+    public Job simpleImportJob(final Step updateStep) {
+        return jobBuilderFactory.get("simple-update-job") //
+                .incrementer(new RunIdIncrementer()) //
+                .validator(new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
+                .start(updateStep) //
+                .listener(reportListener()) //
+                .build();
+    }
 
-	@Bean
-	public Step updateStep(final ItemReader<Customer> updateReader, //
-			final ItemWriter<Customer> updateWriter, final RejectFileSkipListener<Customer, Customer> rejectListener) {
+    @Bean
+    public Step updateStep(final ItemReader<Customer> updateReader, //
+            final ItemWriter<Customer> updateWriter, final RejectFileSkipListener<Customer, Customer> rejectListener) {
 
-		return stepBuilderFactory.get("simple-update-step") //
-				.<Customer, Customer>chunk(chunkSize) //
-				.reader(updateReader) //
-				.processor(updateProcessor()) //
-				.writer(updateWriter) //
-				.faultTolerant() //
-				// .skipPolicy(new AlwaysSkipItemSkipPolicy())
-				.skipLimit(100) //
-				.skip(RuntimeException.class).listener(progressListener()) //
-				.listener(rejectListener) //
-				.build();
-	}
+        return stepBuilderFactory.get("simple-update-step") //
+                .<Customer, Customer> chunk(chunkSize) //
+                .reader(updateReader) //
+                .processor(updateProcessor()) //
+                .writer(updateWriter) //
+                .faultTolerant() //
+                // .skipPolicy(new AlwaysSkipItemSkipPolicy())
+                .skipLimit(100) //
+                .skip(RuntimeException.class).listener(progressListener()) //
+                .listener(rejectListener) //
+                .build();
+    }
 
-	/**
-	 * Used for logging step progression
-	 */
-	@Override
-	@Bean
-	public ItemCountListener progressListener() {
-		final ItemCountListener listener = new ItemCountListener();
-		listener.setItemName("Customer(s)");
-		listener.setLoggingInterval(50); // Log process item count every 50
-		return listener;
-	}
+    /**
+     * Used for logging step progression
+     */
+    @Override
+    @Bean
+    public ItemCountListener progressListener() {
+        final ItemCountListener listener = new ItemCountListener();
+        listener.setItemName("Customer(s)");
+        listener.setLoggingInterval(50); // Log process item count every 50
+        return listener;
+    }
 
-	/**
-	 * Fake processor that only logs
-	 *
-	 * @return an item processor
-	 */
-	private ItemProcessor<Customer, Customer> updateProcessor() {
-		return new ItemProcessor<Customer, Customer>() {
+    /**
+     * Fake processor that only logs
+     *
+     * @return an item processor
+     */
+    private ItemProcessor<Customer, Customer> updateProcessor() {
+        return new ItemProcessor<Customer, Customer>() {
 
-			@Override
-			public Customer process(final Customer customer) throws Exception {
-				logger.debug("Processing {}", customer);
-				return customer;
-			}
-		};
-	}
+            @Override
+            public Customer process(final Customer customer) throws Exception {
+                logger.debug("Processing {}", customer);
+                return customer;
+            }
+        };
+    }
 
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public FlatFileItemReader<Customer> updateReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    public FlatFileItemReader<Customer> updateReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
 
-		return new FlatFileItemReaderBuilder<Customer>() //
-				.name("simpleUpdateReader") //
-				.resource(new FileSystemResource(inputFile)) //
-				.delimited() //
-				.delimiter(";") //
-				.names("number", "birthDate") //
-				.linesToSkip(1) //
-				.fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {
-					{
-						setTargetType(Customer.class);
-						setConversionService(localDateConverter());
-					}
-				}).build();
-	}
+        return new FlatFileItemReaderBuilder<Customer>() //
+                .name("simpleUpdateReader") //
+                .resource(new FileSystemResource(inputFile)) //
+                .delimited() //
+                .delimiter(";") //
+                .names("number", "birthDate") //
+                .linesToSkip(1) //
+                .fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {
+                    {
+                        setTargetType(Customer.class);
+                        setConversionService(localDateConverter());
+                    }
+                }).build();
+    }
 
-	@Bean
-	public JdbcBatchItemWriter<Customer> updateWriter() {
+    @Bean
+    public JdbcBatchItemWriter<Customer> updateWriter() {
 
-		return new JdbcBatchItemWriterBuilder<Customer>() //
-				.dataSource(dataSource).sql("UPDATE Customer SET birth_date = :birthDate WHERE number = :number")
-				.itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Customer>()) //
-				.build();
-	}
+        return new JdbcBatchItemWriterBuilder<Customer>() //
+                .dataSource(dataSource).sql("UPDATE Customer SET birth_date = :birthDate WHERE number = :number")
+                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Customer>()) //
+                .build();
+    }
 
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public RejectFileSkipListener<Customer, Customer> rejectListener(
-			@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    public RejectFileSkipListener<Customer, Customer> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
 
-		return new RejectFileSkipListener<Customer, Customer>(new File(rejectfile));
-	}
+        return new RejectFileSkipListener<Customer, Customer>(new File(rejectfile));
+    }
 
 }

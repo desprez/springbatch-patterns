@@ -7,24 +7,24 @@ import org.springframework.batch.item.ItemProcessor;
 
 public class ExceptionThrowingProcessor<T> implements ItemProcessor<T, T> {
 
-	private static final Logger log = LoggerFactory.getLogger(ExceptionThrowingProcessor.class);
+    private static final Logger log = LoggerFactory.getLogger(ExceptionThrowingProcessor.class);
 
-	private int counter = 0;
+    private int counter = 0;
 
-	private int throwExceptionOnNumber = Integer.MAX_VALUE;
+    private int throwExceptionOnNumber = Integer.MAX_VALUE;
 
-	@Override
-	public T process(final T item) throws Exception {
-		counter++;
-		if (counter == throwExceptionOnNumber) {
-			throw new UnexpectedJobExecutionException("Planned failure on count=" + counter);
-		}
-		log.debug("Process count " + counter);
-		return item;
-	}
+    @Override
+    public T process(final T item) throws Exception {
+        counter++;
+        if (counter == throwExceptionOnNumber) {
+            throw new UnexpectedJobExecutionException("Planned failure on count=" + counter);
+        }
+        log.debug("Process count " + counter);
+        return item;
+    }
 
-	public void setThrowExceptionOnNumber(final int throwExceptionOnNumber) {
-		this.throwExceptionOnNumber = throwExceptionOnNumber;
-	}
+    public void setThrowExceptionOnNumber(final int throwExceptionOnNumber) {
+        this.throwExceptionOnNumber = throwExceptionOnNumber;
+    }
 
 }

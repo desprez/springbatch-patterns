@@ -22,34 +22,32 @@ import fr.training.springbatch.job.extract.processindicator.ExtractProcessIndica
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		ExtractProcessIndicatorJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, ExtractProcessIndicatorJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class ExtractProcessIndicatorJobTest {
 
-	private static final String OUTPUT_FILE = "target/output/extract_process_indicator.csv";
-	private static final String EXPECTED_FILE = "src/test/resources/datas/csv/extract-expected.csv";
+    private static final String OUTPUT_FILE = "target/output/extract_process_indicator.csv";
+    private static final String EXPECTED_FILE = "src/test/resources/datas/csv/extract-expected.csv";
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-	@Test
-	void launch_ExtractProcessIndicatorJob_nominal_should_success() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-				.addString("output-file", OUTPUT_FILE) //
-				.toJobParameters();
-		// When
-		final JobExecution jobExec = testUtils.launchJob(jobParameters);
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    @Test
+    void launch_ExtractProcessIndicatorJob_nominal_should_success() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("output-file", OUTPUT_FILE) //
+                .toJobParameters();
+        // When
+        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-		AssertFile.assertFileEquals(new FileSystemResource(EXPECTED_FILE), //
-				new FileSystemResource(OUTPUT_FILE));
+        AssertFile.assertFileEquals(new FileSystemResource(EXPECTED_FILE), //
+                new FileSystemResource(OUTPUT_FILE));
 
-		assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "TRANSACTION")).isZero();
-	}
+        assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "TRANSACTION")).isZero();
+    }
 
 }

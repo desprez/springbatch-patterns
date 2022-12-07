@@ -9,20 +9,20 @@ import org.springframework.util.StopWatch;
 
 public class ElapsedTimeJobListener implements JobExecutionListener {
 
-	private final static Logger logger = LoggerFactory.getLogger(ElapsedTimeJobListener.class);
+    private final static Logger logger = LoggerFactory.getLogger(ElapsedTimeJobListener.class);
 
-	private final StopWatch stopWatch = new StopWatch();
+    private final StopWatch stopWatch = new StopWatch();
 
-	@Override
-	public void beforeJob(final JobExecution jobExecution) {
-		logger.debug("Called beforeJob().");
-		stopWatch.start();
-	}
+    @Override
+    public void beforeJob(final JobExecution jobExecution) {
+        logger.debug("Called beforeJob().");
+        stopWatch.start();
+    }
 
-	@Override
-	public void afterJob(final JobExecution jobExecution) {
-		logger.debug("Called afterJob().");
-		stopWatch.stop();
-		logger.info("Elapsed time : {}", DurationFormatUtils.formatDurationHMS(stopWatch.getTotalTimeMillis()));
-	}
+    @Override
+    public void afterJob(final JobExecution jobExecution) {
+        logger.debug("Called afterJob().");
+        stopWatch.stop();
+        logger.info("Elapsed time : {}", DurationFormatUtils.formatDurationHMS(stopWatch.getTotalTimeMillis()));
+    }
 }

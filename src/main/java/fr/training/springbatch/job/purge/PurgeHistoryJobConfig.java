@@ -10,28 +10,27 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.tasklet.RemoveSpringBatchHistoryTasklet;
 
 /**
- * This job use the {@link RemoveSpringBatchHistoryTasklet} to remove the old
- * entries in the Spring-batch metadatas tables.
+ * This job use the {@link RemoveSpringBatchHistoryTasklet} to remove the old entries in the Spring-batch metadatas tables.
  */
 public class PurgeHistoryJobConfig extends AbstractJobConfiguration {
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-	@Bean
-	public Job job() {
+    @Bean
+    public Job job() {
 
-		final Step purgeHistoryStep = stepBuilderFactory.get("purgehistorystep") //
-				.tasklet(new RemoveSpringBatchHistoryTasklet() {
-					{
-						setHistoryRetentionMonth(1);
-						setJdbcTemplate(jdbcTemplate);
-					}
-				}).build();
+        final Step purgeHistoryStep = stepBuilderFactory.get("purgehistorystep") //
+                .tasklet(new RemoveSpringBatchHistoryTasklet() {
+                    {
+                        setHistoryRetentionMonth(1);
+                        setJdbcTemplate(jdbcTemplate);
+                    }
+                }).build();
 
-		return jobBuilderFactory.get("purgehistoryjob") //
-				.start(purgeHistoryStep) //
-				.build();
-	}
+        return jobBuilderFactory.get("purgehistoryjob") //
+                .start(purgeHistoryStep) //
+                .build();
+    }
 
 }

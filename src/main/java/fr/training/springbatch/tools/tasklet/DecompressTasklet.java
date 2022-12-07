@@ -18,76 +18,75 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 
 /**
- * A {link Tasklet} that decompress files from an archive filename to a given
- * directory.
+ * A {link Tasklet} that decompress files from an archive filename to a given directory.
  */
 public class DecompressTasklet implements Tasklet {
 
-	private Resource inputResource;
+    private Resource inputResource;
 
-	private String targetDirectory;
+    private String targetDirectory;
 
-	private String targetFile;
+    private String targetFile;
 
-	private void setParameters(final JobParameters jobParameters) {
+    private void setParameters(final JobParameters jobParameters) {
 
-		if (inputResource == null) {
-			inputResource = new ClassPathResource(jobParameters.getString("inputResource"));
-		}
+        if (inputResource == null) {
+            inputResource = new ClassPathResource(jobParameters.getString("inputResource"));
+        }
 
-		if (StringUtils.isEmpty(targetDirectory)) {
-			targetDirectory = jobParameters.getString("targetDirectory");
-		}
+        if (StringUtils.isEmpty(targetDirectory)) {
+            targetDirectory = jobParameters.getString("targetDirectory");
+        }
 
-		if (StringUtils.isEmpty(targetFile)) {
-			targetFile = jobParameters.getString("targetFile");
-		}
-	}
+        if (StringUtils.isEmpty(targetFile)) {
+            targetFile = jobParameters.getString("targetFile");
+        }
+    }
 
-	@Override
-	public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-		if (chunkContext != null) {
-			setParameters(chunkContext.getStepContext().getStepExecution().getJobParameters());
-		}
+    @Override
+    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+        if (chunkContext != null) {
+            setParameters(chunkContext.getStepContext().getStepExecution().getJobParameters());
+        }
 
-		final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(inputResource.getInputStream()));
+        final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(inputResource.getInputStream()));
 
-		final File targetDirectoryAsFile = new File(targetDirectory);
-		if (!targetDirectoryAsFile.exists()) {
-			FileUtils.forceMkdir(targetDirectoryAsFile);
-		}
+        final File targetDirectoryAsFile = new File(targetDirectory);
+        if (!targetDirectoryAsFile.exists()) {
+            FileUtils.forceMkdir(targetDirectoryAsFile);
+        }
 
-		final File target = new File(targetDirectory, targetFile);
+        final File target = new File(targetDirectory, targetFile);
 
-		BufferedOutputStream dest = null;
-		while (zis.getNextEntry() != null) {
-			if (!target.exists()) {
-				target.createNewFile();
-			}
-			final FileOutputStream fos = new FileOutputStream(target);
-			dest = new BufferedOutputStream(fos);
-			IOUtils.copy(zis, dest);
-			dest.flush();
-			dest.close();
-		}
-		zis.close();
+        BufferedOutputStream dest = null;
+        while (zis.getNextEntry() != null) {
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            final FileOutputStream fos = new FileOutputStream(target);
+            dest = new BufferedOutputStream(fos);
+            IOUtils.copy(zis, dest);
+            dest.flush();
+            dest.close();
+        }
+        zis.close();
 
-		if (!target.exists()) {
-			throw new IllegalStateException("Could not decompress anything from the archive!");
-		}
+        if (!target.exists()) {
+            throw new IllegalStateException("Could not decompress anything from the archive!");
+        }
 
-		return RepeatStatus.FINISHED;
-	}
+        return RepeatStatus.FINISHED;
+    }
 
-	public void setInputResource(final Resource inputResource) {
-		this.inputResource = inputResource;
-	}
+    public void setInputResource(final Resource inputResource) {
+        this.inputResource = inputResource;
+    }
 
-	public void setTargetDirectory(final String targetDirectory) {
-		this.targetDirectory = targetDirectory;
-	}
+    public void setTargetDirectory(final String targetDirectory) {
+        this.targetDirectory = targetDirectory;
+    }
 
-	public void setTargetFile(final String targetFile) {
-		this.targetFile = targetFile;
-	}
+    public void setTargetFile(final String targetFile) {
+        this.targetFile = targetFile;
+    }
 }

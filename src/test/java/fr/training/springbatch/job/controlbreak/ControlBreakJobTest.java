@@ -20,34 +20,33 @@ import fr.training.springbatch.job.controlbreak.ControlBreakJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		ControlBreakJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, ControlBreakJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class ControlBreakJobTest {
 
-	private static final String OUTPUT_FILE = "target/output/outputfile.csv";
+    private static final String OUTPUT_FILE = "target/output/outputfile.csv";
 
-	private static final String TRANSACTION_FILE = "src/main/resources/csv/transaction.csv";
+    private static final String TRANSACTION_FILE = "src/main/resources/csv/transaction.csv";
 
-	private static final String EXPECTED_FILE = "src/test/resources/datas/csv/transaction-sum-expected.csv";
+    private static final String EXPECTED_FILE = "src/test/resources/datas/csv/transaction-sum-expected.csv";
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void controlBreakStep_should_produce_expected_file() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
-				.addString("transaction-file", TRANSACTION_FILE) //
-				.addString("output-file", OUTPUT_FILE) //
-				.toJobParameters();
-		// When
-		final JobExecution jobExecution = testUtils.launchStep("controlbreak-step", jobParameters);
+    @Test
+    void controlBreakStep_should_produce_expected_file() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
+                .addString("transaction-file", TRANSACTION_FILE) //
+                .addString("output-file", OUTPUT_FILE) //
+                .toJobParameters();
+        // When
+        final JobExecution jobExecution = testUtils.launchStep("controlbreak-step", jobParameters);
 
-		// Then
-		assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        // Then
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-		AssertFile.assertFileEquals(new FileSystemResource(EXPECTED_FILE), //
-				new FileSystemResource(OUTPUT_FILE));
-	}
+        AssertFile.assertFileEquals(new FileSystemResource(EXPECTED_FILE), //
+                new FileSystemResource(OUTPUT_FILE));
+    }
 
 }

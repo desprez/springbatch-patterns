@@ -17,25 +17,23 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		MultiLinesExtractJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, MultiLinesExtractJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class MultiLinesExtractJobTest {
 
-	private static final String OUTPUT_FILE = "target/output/multilines-outputfile.csv";
+    private static final String OUTPUT_FILE = "target/output/multilines-outputfile.csv";
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void launch_MultilinesExtractJob_nominal_should_success() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-				.addString("output-file", OUTPUT_FILE) //
-				.toJobParameters();
-		// When
-		final JobExecution jobExec = testUtils.launchJob(jobParameters);
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-	}
+    @Test
+    void launch_MultilinesExtractJob_nominal_should_success() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("output-file", OUTPUT_FILE) //
+                .toJobParameters();
+        // When
+        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    }
 
 }

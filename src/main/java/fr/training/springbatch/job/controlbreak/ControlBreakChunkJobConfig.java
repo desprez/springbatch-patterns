@@ -29,132 +29,131 @@ import fr.training.springbatch.tools.writer.ConsoleItemWriter;
  */
 public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
 
-	private static final Logger logger = LoggerFactory.getLogger(ControlBreakChunkJobConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(ControlBreakChunkJobConfig.class);
 
-	@Value("${application.controlbreak-step.chunksize:10}")
-	private int chunkSize;
+    @Value("${application.controlbreak-step.chunksize:10}")
+    private int chunkSize;
 
-	@Bean
-	public Job controlBreakChunkJob(final Step controlBreakStep /* injected by Spring */) {
-		return jobBuilderFactory.get("controlbreak-chunk-job") //
-				.incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-				.validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" },
-						new String[] {})) //
-				.start(controlBreakStep) //
-				.listener(reportListener()) //
-				.build();
-	}
+    @Bean
+    public Job controlBreakChunkJob(final Step controlBreakStep /* injected by Spring */) {
+        return jobBuilderFactory.get("controlbreak-chunk-job") //
+                .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
+                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
+                .start(controlBreakStep) //
+                .listener(reportListener()) //
+                .build();
+    }
 
-	/**
-	 * @param controlBreakReader the injected Transaction
-	 *                           {@link SingleItemPeekableItemReader} bean.
-	 * @param transactionWriter  the injected Transaction {@link ItemWriter}.
-	 * @param completionPolicy
-	 * @return a Step Bean
-	 */
-	@Bean
-	public Step controlBreakChunkStep(final ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy,
-			final ItemWriter<Transaction> transactionWriter
-			/* injected by Spring */) {
+    /**
+     * @param controlBreakReader
+     *            the injected Transaction {@link SingleItemPeekableItemReader} bean.
+     * @param transactionWriter
+     *            the injected Transaction {@link ItemWriter}.
+     * @param completionPolicy
+     * @return a Step Bean
+     */
+    @Bean
+    public Step controlBreakChunkStep(final ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy,
+            final ItemWriter<Transaction> transactionWriter
+    /* injected by Spring */) {
 
-		return stepBuilderFactory.get("controlbreak-step") //
-				.<Transaction, Transaction>chunk(breakKeyCompletionPolicy) //
-				.reader(breakKeyCompletionPolicy) //
-				.writer(transactionWriter) //
-				.listener(reportListener()) //
-				.listener(chunklistener()) //
-				.build();
-	}
+        return stepBuilderFactory.get("controlbreak-step") //
+                .<Transaction, Transaction> chunk(breakKeyCompletionPolicy) //
+                .reader(breakKeyCompletionPolicy) //
+                .writer(transactionWriter) //
+                .listener(reportListener()) //
+                .listener(chunklistener()) //
+                .build();
+    }
 
-	private ChunkListener chunklistener() {
-		// TODO Auto-generated method stub
-		return new ChunkListener() {
+    private ChunkListener chunklistener() {
+        // TODO Auto-generated method stub
+        return new ChunkListener() {
 
-			@Override
-			public void beforeChunk(final ChunkContext context) {
-				// TODO Auto-generated method stub
+            @Override
+            public void beforeChunk(final ChunkContext context) {
+                // TODO Auto-generated method stub
 
-			}
+            }
 
-			@Override
-			public void afterChunkError(final ChunkContext context) {
-				// TODO Auto-generated method stub
+            @Override
+            public void afterChunkError(final ChunkContext context) {
+                // TODO Auto-generated method stub
 
-			}
+            }
 
-			@Override
-			public void afterChunk(final ChunkContext context) {
-				logger.info("after chunk");
-			}
-		};
-	}
+            @Override
+            public void afterChunk(final ChunkContext context) {
+                logger.info("after chunk");
+            }
+        };
+    }
 
-	@Bean
-	public ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy(
-			final SingleItemPeekableItemReader<Transaction> controlBreakReader) {
-		final ItemPeekingCompletionPolicyReader<Transaction> policy = new ItemPeekingCompletionPolicyReader<>();
-		policy.setDelegate(controlBreakReader);
-		policy.setBreakKeyStrategy(new BreakKeyStrategy<Transaction>() {
+    @Bean
+    public ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy(final SingleItemPeekableItemReader<Transaction> controlBreakReader) {
+        final ItemPeekingCompletionPolicyReader<Transaction> policy = new ItemPeekingCompletionPolicyReader<>();
+        policy.setDelegate(controlBreakReader);
+        policy.setBreakKeyStrategy(new BreakKeyStrategy<Transaction>() {
 
-			@Override
-			public boolean isKeyBreak(final Transaction item1, final Transaction item2) {
-				return !item1.getCustomerNumber().equals(item1.getCustomerNumber());
-			}
-		});
-		return policy;
-	}
+            @Override
+            public boolean isKeyBreak(final Transaction item1, final Transaction item2) {
+                return !item1.getCustomerNumber().equals(item1.getCustomerNumber());
+            }
+        });
+        return policy;
+    }
 
-	@Bean(destroyMethod = "")
-	public SingleItemPeekableItemReader<Transaction> controlBreakReader(
-			final FlatFileItemReader<Transaction> transactionReader) {
+    @Bean(destroyMethod = "")
+    public SingleItemPeekableItemReader<Transaction> controlBreakReader(final FlatFileItemReader<Transaction> transactionReader) {
 
-		final SingleItemPeekableItemReader<Transaction> groupReader = new SingleItemPeekableItemReader<Transaction>();
-		groupReader.setDelegate(transactionReader);
+        final SingleItemPeekableItemReader<Transaction> groupReader = new SingleItemPeekableItemReader<Transaction>();
+        groupReader.setDelegate(transactionReader);
 
-		return groupReader;
-	}
+        return groupReader;
+    }
 
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public FlatFileItemReader<Transaction> transactionReader(
-			@Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    public FlatFileItemReader<Transaction> transactionReader(
+            @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
-		return new FlatFileItemReaderBuilder<Transaction>() //
-				.name("transactionReader") //
-				.resource(new FileSystemResource(transactionFile)) //
-				.delimited() //
-				.delimiter(";") //
-				.names("customerNumber", "number", "transactionDate", "amount") //
-				.linesToSkip(1) //
-				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-					{
-						setTargetType(Transaction.class);
-						setConversionService(localDateConverter());
-					}
-				}).build();
-	}
+        return new FlatFileItemReaderBuilder<Transaction>() //
+                .name("transactionReader") //
+                .resource(new FileSystemResource(transactionFile)) //
+                .delimited() //
+                .delimiter(";") //
+                .names("customerNumber", "number", "transactionDate", "amount") //
+                .linesToSkip(1) //
+                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
+                    {
+                        setTargetType(Transaction.class);
+                        setConversionService(localDateConverter());
+                    }
+                }).build();
+    }
 
-	/**
-	 * @param outputFile the injected output file job parameter
-	 * @return a {@link FlatFileItemWriter} bean
-	 */
-	// @StepScope // Mandatory for using jobParameters
-	// @Bean
-	// public FlatFileItemWriter<Transaction> transactionWriter(
-	// @Value("#{jobParameters['output-file']}") final String outputFile) {
-	//
-	// return new FlatFileItemWriterBuilder<Transaction>().name("transactionWriter")
-	// .resource(new FileSystemResource(outputFile)) //
-	// .delimited() //
-	// .delimiter(";") //
-	// .names("customerNumber", "number", "transactionDate", "amount") //
-	// .build();
-	//
-	// }
+    /**
+     * @param outputFile
+     *            the injected output file job parameter
+     * @return a {@link FlatFileItemWriter} bean
+     */
+    // @StepScope // Mandatory for using jobParameters
+    // @Bean
+    // public FlatFileItemWriter<Transaction> transactionWriter(
+    // @Value("#{jobParameters['output-file']}") final String outputFile) {
+    //
+    // return new FlatFileItemWriterBuilder<Transaction>().name("transactionWriter")
+    // .resource(new FileSystemResource(outputFile)) //
+    // .delimited() //
+    // .delimiter(";") //
+    // .names("customerNumber", "number", "transactionDate", "amount") //
+    // .build();
+    //
+    // }
 
-	@Bean
-	public ConsoleItemWriter<Transaction> transactionWriter() {
-		return new ConsoleItemWriter<Transaction>();
-	}
+    @Bean
+    public ConsoleItemWriter<Transaction> transactionWriter() {
+        return new ConsoleItemWriter<Transaction>();
+    }
 
 }

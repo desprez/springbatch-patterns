@@ -44,156 +44,149 @@ import fr.training.springbatch.tools.tasklet.JdbcTasklet;
  */
 public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
 
-	private static final Logger log = LoggerFactory.getLogger(ExtractProcessIndicatorJobConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(ExtractProcessIndicatorJobConfig.class);
 
-	private static final String NEW = "N";
+    private static final String NEW = "N";
 
-	private static final String DONE = "Y";
+    private static final String DONE = "Y";
 
-	@Value("${application.createCsvFile-step.chunksize:10}")
-	private int chunkSize;
+    @Value("${application.createCsvFile-step.chunksize:10}")
+    private int chunkSize;
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-	@Autowired
-	private DataSource dataSource;
+    @Autowired
+    private DataSource dataSource;
 
-	@Bean
-	public Job extractProcessIndicatorJob(final Step extractProcessIndicatorStep, final Step processedRemoverStep) {
-		return jobBuilderFactory.get("extract-process-indicator-job") //
-				.incrementer(new RunIdIncrementer()) //
-				.start(extractProcessIndicatorStep) //
-				.next(processedRemoverStep) //
-				.listener(reportListener()) //
-				.build();
-	}
+    @Bean
+    public Job extractProcessIndicatorJob(final Step extractProcessIndicatorStep, final Step processedRemoverStep) {
+        return jobBuilderFactory.get("extract-process-indicator-job") //
+                .incrementer(new RunIdIncrementer()) //
+                .start(extractProcessIndicatorStep) //
+                .next(processedRemoverStep) //
+                .listener(reportListener()) //
+                .build();
+    }
 
-	@Bean
-	public Step extractProcessIndicatorStep(final ItemReader<Transaction> unprocessedReader,
-			final FlatFileItemWriter<Transaction> csvFileWriter) {
+    @Bean
+    public Step extractProcessIndicatorStep(final ItemReader<Transaction> unprocessedReader, final FlatFileItemWriter<Transaction> csvFileWriter) {
 
-		return stepBuilderFactory.get("extract-process-indicator-step") //
-				.<Transaction, Transaction>chunk(chunkSize) //
-				.reader(unprocessedReader) //
-				.processor(processedMarker()) //
-				.writer(csvFileWriter) //
-				.listener(reportListener()) //
-				.build();
-	}
+        return stepBuilderFactory.get("extract-process-indicator-step") //
+                .<Transaction, Transaction> chunk(chunkSize) //
+                .reader(unprocessedReader) //
+                .processor(processedMarker()) //
+                .writer(csvFileWriter) //
+                .listener(reportListener()) //
+                .build();
+    }
 
-	@Bean
-	public Step processedRemoverStep() {
+    @Bean
+    public Step processedRemoverStep() {
 
-		return stepBuilderFactory.get("processedRemover-step") //
-				.tasklet(processedItemsRemover()) //
-				.build();
+        return stepBuilderFactory.get("processedRemover-step") //
+                .tasklet(processedItemsRemover()) //
+                .build();
 
-	}
+    }
 
-	/**
-	 * The ItemReader unprocessedBillsReader always reads 1000 ids of unprocessed
-	 * records and returns them one after another.
-	 */
-	@Bean
-	public JdbcPagingItemReader<Transaction> unprocessedReader(final DataSource dataSource,
-			final PagingQueryProvider queryProvider) {
+    /**
+     * The ItemReader unprocessedBillsReader always reads 1000 ids of unprocessed records and returns them one after another.
+     */
+    @Bean
+    public JdbcPagingItemReader<Transaction> unprocessedReader(final DataSource dataSource, final PagingQueryProvider queryProvider) {
 
-		return new JdbcPagingItemReaderBuilder<Transaction>() //
-				.name("unprocessedReader") //
-				.dataSource(dataSource) //
-				.pageSize(chunkSize) //
-				.queryProvider(queryProvider)//
-				.rowMapper(new BeanPropertyRowMapper<>(Transaction.class)) //
-				.build();
+        return new JdbcPagingItemReaderBuilder<Transaction>() //
+                .name("unprocessedReader") //
+                .dataSource(dataSource) //
+                .pageSize(chunkSize) //
+                .queryProvider(queryProvider)//
+                .rowMapper(new BeanPropertyRowMapper<>(Transaction.class)) //
+                .build();
 
-	}
+    }
 
-	@Bean
-	public SqlPagingQueryProviderFactoryBean queryProvider(final DataSource dataSource) {
-		final SqlPagingQueryProviderFactoryBean provider = new SqlPagingQueryProviderFactoryBean();
+    @Bean
+    public SqlPagingQueryProviderFactoryBean queryProvider(final DataSource dataSource) {
+        final SqlPagingQueryProviderFactoryBean provider = new SqlPagingQueryProviderFactoryBean();
 
-		provider.setDataSource(dataSource);
-		provider.setSelectClause("SELECT customer_number, number, amount, transaction_date");
-		provider.setFromClause("FROM Transaction");
-		provider.setWhereClause("WHERE processed <> '" + DONE + "'");
-		provider.setSortKeys(sortByCustomerNumberAsc());
+        provider.setDataSource(dataSource);
+        provider.setSelectClause("SELECT customer_number, number, amount, transaction_date");
+        provider.setFromClause("FROM Transaction");
+        provider.setWhereClause("WHERE processed <> '" + DONE + "'");
+        provider.setSortKeys(sortByCustomerNumberAsc());
 
-		return provider;
-	}
+        return provider;
+    }
 
-	private Map<String, Order> sortByCustomerNumberAsc() {
-		final Map<String, Order> sortConfiguration = new LinkedHashMap<>();
-		sortConfiguration.put("customer_number", Order.ASCENDING);
-		sortConfiguration.put("number", Order.ASCENDING);
-		sortConfiguration.put("transaction_date", Order.ASCENDING);
-		return sortConfiguration;
-	}
+    private Map<String, Order> sortByCustomerNumberAsc() {
+        final Map<String, Order> sortConfiguration = new LinkedHashMap<>();
+        sortConfiguration.put("customer_number", Order.ASCENDING);
+        sortConfiguration.put("number", Order.ASCENDING);
+        sortConfiguration.put("transaction_date", Order.ASCENDING);
+        return sortConfiguration;
+    }
 
-	/**
-	 * The ItemProcessor processedMarker reads the corresponding items from the
-	 * database and marks them as processed.
-	 */
-	@Bean
-	public ItemProcessor<Transaction, Transaction> processedMarker() {
-		return new ItemProcessor<Transaction, Transaction>() {
-			@Override
-			public Transaction process(final Transaction item) throws Exception {
-				markAsProcessed(item);
-				return item;
-			}
-		};
-	}
+    /**
+     * The ItemProcessor processedMarker reads the corresponding items from the database and marks them as processed.
+     */
+    @Bean
+    public ItemProcessor<Transaction, Transaction> processedMarker() {
+        return new ItemProcessor<Transaction, Transaction>() {
+            @Override
+            public Transaction process(final Transaction item) throws Exception {
+                markAsProcessed(item);
+                return item;
+            }
+        };
+    }
 
-	/**
-	 *
-	 * @param item
-	 */
-	private void markAsProcessed(final Transaction item) {
-		jdbcTemplate.update("UPDATE Transaction SET processed=? WHERE customer_number=? AND number=?",
-				new PreparedStatementSetter() {
-			@Override
-			public void setValues(final PreparedStatement ps) throws SQLException {
-				ps.setString(1, DONE);
-				ps.setLong(2, item.getCustomerNumber());
-				ps.setString(3, item.getNumber());
-			}
-		});
-	}
+    /**
+     *
+     * @param item
+     */
+    private void markAsProcessed(final Transaction item) {
+        jdbcTemplate.update("UPDATE Transaction SET processed=? WHERE customer_number=? AND number=?", new PreparedStatementSetter() {
+            @Override
+            public void setValues(final PreparedStatement ps) throws SQLException {
+                ps.setString(1, DONE);
+                ps.setLong(2, item.getCustomerNumber());
+                ps.setString(3, item.getNumber());
+            }
+        });
+    }
 
-	/**
-	 * The ItemWriter csvFileWriter writes them to a CSV file. The path of this file
-	 * is provided as batch parameter ("outputFile").
-	 */
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public FlatFileItemWriter<Transaction> csvFileWriter(
-			@Value("#{jobParameters['output-file']}") final String outputFile) {
+    /**
+     * The ItemWriter csvFileWriter writes them to a CSV file. The path of this file is provided as batch parameter ("outputFile").
+     */
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    public FlatFileItemWriter<Transaction> csvFileWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
-		return new FlatFileItemWriterBuilder<Transaction>() //
-				.name("csvFileWriter") //
-				.resource(new FileSystemResource(outputFile)) //
-				.delimited() //
-				.delimiter(";") //
-				.names("customerNumber", "number", "transactionDate", "amount") //
-				.headerCallback(new FlatFileHeaderCallback() {
-					@Override
-					public void writeHeader(final Writer writer) throws IOException {
-						writer.write("customerNumber;number;transactionDate;amount");
-					}
-				}) //
-				.build();
-	}
+        return new FlatFileItemWriterBuilder<Transaction>() //
+                .name("csvFileWriter") //
+                .resource(new FileSystemResource(outputFile)) //
+                .delimited() //
+                .delimiter(";") //
+                .names("customerNumber", "number", "transactionDate", "amount") //
+                .headerCallback(new FlatFileHeaderCallback() {
+                    @Override
+                    public void writeHeader(final Writer writer) throws IOException {
+                        writer.write("customerNumber;number;transactionDate;amount");
+                    }
+                }) //
+                .build();
+    }
 
-	/**
-	 * The tasklet processedItemsRemover deletes all record marked as processed.
-	 */
-	@Bean
-	public Tasklet processedItemsRemover() {
-		final JdbcTasklet deleteRecordTasklet = new JdbcTasklet();
-		deleteRecordTasklet.setDataSource(dataSource);
-		deleteRecordTasklet.setSql("DELETE FROM Transaction WHERE processed = '" + DONE + "'");
-		return deleteRecordTasklet;
-	}
+    /**
+     * The tasklet processedItemsRemover deletes all record marked as processed.
+     */
+    @Bean
+    public Tasklet processedItemsRemover() {
+        final JdbcTasklet deleteRecordTasklet = new JdbcTasklet();
+        deleteRecordTasklet.setDataSource(dataSource);
+        deleteRecordTasklet.setSql("DELETE FROM Transaction WHERE processed = '" + DONE + "'");
+        return deleteRecordTasklet;
+    }
 
 }

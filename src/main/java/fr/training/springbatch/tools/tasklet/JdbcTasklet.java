@@ -41,106 +41,100 @@ import org.springframework.util.Assert;
  */
 public class JdbcTasklet implements Tasklet, InitializingBean {
 
-	private static final Logger log = LoggerFactory.getLogger(JdbcTasklet.class);
+    private static final Logger log = LoggerFactory.getLogger(JdbcTasklet.class);
 
-	private NamedParameterJdbcTemplate jdbcTemplate;
+    private NamedParameterJdbcTemplate jdbcTemplate;
 
-	private String sql;
+    private String sql;
 
-	/**
-	 * An SQL query to execute in the tasklet. The query can be a select, update,
-	 * delete or insert, and it can contain embedded query parameters using a
-	 * {@link BeanPropertySqlParameterSource} whose root context is the step
-	 * context. So for example
-	 *
-	 * <pre>
-	 * DELETE from LEAD_INPUTS where ID=:jobParameters[idToDelete]
-	 * </pre>
-	 *
-	 * Note that the syntax for the named parameters is different from and not as
-	 * flexible as Spring EL. So it might be better anyway if possible to use late
-	 * binding to push step context properties into the query, e.g. this will work
-	 * in a bean definition which is step scoped:
-	 *
-	 * <pre>
-	 * <bean id="tasklet" class="org...JdbcTasklet" scope="step">
-	 *   <property name="sql">
-	 *     <value>
-	 * DELETE from LEAD_INPUTS where ID=#{jobParameters['i.to.delete']?:-1}
-	 *     </value>
-	 *   </property>
-	 * </bean>
-	 * </pre>
-	 *
-	 * @see BeanPropertySqlParameterSource
-	 *
-	 * @param sql the sql to set
-	 */
-	public void setSql(final String sql) {
-		this.sql = sql;
-	}
+    /**
+     * An SQL query to execute in the tasklet. The query can be a select, update, delete or insert, and it can contain embedded query parameters using a
+     * {@link BeanPropertySqlParameterSource} whose root context is the step context. So for example
+     *
+     * <pre>
+     * DELETE from LEAD_INPUTS where ID=:jobParameters[idToDelete]
+     * </pre>
+     *
+     * Note that the syntax for the named parameters is different from and not as flexible as Spring EL. So it might be better anyway if possible to use late
+     * binding to push step context properties into the query, e.g. this will work in a bean definition which is step scoped:
+     *
+     * <pre>
+     * <bean id="tasklet" class="org...JdbcTasklet" scope="step">
+     *   <property name="sql">
+     *     <value>
+     * DELETE from LEAD_INPUTS where ID=#{jobParameters['i.to.delete']?:-1}
+     *     </value>
+     *   </property>
+     * </bean>
+     * </pre>
+     *
+     * @see BeanPropertySqlParameterSource
+     *
+     * @param sql
+     *            the sql to set
+     */
+    public void setSql(final String sql) {
+        this.sql = sql;
+    }
 
-	/**
-	 * @param dataSource the dataSource to set
-	 */
-	public void setDataSource(final DataSource dataSource) {
-		jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-	}
+    /**
+     * @param dataSource
+     *            the dataSource to set
+     */
+    public void setDataSource(final DataSource dataSource) {
+        jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+    }
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		Assert.state(jdbcTemplate != null, "A DataSource must be provided");
-		Assert.state(sql != null, "A SQL query must be provided");
-	}
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.state(jdbcTemplate != null, "A DataSource must be provided");
+        Assert.state(sql != null, "A SQL query must be provided");
+    }
 
-	/**
-	 * Execute the {@link #setSql(String) SQL query} provided. If the query starts
-	 * with "select" (case insensitive) the result is a list of maps, which is
-	 * logged and added to the step execution exit status. Otherwise the query is
-	 * executed and the result is an indication, also in the exit status, of the
-	 * number of rows updated.
-	 */
-	@Override
-	public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+    /**
+     * Execute the {@link #setSql(String) SQL query} provided. If the query starts with "select" (case insensitive) the result is a list of maps, which is
+     * logged and added to the step execution exit status. Otherwise the query is executed and the result is an indication, also in the exit status, of the
+     * number of rows updated.
+     */
+    @Override
+    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 
-		final StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
-		final ExitStatus exitStatus = stepExecution.getExitStatus();
-		String msg = "";
-		if (isSelect(sql)) {
-			log.debug("Executing: " + sql);
-			final List<Map<String, Object>> result = jdbcTemplate.queryForList(sql,
-					new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
-			msg = "Result: " + result;
-		} else if (isUpdate(sql)) {
-			log.debug("Updating : " + sql);
-			final int updated = jdbcTemplate.update(sql,
-					new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
-			contribution.incrementWriteCount(updated);
-			msg = "Updated: " + updated + " rows";
-		}
-		log.debug(msg);
-		stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
+        final StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
+        final ExitStatus exitStatus = stepExecution.getExitStatus();
+        String msg = "";
+        if (isSelect(sql)) {
+            log.debug("Executing: " + sql);
+            final List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
+            msg = "Result: " + result;
+        } else if (isUpdate(sql)) {
+            log.debug("Updating : " + sql);
+            final int updated = jdbcTemplate.update(sql, new BeanPropertySqlParameterSource(chunkContext.getStepContext()));
+            contribution.incrementWriteCount(updated);
+            msg = "Updated: " + updated + " rows";
+        }
+        log.debug(msg);
+        stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
 
-		return RepeatStatus.FINISHED;
+        return RepeatStatus.FINISHED;
 
-	}
+    }
 
-	/**
-	 *
-	 * @param sqlCommand
-	 * @return
-	 */
-	private boolean isUpdate(final String sqlCommand) {
-		final String upperCaseCommand = sqlCommand.trim().toUpperCase();
-		return upperCaseCommand.startsWith("UPDATE") || upperCaseCommand.startsWith("DELETE");
-	}
+    /**
+     *
+     * @param sqlCommand
+     * @return
+     */
+    private boolean isUpdate(final String sqlCommand) {
+        final String upperCaseCommand = sqlCommand.trim().toUpperCase();
+        return upperCaseCommand.startsWith("UPDATE") || upperCaseCommand.startsWith("DELETE");
+    }
 
-	/**
-	 * @param sqlCommand
-	 * @return
-	 */
-	private static boolean isSelect(final String sqlCommand) {
-		return sqlCommand.trim().toUpperCase().startsWith("SELECT");
-	}
+    /**
+     * @param sqlCommand
+     * @return
+     */
+    private static boolean isSelect(final String sqlCommand) {
+        return sqlCommand.trim().toUpperCase().startsWith("SELECT");
+    }
 
 }

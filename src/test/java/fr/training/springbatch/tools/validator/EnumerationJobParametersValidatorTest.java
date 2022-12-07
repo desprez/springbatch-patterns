@@ -10,49 +10,48 @@ import org.springframework.batch.core.JobParametersInvalidException;
 
 class EnumerationJobParametersValidatorTest {
 
-	public enum Option {
-		ONE, TWO, THREE
-	}
+    public enum Option {
+        ONE, TWO, THREE
+    }
 
-	public static class OptionValidator extends EnumerationJobParametersValidator<Option> {
-		public OptionValidator(final String parameterKey) {
-			super(parameterKey, Option.class);
-		}
-	}
+    public static class OptionValidator extends EnumerationJobParametersValidator<Option> {
+        public OptionValidator(final String parameterKey) {
+            super(parameterKey, Option.class);
+        }
+    }
 
-	private static final String PARAMETER_NAME = "flag";
+    private static final String PARAMETER_NAME = "flag";
 
-	OptionValidator validator = new OptionValidator(PARAMETER_NAME);
+    OptionValidator validator = new OptionValidator(PARAMETER_NAME);
 
-	@Test
-	void validation_with_allowed_value_jobparameter_should_pass() throws JobParametersInvalidException {
-		// Given
-		final JobParameters parameters = new JobParametersBuilder() //
-				.addString(PARAMETER_NAME, "ONE") //
-				.toJobParameters();
+    @Test
+    void validation_with_allowed_value_jobparameter_should_pass() throws JobParametersInvalidException {
+        // Given
+        final JobParameters parameters = new JobParametersBuilder() //
+                .addString(PARAMETER_NAME, "ONE") //
+                .toJobParameters();
 
-		// Then
-		Assertions.assertDoesNotThrow(() -> {
-			// When
-			validator.validate(parameters);
-		});
-	}
+        // Then
+        Assertions.assertDoesNotThrow(() -> {
+            // When
+            validator.validate(parameters);
+        });
+    }
 
-	@Test
-	void validation_with_incorrect_value_jobparameter_should_fail() throws JobParametersInvalidException {
-		// Given
-		final JobParameters parameters = new JobParametersBuilder() //
-				.addString(PARAMETER_NAME, "FOUR") //
-				.toJobParameters();
+    @Test
+    void validation_with_incorrect_value_jobparameter_should_fail() throws JobParametersInvalidException {
+        // Given
+        final JobParameters parameters = new JobParametersBuilder() //
+                .addString(PARAMETER_NAME, "FOUR") //
+                .toJobParameters();
 
-		final Throwable exceptionThatWasThrown = Assertions.assertThrows(JobParametersInvalidException.class, () -> {
-			// When
-			validator.validate(parameters);
-		});
+        final Throwable exceptionThatWasThrown = Assertions.assertThrows(JobParametersInvalidException.class, () -> {
+            // When
+            validator.validate(parameters);
+        });
 
-		// Then
-		assertThat(exceptionThatWasThrown.getMessage())
-		.isEqualTo("Invalid value input for parameter:flag : allowed values are [ONE, TWO, THREE]");
-	}
+        // Then
+        assertThat(exceptionThatWasThrown.getMessage()).isEqualTo("Invalid value input for parameter:flag : allowed values are [ONE, TWO, THREE]");
+    }
 
 }

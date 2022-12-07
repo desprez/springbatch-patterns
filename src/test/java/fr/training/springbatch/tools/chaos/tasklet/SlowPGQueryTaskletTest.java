@@ -26,95 +26,95 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @ExtendWith(MockitoExtension.class)
 class SlowPGQueryTaskletTest {
 
-	@Mock
-	private JdbcTemplate jdbcTemplate;
+    @Mock
+    private JdbcTemplate jdbcTemplate;
 
-	@Captor
-	private ArgumentCaptor<String> captor;
+    @Captor
+    private ArgumentCaptor<String> captor;
 
-	@Test
-	void execute_with_fixed_mode_should_success() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
-		final StepContribution contrib = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
-		final SlowPGQueryTasklet slowPGQueryTasklet = new SlowPGQueryTasklet();
-		slowPGQueryTasklet.setDuration(Duration.ofSeconds(30));
-		slowPGQueryTasklet.setMaxQueries(2);
-		slowPGQueryTasklet.setJdbcTemplate(jdbcTemplate);
+    @Test
+    void execute_with_fixed_mode_should_success() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+        final StepContribution contrib = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+        final SlowPGQueryTasklet slowPGQueryTasklet = new SlowPGQueryTasklet();
+        slowPGQueryTasklet.setDuration(Duration.ofSeconds(30));
+        slowPGQueryTasklet.setMaxQueries(2);
+        slowPGQueryTasklet.setJdbcTemplate(jdbcTemplate);
 
-		// When
-		RepeatStatus status = slowPGQueryTasklet.execute(contrib, context);
+        // When
+        RepeatStatus status = slowPGQueryTasklet.execute(contrib, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.CONTINUABLE);
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.CONTINUABLE);
 
-		// And when
-		status = slowPGQueryTasklet.execute(contrib, context);
+        // And when
+        status = slowPGQueryTasklet.execute(contrib, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
 
-		verify(jdbcTemplate, times(2)).execute(captor.capture());
-		assertThat(captor.getAllValues().get(0)).isEqualTo("select pg_sleep(30);");
-		assertThat(captor.getAllValues().get(1)).isEqualTo("select pg_sleep(30);");
-	}
+        verify(jdbcTemplate, times(2)).execute(captor.capture());
+        assertThat(captor.getAllValues().get(0)).isEqualTo("select pg_sleep(30);");
+        assertThat(captor.getAllValues().get(1)).isEqualTo("select pg_sleep(30);");
+    }
 
-	@Test
-	void execute_with_random_mode_should_success() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
-		final StepContribution contrib = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
-		final SlowPGQueryTasklet slowPGQueryTasklet = new SlowPGQueryTasklet();
-		slowPGQueryTasklet.setDuration(Duration.ofSeconds(30));
-		slowPGQueryTasklet.setMaxQueries(2);
-		slowPGQueryTasklet.setJdbcTemplate(jdbcTemplate);
-		slowPGQueryTasklet.setMode(SlowPGQueryTasklet.Mode.RANDOM);
+    @Test
+    void execute_with_random_mode_should_success() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+        final StepContribution contrib = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+        final SlowPGQueryTasklet slowPGQueryTasklet = new SlowPGQueryTasklet();
+        slowPGQueryTasklet.setDuration(Duration.ofSeconds(30));
+        slowPGQueryTasklet.setMaxQueries(2);
+        slowPGQueryTasklet.setJdbcTemplate(jdbcTemplate);
+        slowPGQueryTasklet.setMode(SlowPGQueryTasklet.Mode.RANDOM);
 
-		// When
-		RepeatStatus status = slowPGQueryTasklet.execute(contrib, context);
+        // When
+        RepeatStatus status = slowPGQueryTasklet.execute(contrib, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.CONTINUABLE);
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.CONTINUABLE);
 
-		// And when
-		status = slowPGQueryTasklet.execute(contrib, context);
+        // And when
+        status = slowPGQueryTasklet.execute(contrib, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
 
-		verify(jdbcTemplate, times(2)).execute(captor.capture());
-		assertThat(captor.getAllValues().get(0)).contains("select pg_sleep");
-		assertThat(captor.getAllValues().get(1)).contains("select pg_sleep");
-	}
+        verify(jdbcTemplate, times(2)).execute(captor.capture());
+        assertThat(captor.getAllValues().get(0)).contains("select pg_sleep");
+        assertThat(captor.getAllValues().get(1)).contains("select pg_sleep");
+    }
 
-	@Test
-	void execute_with_ramptup_mode_should_success() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
-		final StepContribution contrib = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
-		final SlowPGQueryTasklet slowPGQueryTasklet = new SlowPGQueryTasklet();
-		slowPGQueryTasklet.setDuration(Duration.ofSeconds(30));
-		slowPGQueryTasklet.setMaxQueries(2);
-		slowPGQueryTasklet.setJdbcTemplate(jdbcTemplate);
-		slowPGQueryTasklet.setMode(SlowPGQueryTasklet.Mode.RAMPUP);
+    @Test
+    void execute_with_ramptup_mode_should_success() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+        final StepContribution contrib = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+        final SlowPGQueryTasklet slowPGQueryTasklet = new SlowPGQueryTasklet();
+        slowPGQueryTasklet.setDuration(Duration.ofSeconds(30));
+        slowPGQueryTasklet.setMaxQueries(2);
+        slowPGQueryTasklet.setJdbcTemplate(jdbcTemplate);
+        slowPGQueryTasklet.setMode(SlowPGQueryTasklet.Mode.RAMPUP);
 
-		// When
-		RepeatStatus status = slowPGQueryTasklet.execute(contrib, context);
+        // When
+        RepeatStatus status = slowPGQueryTasklet.execute(contrib, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.CONTINUABLE);
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.CONTINUABLE);
 
-		// And when
-		status = slowPGQueryTasklet.execute(contrib, context);
+        // And when
+        status = slowPGQueryTasklet.execute(contrib, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
 
-		verify(jdbcTemplate, times(2)).execute(captor.capture());
-		assertThat(captor.getAllValues().get(0)).isEqualTo("select pg_sleep(15);");
-		assertThat(captor.getAllValues().get(1)).isEqualTo("select pg_sleep(30);");
-	}
+        verify(jdbcTemplate, times(2)).execute(captor.capture());
+        assertThat(captor.getAllValues().get(0)).isEqualTo("select pg_sleep(15);");
+        assertThat(captor.getAllValues().get(1)).isEqualTo("select pg_sleep(30);");
+    }
 }

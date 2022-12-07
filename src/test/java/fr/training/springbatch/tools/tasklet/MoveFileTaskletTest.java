@@ -18,35 +18,35 @@ import org.springframework.batch.test.MetaDataInstanceFactory;
 
 class MoveFileTaskletTest {
 
-	private static File outputDir = new File("target/movefiletasklet/");
+    private static File outputDir = new File("target/movefiletasklet/");
 
-	@BeforeEach
-	void cleanup() throws IOException {
-		if (outputDir.exists()) {
-			FileUtils.deleteDirectory(outputDir);
-		}
-		FileUtils.writeStringToFile(new File("target/file2move.txt"), "This is a test", Charset.defaultCharset());
-	}
+    @BeforeEach
+    void cleanup() throws IOException {
+        if (outputDir.exists()) {
+            FileUtils.deleteDirectory(outputDir);
+        }
+        FileUtils.writeStringToFile(new File("target/file2move.txt"), "This is a test", Charset.defaultCharset());
+    }
 
-	@Test
-	void execute_with_existing_file_should_success() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
-		final StepContribution contribution = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+    @Test
+    void execute_with_existing_file_should_success() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+        final StepContribution contribution = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-		final MoveFileTasklet tasklet = new MoveFileTasklet();
-		tasklet.setFilename("file2move.txt");
-		tasklet.setSourceDirectory("target/");
-		tasklet.setTargetDirectory("target/movefiletasklet/");
+        final MoveFileTasklet tasklet = new MoveFileTasklet();
+        tasklet.setFilename("file2move.txt");
+        tasklet.setSourceDirectory("target/");
+        tasklet.setTargetDirectory("target/movefiletasklet/");
 
-		// When
-		final RepeatStatus status = tasklet.execute(contribution, context);
+        // When
+        final RepeatStatus status = tasklet.execute(contribution, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
 
-		assertThat(new File("target/movefiletasklet/file2move.txt")).exists();
-		assertThat(new File("target/file2move.txt")).doesNotExist();
-	}
+        assertThat(new File("target/movefiletasklet/file2move.txt")).exists();
+        assertThat(new File("target/file2move.txt")).doesNotExist();
+    }
 }

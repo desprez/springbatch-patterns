@@ -23,59 +23,58 @@ import fr.training.springbatch.job.computedelta.ComputeDeltaJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		ComputeDeltaJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, ComputeDeltaJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class ComputeDeltaJobTest {
 
-	private static final String YESTERDAY_FILE = "src/test/resources/datas/stock/yesterday-stock.csv";
+    private static final String YESTERDAY_FILE = "src/test/resources/datas/stock/yesterday-stock.csv";
 
-	private static final String TODAY_FILE = "src/test/resources/datas/stock/today-stock.csv";
+    private static final String TODAY_FILE = "src/test/resources/datas/stock/today-stock.csv";
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void launch_CompareJob_nominal_should_success() throws Exception {
-		// Given
-		assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "yesterday_stock")).isZero();
+    @Test
+    void launch_CompareJob_nominal_should_success() throws Exception {
+        // Given
+        assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "yesterday_stock")).isZero();
 
-		JobParameters jobParameters = new JobParametersBuilder() //
-				.addString("today-stock-file", YESTERDAY_FILE) //
-				.toJobParameters();
-		// When
-		JobExecution jobExec = testUtils.launchJob(jobParameters);
+        JobParameters jobParameters = new JobParametersBuilder() //
+                .addString("today-stock-file", YESTERDAY_FILE) //
+                .toJobParameters();
+        // When
+        JobExecution jobExec = testUtils.launchJob(jobParameters);
 
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-		assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "yesterday_stock")).isEqualTo(7);
-		assertWriteCount(jobExec, "process-added-step", 7);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "yesterday_stock")).isEqualTo(7);
+        assertWriteCount(jobExec, "process-added-step", 7);
 
-		jobParameters = new JobParametersBuilder() //
-				.addString("today-stock-file", TODAY_FILE) //
-				.toJobParameters();
+        jobParameters = new JobParametersBuilder() //
+                .addString("today-stock-file", TODAY_FILE) //
+                .toJobParameters();
 
-		// When
-		jobExec = testUtils.launchJob(jobParameters);
+        // When
+        jobExec = testUtils.launchJob(jobParameters);
 
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-		assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "yesterday_stock")).isEqualTo(8);
-		assertWriteCount(jobExec, "process-added-step", 4);
-		assertWriteCount(jobExec, "process-removed-step", 3);
-	}
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "yesterday_stock")).isEqualTo(8);
+        assertWriteCount(jobExec, "process-added-step", 4);
+        assertWriteCount(jobExec, "process-removed-step", 3);
+    }
 
-	private void assertWriteCount(final JobExecution jobExec, final String stepName, final int expectedWriteCounts) {
-		// And expected read / write counts
-		final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> {
-			return stepName.equals(e.getStepName());
-		}).findFirst();
-		assertThat(executionOpt.isPresent()).isTrue();
-		final StepExecution stepExec = executionOpt.get();
+    private void assertWriteCount(final JobExecution jobExec, final String stepName, final int expectedWriteCounts) {
+        // And expected read / write counts
+        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> {
+            return stepName.equals(e.getStepName());
+        }).findFirst();
+        assertThat(executionOpt.isPresent()).isTrue();
+        final StepExecution stepExec = executionOpt.get();
 
-		assertThat(stepExec.getWriteCount()).isEqualTo(expectedWriteCounts);
-	}
+        assertThat(stepExec.getWriteCount()).isEqualTo(expectedWriteCounts);
+    }
 
 }

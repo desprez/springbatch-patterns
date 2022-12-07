@@ -24,32 +24,32 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @ExtendWith(MockitoExtension.class)
 class AnalyzePGTaskletTest {
 
-	@Mock
-	private JdbcTemplate jdbcTemplate;
+    @Mock
+    private JdbcTemplate jdbcTemplate;
 
-	@Captor
-	private ArgumentCaptor<String> captor;
+    @Captor
+    private ArgumentCaptor<String> captor;
 
-	@Test
-	void execute_with_all_expected_fields_should_success() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
-		final StepContribution contribution = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+    @Test
+    void execute_with_all_expected_fields_should_success() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+        final StepContribution contribution = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-		final AnalyzePGTasklet tasklet = new AnalyzePGTasklet();
-		tasklet.setJdbcTemplate(jdbcTemplate);
-		tasklet.setTableNames("my1stTable", "my2ndTable");
-		tasklet.setSchema("schema");
+        final AnalyzePGTasklet tasklet = new AnalyzePGTasklet();
+        tasklet.setJdbcTemplate(jdbcTemplate);
+        tasklet.setTableNames("my1stTable", "my2ndTable");
+        tasklet.setSchema("schema");
 
-		// When
-		final RepeatStatus status = tasklet.execute(contribution, context);
+        // When
+        final RepeatStatus status = tasklet.execute(contribution, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
-		verify(jdbcTemplate, times(2)).execute(captor.capture());
-		assertThat(captor.getAllValues().get(0)).isEqualTo("ANALYSE schema.my1stTable;");
-		assertThat(captor.getAllValues().get(1)).isEqualTo("ANALYSE schema.my2ndTable;");
-	}
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+        verify(jdbcTemplate, times(2)).execute(captor.capture());
+        assertThat(captor.getAllValues().get(0)).isEqualTo("ANALYSE schema.my1stTable;");
+        assertThat(captor.getAllValues().get(1)).isEqualTo("ANALYSE schema.my2ndTable;");
+    }
 
 }

@@ -19,57 +19,56 @@ import org.springframework.beans.factory.InitializingBean;
  */
 public class WaitingTasklet implements StoppableTasklet, InitializingBean {
 
-	private static final Logger log = LoggerFactory.getLogger(WaitingTasklet.class);
+    private static final Logger log = LoggerFactory.getLogger(WaitingTasklet.class);
 
-	private static final int ONE_SECOND = 1000;
+    private static final int ONE_SECOND = 1000;
 
-	private String waitingMessage = "WaitingTasklet is waiting for {} second";
+    private String waitingMessage = "WaitingTasklet is waiting for {} second";
 
-	private Duration duration = Duration.ofSeconds(1); // Default 1s
+    private Duration duration = Duration.ofSeconds(1); // Default 1s
 
-	private long i;
+    private long i;
 
-	private boolean stopped = false;
+    private boolean stopped = false;
 
-	public WaitingTasklet(final Duration duration) throws Exception {
-		this.duration = duration;
-		afterPropertiesSet();
-	}
+    public WaitingTasklet(final Duration duration) throws Exception {
+        this.duration = duration;
+        afterPropertiesSet();
+    }
 
-	@Override
-	public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext)
-			throws Exception {
-		log.info(waitingMessage, duration.getSeconds());
+    @Override
+    public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext) throws Exception {
+        log.info(waitingMessage, duration.getSeconds());
 
-		Thread.sleep(ONE_SECOND);
-		i--;
+        Thread.sleep(ONE_SECOND);
+        i--;
 
-		if (i == 0) {
-			log.info("GO");
-			return RepeatStatus.FINISHED;
-		} else {
-			log.info("{}", i);
-			return RepeatStatus.continueIf(!stopped);
-		}
-	}
+        if (i == 0) {
+            log.info("GO");
+            return RepeatStatus.FINISHED;
+        } else {
+            log.info("{}", i);
+            return RepeatStatus.continueIf(!stopped);
+        }
+    }
 
-	@Override
-	public void stop() {
-		log.info("Stop requested");
-		stopped = true;
-	}
+    @Override
+    public void stop() {
+        log.info("Stop requested");
+        stopped = true;
+    }
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		i = duration.getSeconds();
-	}
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        i = duration.getSeconds();
+    }
 
-	public void setDuration(final Duration seconds) {
-		duration = seconds;
-	}
+    public void setDuration(final Duration seconds) {
+        duration = seconds;
+    }
 
-	public void setWaitingMessage(final String waitingMessage) {
-		this.waitingMessage = waitingMessage;
-	}
+    public void setWaitingMessage(final String waitingMessage) {
+        this.waitingMessage = waitingMessage;
+    }
 
 }

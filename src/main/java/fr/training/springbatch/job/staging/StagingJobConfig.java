@@ -45,135 +45,132 @@ import fr.training.springbatch.tools.staging.StagingItemWriter;
  */
 public class StagingJobConfig extends AbstractJobConfiguration {
 
-	@Autowired
-	public DataSource dataSource;
+    @Autowired
+    public DataSource dataSource;
 
-	@Bean
-	public Job stagingJob(final Step stagingStep, final Step loadingStep) {
-		return jobBuilderFactory.get("staging-job") //
-				.incrementer(new RunIdIncrementer()) //
-				.validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})) //
-				.start(stagingStep) //
-				.next(loadingStep) //
-				.listener(reportListener()) //
-				.build();
-	}
+    @Bean
+    public Job stagingJob(final Step stagingStep, final Step loadingStep) {
+        return jobBuilderFactory.get("staging-job") //
+                .incrementer(new RunIdIncrementer()) //
+                .validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})) //
+                .start(stagingStep) //
+                .next(loadingStep) //
+                .listener(reportListener()) //
+                .build();
+    }
 
-	@Bean
-	public Step stagingStep(final ValidatingItemProcessor<Transaction> validatingProcessor, //
-			final ItemWriter<Transaction> stagingItemWriter, final ItemReader<Transaction> fileItemReader) {
+    @Bean
+    public Step stagingStep(final ValidatingItemProcessor<Transaction> validatingProcessor, //
+            final ItemWriter<Transaction> stagingItemWriter, final ItemReader<Transaction> fileItemReader) {
 
-		return stepBuilderFactory.get("staging-step") //
-				.<Transaction, Transaction>chunk(2) //
-				.reader(fileItemReader) //
-				.processor(validatingProcessor)//
-				.writer(stagingItemWriter) //
-				.listener(progressListener()) //
-				.build();
-	}
+        return stepBuilderFactory.get("staging-step") //
+                .<Transaction, Transaction> chunk(2) //
+                .reader(fileItemReader) //
+                .processor(validatingProcessor)//
+                .writer(stagingItemWriter) //
+                .listener(progressListener()) //
+                .build();
+    }
 
-	@Bean
-	public Step loadingStep(final ItemWriter<? super Transaction> transactionWriter) {
+    @Bean
+    public Step loadingStep(final ItemWriter<? super Transaction> transactionWriter) {
 
-		return stepBuilderFactory.get("loading-step") //
-				.<ProcessIndicatorItemWrapper<Transaction>, Transaction>chunk(2) //
-				.reader(stagingReader()) //
-				.processor(stagingProcessor())//
-				.writer(transactionWriter) //
-				.taskExecutor(taskExecutor()) //
-				.listener(progressListener()) //
-				.build();
-	}
+        return stepBuilderFactory.get("loading-step") //
+                .<ProcessIndicatorItemWrapper<Transaction>, Transaction> chunk(2) //
+                .reader(stagingReader()) //
+                .processor(stagingProcessor())//
+                .writer(transactionWriter) //
+                .taskExecutor(taskExecutor()) //
+                .listener(progressListener()) //
+                .build();
+    }
 
-	/**
-	 * Used for logging step progression
-	 */
-	@Override
-	@Bean
-	public ItemCountListener progressListener() {
-		final ItemCountListener listener = new ItemCountListener();
-		listener.setItemName("Transaction(s)");
-		listener.setLoggingInterval(50); // Log process item count every 50
-		return listener;
-	}
+    /**
+     * Used for logging step progression
+     */
+    @Override
+    @Bean
+    public ItemCountListener progressListener() {
+        final ItemCountListener listener = new ItemCountListener();
+        listener.setItemName("Transaction(s)");
+        listener.setLoggingInterval(50); // Log process item count every 50
+        return listener;
+    }
 
-	@Bean
-	public ItemProcessor<? super ProcessIndicatorItemWrapper<Transaction>, ? extends Transaction> stagingProcessor() {
-		final StagingItemProcessor<Transaction> itemProcessor = new StagingItemProcessor<Transaction>();
-		itemProcessor.setDataSource(dataSource);
-		return itemProcessor;
-	}
+    @Bean
+    public ItemProcessor<? super ProcessIndicatorItemWrapper<Transaction>, ? extends Transaction> stagingProcessor() {
+        final StagingItemProcessor<Transaction> itemProcessor = new StagingItemProcessor<Transaction>();
+        itemProcessor.setDataSource(dataSource);
+        return itemProcessor;
+    }
 
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public FlatFileItemReader<Transaction> fileItemReader(
-			@Value("#{jobParameters['input-file']}") final String inputFile) {
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    public FlatFileItemReader<Transaction> fileItemReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
 
-		return new FlatFileItemReaderBuilder<Transaction>() //
-				.name("simpleImportReader") //
-				.resource(new FileSystemResource(inputFile)) //
-				.delimited() //
-				.delimiter(";") //
-				.names("customerNumber", "number", "transactionDate", "amount") //
-				.linesToSkip(1) //
-				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-					{
-						setTargetType(Transaction.class);
-						setConversionService(localDateConverter());
-					}
-				}).build();
-	}
+        return new FlatFileItemReaderBuilder<Transaction>() //
+                .name("simpleImportReader") //
+                .resource(new FileSystemResource(inputFile)) //
+                .delimited() //
+                .delimiter(";") //
+                .names("customerNumber", "number", "transactionDate", "amount") //
+                .linesToSkip(1) //
+                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
+                    {
+                        setTargetType(Transaction.class);
+                        setConversionService(localDateConverter());
+                    }
+                }).build();
+    }
 
-	@Bean("fixedValidator")
-	public SpringValidator<Transaction> getSpringValidator() {
-		final SpringValidator<Transaction> validator = new SpringValidator<Transaction>();
-		validator.setValidator(new TransactionValidator());
-		return validator;
-	}
+    @Bean("fixedValidator")
+    public SpringValidator<Transaction> getSpringValidator() {
+        final SpringValidator<Transaction> validator = new SpringValidator<Transaction>();
+        validator.setValidator(new TransactionValidator());
+        return validator;
+    }
 
-	@Bean("processor")
-	public ValidatingItemProcessor<Transaction> validatingProcessor(
-			@Qualifier("fixedValidator") final SpringValidator<Transaction> fixedValidator) {
-		final ValidatingItemProcessor<Transaction> processor = new ValidatingItemProcessor<Transaction>(fixedValidator);
-		return processor;
-	}
+    @Bean("processor")
+    public ValidatingItemProcessor<Transaction> validatingProcessor(@Qualifier("fixedValidator") final SpringValidator<Transaction> fixedValidator) {
+        final ValidatingItemProcessor<Transaction> processor = new ValidatingItemProcessor<Transaction>(fixedValidator);
+        return processor;
+    }
 
-	@Bean
-	public StagingItemWriter<Transaction> stagingItemWriter(final DataFieldMaxValueIncrementer StagingIncrementer) {
-		final StagingItemWriter<Transaction> writer = new StagingItemWriter<Transaction>();
-		writer.setDataSource(dataSource);
-		writer.setIncrementer(StagingIncrementer);
-		return writer;
-	}
+    @Bean
+    public StagingItemWriter<Transaction> stagingItemWriter(final DataFieldMaxValueIncrementer StagingIncrementer) {
+        final StagingItemWriter<Transaction> writer = new StagingItemWriter<Transaction>();
+        writer.setDataSource(dataSource);
+        writer.setIncrementer(StagingIncrementer);
+        return writer;
+    }
 
-	@Bean
-	public DataFieldMaxValueIncrementer stagingIncrementer() throws MetaDataAccessException {
-		final DataFieldMaxValueIncrementerFactory incrementerFactory = new DefaultDataFieldMaxValueIncrementerFactory(
-				dataSource);
-		return incrementerFactory.getIncrementer(DatabaseType.fromMetaData(dataSource).name(), "BATCH_STAGING_SEQ");
-	}
+    @Bean
+    public DataFieldMaxValueIncrementer stagingIncrementer() throws MetaDataAccessException {
+        final DataFieldMaxValueIncrementerFactory incrementerFactory = new DefaultDataFieldMaxValueIncrementerFactory(dataSource);
+        return incrementerFactory.getIncrementer(DatabaseType.fromMetaData(dataSource).name(), "BATCH_STAGING_SEQ");
+    }
 
-	@Bean
-	public TaskExecutor taskExecutor() {
-		return new SimpleAsyncTaskExecutor("spring_batch");
-	}
+    @Bean
+    public TaskExecutor taskExecutor() {
+        return new SimpleAsyncTaskExecutor("spring_batch");
+    }
 
-	@Bean
-	public JdbcBatchItemWriter<Transaction> transactionWriter() {
+    @Bean
+    public JdbcBatchItemWriter<Transaction> transactionWriter() {
 
-		return new JdbcBatchItemWriterBuilder<Transaction>() //
-				.dataSource(dataSource)
-				.sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
-						+ "VALUES (:customerNumber, :number, :transactionDate, :amount )")
-				.beanMapped() //
-				.build();
-	}
+        return new JdbcBatchItemWriterBuilder<Transaction>() //
+                .dataSource(dataSource)
+                .sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
+                        + "VALUES (:customerNumber, :number, :transactionDate, :amount )")
+                .beanMapped() //
+                .build();
+    }
 
-	@Bean
-	public ItemReader<? extends ProcessIndicatorItemWrapper<Transaction>> stagingReader() {
-		final StagingItemReader<Transaction> reader = new StagingItemReader<Transaction>();
-		reader.setDataSource(dataSource);
-		return reader;
-	}
+    @Bean
+    public ItemReader<? extends ProcessIndicatorItemWrapper<Transaction>> stagingReader() {
+        final StagingItemReader<Transaction> reader = new StagingItemReader<Transaction>();
+        reader.setDataSource(dataSource);
+        return reader;
+    }
 
 }

@@ -22,32 +22,31 @@ import fr.training.springbatch.job.staging.StagingJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		StagingJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, StagingJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class StagingJobTest {
 
-	@Autowired
-	private JobLauncherTestUtils jobLauncherTestUtils;
+    @Autowired
+    private JobLauncherTestUtils jobLauncherTestUtils;
 
-	private JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
-	@Autowired
-	public void setDataSource(final DataSource dataSource) {
-		jdbcTemplate = new JdbcTemplate(dataSource);
-	}
+    @Autowired
+    public void setDataSource(final DataSource dataSource) {
+        jdbcTemplate = new JdbcTemplate(dataSource);
+    }
 
-	@Test
-	void stagingjob_should_proccess_all_batch_staging_table_records() throws Exception {
-		final int before = JdbcTestUtils.countRowsInTable(jdbcTemplate, "BATCH_STAGING");
+    @Test
+    void stagingjob_should_proccess_all_batch_staging_table_records() throws Exception {
+        final int before = JdbcTestUtils.countRowsInTable(jdbcTemplate, "BATCH_STAGING");
 
-		final JobParameters jobParameters = new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-				.addString("input-file", "src/main/resources/csv/transaction.csv").toJobParameters();
+        final JobParameters jobParameters = new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
+                .addString("input-file", "src/main/resources/csv/transaction.csv").toJobParameters();
 
-		final JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters);
+        final JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters);
 
-		final int after = JdbcTestUtils.countRowsInTable(jdbcTemplate, "BATCH_STAGING");
-		assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-		assertThat(execution.getStepExecutions().iterator().next().getReadCount()).isEqualTo(after - before);
-	}
+        final int after = JdbcTestUtils.countRowsInTable(jdbcTemplate, "BATCH_STAGING");
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(execution.getStepExecutions().iterator().next().getReadCount()).isEqualTo(after - before);
+    }
 
 }

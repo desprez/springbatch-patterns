@@ -18,25 +18,24 @@ import fr.training.springbatch.job.complexml.ComplexmlJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		ComplexmlJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, ComplexmlJobConfig.class }, properties = "spring.batch.job.enabled=false")
 
 class ComplexmlJobConfigTest {
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void launch_ComplexmlJob_nominal_should_success() throws Exception {
-		// Given
+    @Test
+    void launch_ComplexmlJob_nominal_should_success() throws Exception {
+        // Given
 
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-				.addString("xml-file", "src/test/resources/datas/xml/input-complex.xml") //
-				.toJobParameters();
-		// When
-		final JobExecution jobExec = testUtils.launchJob(jobParameters);
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-	}
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
+                .addString("xml-file", "src/test/resources/datas/xml/input-complex.xml") //
+                .toJobParameters();
+        // When
+        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    }
 
 }

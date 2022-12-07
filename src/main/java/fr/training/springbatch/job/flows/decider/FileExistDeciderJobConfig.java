@@ -43,135 +43,121 @@ import org.springframework.core.io.FileSystemResource;
  *
  * Try with emptyItemReader the file will not produced and the job ends.
  *
- * Try with filledItemReader the file will produced and the sendAndArchiveFlow
- * wil be executed.
+ * Try with filledItemReader the file will produced and the sendAndArchiveFlow wil be executed.
  *
  */
 @Configuration
 @EnableBatchProcessing
 public class FileExistDeciderJobConfig {
 
-	private static final Logger logger = LoggerFactory.getLogger(FileExistDeciderJobConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileExistDeciderJobConfig.class);
 
-	@Autowired
-	private JobBuilderFactory jobBuilderFactory;
+    @Autowired
+    private JobBuilderFactory jobBuilderFactory;
 
-	@Autowired
-	private StepBuilderFactory stepBuilderFactory;
+    @Autowired
+    private StepBuilderFactory stepBuilderFactory;
 
-	@Bean
-	public Step producerStep(final ItemWriter<String> itemWriter) {
-		return stepBuilderFactory.get("producer-Step").<String, String>chunk(3) //
-				.reader(emptyItemReader()) //
-				.writer(itemWriter) //
-				.build();
-	}
+    @Bean
+    public Step producerStep(final ItemWriter<String> itemWriter) {
+        return stepBuilderFactory.get("producer-Step").<String, String> chunk(3) //
+                .reader(emptyItemReader()) //
+                .writer(itemWriter) //
+                .build();
+    }
 
-	@Bean
-	public ListItemReader<String> emptyItemReader() {
-		return new ListItemReader<>(new ArrayList<String>());
-	}
+    @Bean
+    public ListItemReader<String> emptyItemReader() {
+        return new ListItemReader<>(new ArrayList<String>());
+    }
 
-	@Bean
-	public ListItemReader<String> filledItemReader() {
-		return new ListItemReader<>(Arrays.asList("Line 1", "Line 2", "Line 3", "Line 4", "Line 5", "Line 6"));
-	}
+    @Bean
+    public ListItemReader<String> filledItemReader() {
+        return new ListItemReader<>(Arrays.asList("Line 1", "Line 2", "Line 3", "Line 4", "Line 5", "Line 6"));
+    }
 
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public FlatFileItemWriter<String> itemWriter(@Value("#{jobParameters['output-file']}") final String fileName) {
-		return new FlatFileItemWriterBuilder<String>() //
-				.name("lineWriter") //
-				.resource(new FileSystemResource(fileName)) //
-				.lineAggregator(new PassThroughLineAggregator<>()) //
-				.shouldDeleteIfEmpty(true) //
-				.build();
-	}
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    public FlatFileItemWriter<String> itemWriter(@Value("#{jobParameters['output-file']}") final String fileName) {
+        return new FlatFileItemWriterBuilder<String>() //
+                .name("lineWriter") //
+                .resource(new FileSystemResource(fileName)) //
+                .lineAggregator(new PassThroughLineAggregator<>()) //
+                .shouldDeleteIfEmpty(true) //
+                .build();
+    }
 
-	@Bean
-	public JobExecutionDecider fileExistDecider() {
-		return new JobExecutionDecider() {
+    @Bean
+    public JobExecutionDecider fileExistDecider() {
+        return new JobExecutionDecider() {
 
-			@Override
-			public FlowExecutionStatus decide(final JobExecution jobExecution, final StepExecution stepExecution) {
-				final String filename = jobExecution.getJobParameters().getString("output-file");
-				if (new File(filename).exists()) {
-					return new FlowExecutionStatus("CONTINUE");
-				} else {
-					return FlowExecutionStatus.COMPLETED;
-				}
-			}
-		};
-	}
+            @Override
+            public FlowExecutionStatus decide(final JobExecution jobExecution, final StepExecution stepExecution) {
+                final String filename = jobExecution.getJobParameters().getString("output-file");
+                if (new File(filename).exists()) {
+                    return new FlowExecutionStatus("CONTINUE");
+                } else {
+                    return FlowExecutionStatus.COMPLETED;
+                }
+            }
+        };
+    }
 
-	@Bean
-	public Flow sendAndArchiveFlow() {
-		// @formatter:off
-		return new FlowBuilder<Flow>("send-archive-flow")
-				.start(stepBuilderFactory.get("send-step").tasklet(sendTasklet()).build())
-				.next(stepBuilderFactory.get("archive-step").tasklet(archiveTasklet()).build())
-				.build();
-		// @formatter:on
-	}
+    @Bean
+    public Flow sendAndArchiveFlow() {
+        // @formatter:off
+        return new FlowBuilder<Flow>("send-archive-flow").start(stepBuilderFactory.get("send-step").tasklet(sendTasklet()).build())
+                .next(stepBuilderFactory.get("archive-step").tasklet(archiveTasklet()).build()).build();
+        // @formatter:on
+    }
 
-	@Bean
-	public Tasklet sendTasklet() {
-		return new Tasklet() {
-			@Override
-			public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext)
-					throws Exception {
-				logger.debug("launch sendTasklet");
-				return RepeatStatus.FINISHED;
-			}
-		};
-	}
+    @Bean
+    public Tasklet sendTasklet() {
+        return new Tasklet() {
+            @Override
+            public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+                logger.debug("launch sendTasklet");
+                return RepeatStatus.FINISHED;
+            }
+        };
+    }
 
-	@Bean
-	public Tasklet archiveTasklet() {
-		return new Tasklet() {
-			@Override
-			public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext)
-					throws Exception {
-				logger.debug("launch archiveTasklet");
-				return RepeatStatus.FINISHED;
-			}
-		};
-	}
+    @Bean
+    public Tasklet archiveTasklet() {
+        return new Tasklet() {
+            @Override
+            public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+                logger.debug("launch archiveTasklet");
+                return RepeatStatus.FINISHED;
+            }
+        };
+    }
 
-	@Bean
-	public Flow mainFlow(final Step producerStep) {
-		// @formatter:off
-		return new FlowBuilder<Flow>("main-flow")
-				.start(producerStep)
-				.on("*").to(fileExistDecider())
-				.from(fileExistDecider()).on("CONTINUE").to(sendAndArchiveFlow())
-				.from(fileExistDecider()).on("COMPLETED").end()
-				.build();
-		// @formatter:on
-	}
+    @Bean
+    public Flow mainFlow(final Step producerStep) {
+        // @formatter:off
+        return new FlowBuilder<Flow>("main-flow").start(producerStep).on("*").to(fileExistDecider()).from(fileExistDecider()).on("CONTINUE")
+                .to(sendAndArchiveFlow()).from(fileExistDecider()).on("COMPLETED").end().build();
+        // @formatter:on
+    }
 
-	@Bean
-	public Job job(final Flow mainFlow) {
-		// @formatter:off
-		return jobBuilderFactory.get("exampleJob")
-				.start(mainFlow)
-				.end()
-				.build();
-		// @formatter:on
-	}
+    @Bean
+    public Job job(final Flow mainFlow) {
+        // @formatter:off
+        return jobBuilderFactory.get("exampleJob").start(mainFlow).end().build();
+        // @formatter:on
+    }
 
-	public static void main(final String[] args) throws Exception {
-		final GenericApplicationContext context = new AnnotationConfigApplicationContext(
-				FileExistDeciderJobConfig.class);
-		final JobLauncher jobLauncher = context.getBean(JobLauncher.class);
-		final Job job = context.getBean(Job.class);
+    public static void main(final String[] args) throws Exception {
+        final GenericApplicationContext context = new AnnotationConfigApplicationContext(FileExistDeciderJobConfig.class);
+        final JobLauncher jobLauncher = context.getBean(JobLauncher.class);
+        final Job job = context.getBean(Job.class);
 
-		final JobParameters jobParameters = new JobParametersBuilder()
-				.addString("output-file", "target/output/test.txt").toJobParameters();
+        final JobParameters jobParameters = new JobParametersBuilder().addString("output-file", "target/output/test.txt").toJobParameters();
 
-		jobLauncher.run(job, jobParameters);
+        jobLauncher.run(job, jobParameters);
 
-		context.close();
-	}
+        context.close();
+    }
 
 }

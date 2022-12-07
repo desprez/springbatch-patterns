@@ -26,42 +26,40 @@ import fr.training.springbatch.tools.notifier.JobMonitoringListener;
 @ExtendWith(MockitoExtension.class)
 class JobMonitoringListenerTest {
 
-	@Mock
-	private JavaMailSender mailSender;
+    @Mock
+    private JavaMailSender mailSender;
 
-	@Captor
-	private ArgumentCaptor<SimpleMailMessage> captor;
+    @Captor
+    private ArgumentCaptor<SimpleMailMessage> captor;
 
-	@Test
-	public void afterJob_with_failed_JobExecution_should_send_mail() throws Exception {
-		// Given
-		final SimpleMailMessage templateMessage = new SimpleMailMessage();
-		templateMessage.setFrom("customerservice@mycompany.com");
-		templateMessage.setSubject("your job");
+    @Test
+    public void afterJob_with_failed_JobExecution_should_send_mail() throws Exception {
+        // Given
+        final SimpleMailMessage templateMessage = new SimpleMailMessage();
+        templateMessage.setFrom("customerservice@mycompany.com");
+        templateMessage.setSubject("your job");
 
-		final JobMonitoringListener jobListener = new JobMonitoringListener(
-				new EmailNotificationService(mailSender, templateMessage));
+        final JobMonitoringListener jobListener = new JobMonitoringListener(new EmailNotificationService(mailSender, templateMessage));
 
-		final JobExecution jobExecution = getFailedJobExecution();
+        final JobExecution jobExecution = getFailedJobExecution();
 
-		// when
-		jobListener.afterJob(jobExecution);
+        // when
+        jobListener.afterJob(jobExecution);
 
-		// Then
-		verify(mailSender, times(1)).send(captor.capture());
-		assertThat(captor.getAllValues().get(0).getText()).startsWith(
-				"Job execution #122 of job instance #12 failed with following exceptions:java.lang.RuntimeException: exception example");
-	}
+        // Then
+        verify(mailSender, times(1)).send(captor.capture());
+        assertThat(captor.getAllValues().get(0).getText())
+                .startsWith("Job execution #122 of job instance #12 failed with following exceptions:java.lang.RuntimeException: exception example");
+    }
 
-	private JobExecution getFailedJobExecution() {
-		final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecutionWithStepExecutions(122L,
-				Arrays.asList("step"));
-		jobExecution.setStatus(BatchStatus.FAILED);
-		jobExecution.setExitStatus(ExitStatus.FAILED);
-		jobExecution.setStartTime(new Date());
-		jobExecution.setEndTime(new Date(jobExecution.getStartTime().getTime() + 100));
-		jobExecution.addFailureException(new RuntimeException("exception example"));
-		return jobExecution;
-	}
+    private JobExecution getFailedJobExecution() {
+        final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecutionWithStepExecutions(122L, Arrays.asList("step"));
+        jobExecution.setStatus(BatchStatus.FAILED);
+        jobExecution.setExitStatus(ExitStatus.FAILED);
+        jobExecution.setStartTime(new Date());
+        jobExecution.setEndTime(new Date(jobExecution.getStartTime().getTime() + 100));
+        jobExecution.addFailureException(new RuntimeException("exception example"));
+        return jobExecution;
+    }
 
 }

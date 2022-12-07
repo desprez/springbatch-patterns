@@ -20,33 +20,32 @@ import fr.training.springbatch.job.synchro.File2TableSynchroJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		File2TableSynchroJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, File2TableSynchroJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class File2TableSynchroJobTest {
 
-	private static final String OUTPUT_FILE = "target/output/outputfile.csv";
+    private static final String OUTPUT_FILE = "target/output/outputfile.csv";
 
-	private static final String CUSTOMER_FILE = "src/main/resources/csv/customer.csv";
+    private static final String CUSTOMER_FILE = "src/main/resources/csv/customer.csv";
 
-	private static final String EXPECTED_FILE = "src/test/resources/datas/csv/customer-expected.csv";
+    private static final String EXPECTED_FILE = "src/test/resources/datas/csv/customer-expected.csv";
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void file2DBSynchroStep_should_produce_expected_file() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
-				.addString("customer-file", CUSTOMER_FILE) //
-				.addString("output-file", OUTPUT_FILE) //
-				.toJobParameters();
-		// When
-		final JobExecution jobExecution = testUtils.launchStep("file2tablesynchro-step", jobParameters);
+    @Test
+    void file2DBSynchroStep_should_produce_expected_file() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
+                .addString("customer-file", CUSTOMER_FILE) //
+                .addString("output-file", OUTPUT_FILE) //
+                .toJobParameters();
+        // When
+        final JobExecution jobExecution = testUtils.launchStep("file2tablesynchro-step", jobParameters);
 
-		// Then
-		assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        // Then
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-		AssertFile.assertFileEquals(new FileSystemResource(EXPECTED_FILE), //
-				new FileSystemResource(OUTPUT_FILE));
-	}
+        AssertFile.assertFileEquals(new FileSystemResource(EXPECTED_FILE), //
+                new FileSystemResource(OUTPUT_FILE));
+    }
 }

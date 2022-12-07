@@ -11,53 +11,53 @@ import fr.training.springbatch.app.dto.Transaction;
 
 public class CustomerFileReader implements ItemStreamReader<Customer> {
 
-	private Object curItem = null;
+    private Object curItem = null;
 
-	private ItemStreamReader<Object> delegate;
+    private ItemStreamReader<Object> delegate;
 
-	@Override
-	public Customer read() throws Exception {
-		if (curItem == null) {
-			curItem = delegate.read();
-		}
+    @Override
+    public Customer read() throws Exception {
+        if (curItem == null) {
+            curItem = delegate.read();
+        }
 
-		final Customer customer = (Customer) curItem;
-		curItem = null;
+        final Customer customer = (Customer) curItem;
+        curItem = null;
 
-		if (customer != null) {
+        if (customer != null) {
 
-			while (peek() instanceof Transaction) {
-				customer.addTransaction((Transaction) curItem);
-				curItem = null;
-			}
-		}
-		return customer;
-	}
+            while (peek() instanceof Transaction) {
+                customer.addTransaction((Transaction) curItem);
+                curItem = null;
+            }
+        }
+        return customer;
+    }
 
-	public Object peek() throws Exception, UnexpectedInputException, ParseException {
-		if (curItem == null) {
-			curItem = delegate.read();
-		}
-		return curItem;
-	}
+    public Object peek() throws Exception, UnexpectedInputException, ParseException {
+        if (curItem == null) {
+            curItem = delegate.read();
+        }
+        return curItem;
+    }
 
-	public void setDelegate(final ItemStreamReader<Object> delegate) {
-		this.delegate = delegate;
-	}
+    public void setDelegate(final ItemStreamReader<Object> delegate) {
+        this.delegate = delegate;
+    }
 
-	@Override
-	public void close() throws ItemStreamException {
-		delegate.close();
-	}
+    @Override
+    public void close() throws ItemStreamException {
+        delegate.close();
+    }
 
-	@Override
-	public void open(final ExecutionContext executionContext) throws ItemStreamException {
-		delegate.open(executionContext);
-	}
+    @Override
+    public void open(final ExecutionContext executionContext) throws ItemStreamException {
+        delegate.open(executionContext);
+    }
 
-	@Override
-	public void update(final ExecutionContext executionContext) throws ItemStreamException {
-		delegate.update(executionContext);
-	}
+    @Override
+    public void update(final ExecutionContext executionContext) throws ItemStreamException {
+        delegate.update(executionContext);
+    }
 
 }

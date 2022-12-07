@@ -7,6 +7,6 @@ import org.springframework.batch.core.JobExecution;
  */
 public interface NotificationService {
 
-	void notify(JobExecution jobExecution);
+    void notify(JobExecution jobExecution);
 
 }

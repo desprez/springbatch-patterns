@@ -11,55 +11,48 @@ import org.springframework.batch.item.UnexpectedInputException;
 
 public class FooBarReader implements ItemStreamReader<Foo> {
 
-	private FooAccumulator masterAccumulator;
-	private BarAccumulator detailAccumulator;
+    private FooAccumulator masterAccumulator;
+    private BarAccumulator detailAccumulator;
 
-	@Override
-	public Foo read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-		final List<Foo> items = masterAccumulator.readNextItems();
-		if (items == null || items.size() == 0) {
-			return null;
-		}
+    @Override
+    public Foo read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+        final List<Foo> items = masterAccumulator.readNextItems();
+        if (items == null || items.size() == 0) {
+            return null;
+        }
 
-		final Foo foo = items.get(0);
+        final Foo foo = items.get(0);
 
-		final Integer key = masterAccumulator.getKey(foo);
-		final List<Bar> details = detailAccumulator.readNextItems(key);
+        final Integer key = masterAccumulator.getKey(foo);
+        final List<Bar> details = detailAccumulator.readNextItems(key);
 
-		return new Foo(foo, details);
-	}
+        return new Foo(foo, details);
+    }
 
-	@Override
-	public void open(final ExecutionContext executionContext) throws ItemStreamException {
-		masterAccumulator.open(executionContext);
-		detailAccumulator.open(executionContext);
-	}
+    @Override
+    public void open(final ExecutionContext executionContext) throws ItemStreamException {
+        masterAccumulator.open(executionContext);
+        detailAccumulator.open(executionContext);
+    }
 
-	@Override
-	public void update(final ExecutionContext executionContext) throws ItemStreamException {
-		masterAccumulator.update(executionContext);
-		detailAccumulator.update(executionContext);
-	}
+    @Override
+    public void update(final ExecutionContext executionContext) throws ItemStreamException {
+        masterAccumulator.update(executionContext);
+        detailAccumulator.update(executionContext);
+    }
 
-	@Override
-	public void close() throws ItemStreamException {
-		masterAccumulator.close();
-		detailAccumulator.close();
-	}
+    @Override
+    public void close() throws ItemStreamException {
+        masterAccumulator.close();
+        detailAccumulator.close();
+    }
 
-	public void setMasterAccumulator(final FooAccumulator masterAccumulator) {
-		this.masterAccumulator = masterAccumulator;
-	}
+    public void setMasterAccumulator(final FooAccumulator masterAccumulator) {
+        this.masterAccumulator = masterAccumulator;
+    }
 
-	public void setDetailAccumulator(final BarAccumulator detailAccumulator) {
-		this.detailAccumulator = detailAccumulator;
-	}
-
+    public void setDetailAccumulator(final BarAccumulator detailAccumulator) {
+        this.detailAccumulator = detailAccumulator;
+    }
 
 }
-
-
-
-
-
-

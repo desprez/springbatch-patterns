@@ -16,16 +16,15 @@ import fr.training.springbatch.tools.chaos.BatchChaosException;
  */
 public class BipolarTasklet implements Tasklet {
 
-	@Override
-	public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext)
-			throws Exception {
+    @Override
+    public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext) throws Exception {
 
-		final Long runId = chunkContext.getStepContext().getJobInstanceId();
+        final Long runId = chunkContext.getStepContext().getJobInstanceId();
 
-		if (runId % 2 == 0) {
-			throw new BatchChaosException("BipolarTasklet expected fail");
-		}
+        if (runId % 2 == 0) {
+            throw new BatchChaosException("BipolarTasklet expected fail");
+        }
 
-		return RepeatStatus.FINISHED;
-	}
+        return RepeatStatus.FINISHED;
+    }
 }

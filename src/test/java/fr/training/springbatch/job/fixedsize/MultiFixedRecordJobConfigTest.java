@@ -22,32 +22,31 @@ import fr.training.springbatch.job.fixedsize.MultiFixedRecordJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, MultiFixedRecordJobConfig.class }, properties = {
-		"spring.batch.job.enabled=false", "application.batch.transmitterCode=AP99325" })
+@SpringBootTest(classes = { BatchTestConfiguration.class, MultiFixedRecordJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "application.batch.transmitterCode=AP99325" })
 class MultiFixedRecordJobConfigTest {
 
-	private static final String OUTPUT_FILE_PATH = "target/fixedresult.txt";
-	private static final String INPUT_FILE_PATH = "src/test/resources/datas/fixed/multirecordfile.txt";
+    private static final String OUTPUT_FILE_PATH = "target/fixedresult.txt";
+    private static final String INPUT_FILE_PATH = "src/test/resources/datas/fixed/multirecordfile.txt";
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void fixedJob_should_success() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-				.addString("inputfile", INPUT_FILE_PATH) //
-				.addString("outputfile", OUTPUT_FILE_PATH) //
-				.addString("receivercode", "AP99530") //
-				.addDate("created-date", new SimpleDateFormat("yyyy-MM-dd").parse("2021-05-31")) //
-				.toJobParameters();
-		// When
-		final JobExecution jobExec = testUtils.launchJob(jobParameters);
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    @Test
+    void fixedJob_should_success() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("inputfile", INPUT_FILE_PATH) //
+                .addString("outputfile", OUTPUT_FILE_PATH) //
+                .addString("receivercode", "AP99530") //
+                .addDate("created-date", new SimpleDateFormat("yyyy-MM-dd").parse("2021-05-31")) //
+                .toJobParameters();
+        // When
+        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-		AssertFile.assertFileEquals(new FileSystemResource(INPUT_FILE_PATH), //
-				new FileSystemResource(OUTPUT_FILE_PATH));
-	}
+        AssertFile.assertFileEquals(new FileSystemResource(INPUT_FILE_PATH), //
+                new FileSystemResource(OUTPUT_FILE_PATH));
+    }
 
 }

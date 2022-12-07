@@ -20,31 +20,31 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { BatchTestConfiguration.class})
+@ContextConfiguration(classes = { BatchTestConfiguration.class })
 @JdbcTest
 class JdbcTaskletTest {
 
-	@Autowired
-	private DataSource dataSource;
+    @Autowired
+    private DataSource dataSource;
 
-	@Test
-	void testExecute() throws Exception {
+    @Test
+    void testExecute() throws Exception {
 
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 
-		final StepContribution contribution = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+        final StepContribution contribution = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-		final JdbcTasklet tasklet = new JdbcTasklet();
-		tasklet.setDataSource(dataSource);
-		tasklet.setSql("SELECT * FROM TRANSACTION");
+        final JdbcTasklet tasklet = new JdbcTasklet();
+        tasklet.setDataSource(dataSource);
+        tasklet.setSql("SELECT * FROM TRANSACTION");
 
-		// When
-		final RepeatStatus status = tasklet.execute(contribution, context);
+        // When
+        final RepeatStatus status = tasklet.execute(contribution, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
-	}
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+    }
 
 }

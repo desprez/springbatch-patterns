@@ -10,17 +10,16 @@ import org.springframework.batch.repeat.RepeatStatus;
 
 public class MoveFilesTasklet implements Tasklet {
 
-	private final String filePath = "someFilePAth";
+    private final String filePath = "someFilePAth";
 
-	@Override
-	public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext)
-			throws Exception {
+    @Override
+    public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext) throws Exception {
 
-		final File directory = new File(filePath);
-		Arrays.asList(directory.listFiles((dir, name) -> name.matches("yourfilePrefix.*?"))).stream()
-		.forEach(singleFile -> singleFile.renameTo(new File("someNewFilePath")));
+        final File directory = new File(filePath);
+        Arrays.asList(directory.listFiles((dir, name) -> name.matches("yourfilePrefix.*?"))).stream()
+                .forEach(singleFile -> singleFile.renameTo(new File("someNewFilePath")));
 
-		return RepeatStatus.FINISHED;
-	}
+        return RepeatStatus.FINISHED;
+    }
 
 }

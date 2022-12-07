@@ -22,80 +22,80 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 class RestServiceTaskletTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(RestServiceTaskletTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(RestServiceTaskletTest.class);
 
-	@Test
-	void execute_GET_method_with_existing_resource_should_success() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+    @Test
+    void execute_GET_method_with_existing_resource_should_success() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 
-		final StepContribution contribution = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+        final StepContribution contribution = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-		final RestServiceTasklet tasklet = new RestServiceTasklet();
-		tasklet.setHttpMethod("GET");
-		tasklet.setUri(new URI("https://jsonplaceholder.typicode.com/posts/1"));
-		tasklet.setContentType("application/json");
-		tasklet.afterPropertiesSet();
+        final RestServiceTasklet tasklet = new RestServiceTasklet();
+        tasklet.setHttpMethod("GET");
+        tasklet.setUri(new URI("https://jsonplaceholder.typicode.com/posts/1"));
+        tasklet.setContentType("application/json");
+        tasklet.afterPropertiesSet();
 
-		// When
-		final RepeatStatus status = tasklet.execute(contribution, context);
+        // When
+        final RepeatStatus status = tasklet.execute(contribution, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
-	}
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+    }
 
-	@Test
-	void execute_GET_method_with_unknown_resource_should_fails() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+    @Test
+    void execute_GET_method_with_unknown_resource_should_fails() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 
-		final StepContribution contribution = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+        final StepContribution contribution = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-		final RestServiceTasklet tasklet = new RestServiceTasklet();
-		tasklet.setHttpMethod("GET");
-		tasklet.setUri(new URI("https://jsonplaceholder.typicode.com/posts/9999"));
-		tasklet.setContentType("application/json");
-		tasklet.afterPropertiesSet();
+        final RestServiceTasklet tasklet = new RestServiceTasklet();
+        tasklet.setHttpMethod("GET");
+        tasklet.setUri(new URI("https://jsonplaceholder.typicode.com/posts/9999"));
+        tasklet.setContentType("application/json");
+        tasklet.afterPropertiesSet();
 
-		// Then
-		Assertions.assertThrows(UnexpectedJobExecutionException.class, () -> {
-			// When
-			tasklet.execute(contribution, context);
-		});
+        // Then
+        Assertions.assertThrows(UnexpectedJobExecutionException.class, () -> {
+            // When
+            tasklet.execute(contribution, context);
+        });
 
-	}
+    }
 
-	@Test
-	void execute_POST_method_should_success() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+    @Test
+    void execute_POST_method_should_success() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
 
-		final StepContribution contribution = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+        final StepContribution contribution = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-		final RestServiceTasklet tasklet = new RestServiceTasklet();
-		tasklet.setHttpMethod("POST");
-		tasklet.setUri(new URI("https://jsonplaceholder.typicode.com/posts"));
-		tasklet.setContentType("application/json");
+        final RestServiceTasklet tasklet = new RestServiceTasklet();
+        tasklet.setHttpMethod("POST");
+        tasklet.setUri(new URI("https://jsonplaceholder.typicode.com/posts"));
+        tasklet.setContentType("application/json");
 
-		final Map<String, Object> params = new HashMap<>();
-		params.put("title", "foo");
-		params.put("body", "bar");
-		params.put("userId", 1);
-		final String payload = new ObjectMapper().writeValueAsString(params);
+        final Map<String, Object> params = new HashMap<>();
+        params.put("title", "foo");
+        params.put("body", "bar");
+        params.put("userId", 1);
+        final String payload = new ObjectMapper().writeValueAsString(params);
 
-		tasklet.setRequestBody(payload);
-		tasklet.afterPropertiesSet();
+        tasklet.setRequestBody(payload);
+        tasklet.afterPropertiesSet();
 
-		// When
-		final RepeatStatus status = tasklet.execute(contribution, context);
+        // When
+        final RepeatStatus status = tasklet.execute(contribution, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
 
-		logger.info("responseBody {}", stepExecution.getJobExecution().getExecutionContext().get("responseBody"));
-	}
+        logger.info("responseBody {}", stepExecution.getJobExecution().getExecutionContext().get("responseBody"));
+    }
 
 }

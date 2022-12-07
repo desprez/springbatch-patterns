@@ -22,37 +22,36 @@ import fr.training.springbatch.job.update.SimpleUpdateJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		SimpleUpdateJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, SimpleUpdateJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class SimpleUpdateJobTest {
 
-	private static final String REJECT_FILE_PATH = "target/output/reject-updates.csv";
+    private static final String REJECT_FILE_PATH = "target/output/reject-updates.csv";
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	public void launch_SimpleUpdateJob_nominal_should_success() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-				.addString("input-file", "src/main/resources/csv/customer-update.csv") //
-				.addString("rejectfile", REJECT_FILE_PATH) //
-				.toJobParameters();
-		// When
-		final JobExecution jobExec = testUtils.launchJob(jobParameters);
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-		assertThat(new File(REJECT_FILE_PATH)).doesNotExist();
+    @Test
+    public void launch_SimpleUpdateJob_nominal_should_success() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
+                .addString("input-file", "src/main/resources/csv/customer-update.csv") //
+                .addString("rejectfile", REJECT_FILE_PATH) //
+                .toJobParameters();
+        // When
+        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(new File(REJECT_FILE_PATH)).doesNotExist();
 
-		// And expected read / write counts
-		final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> {
-			return "simple-update-step".equals(e.getStepName());
-		}).findFirst();
-		assertThat(executionOpt.isPresent()).isTrue();
-		final StepExecution stepExec = executionOpt.get();
+        // And expected read / write counts
+        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> {
+            return "simple-update-step".equals(e.getStepName());
+        }).findFirst();
+        assertThat(executionOpt.isPresent()).isTrue();
+        final StepExecution stepExec = executionOpt.get();
 
-		assertThat(stepExec.getReadCount()).isEqualTo(200);
-		assertThat(stepExec.getWriteCount()).isEqualTo(200);
-	}
+        assertThat(stepExec.getReadCount()).isEqualTo(200);
+        assertThat(stepExec.getWriteCount()).isEqualTo(200);
+    }
 
 }

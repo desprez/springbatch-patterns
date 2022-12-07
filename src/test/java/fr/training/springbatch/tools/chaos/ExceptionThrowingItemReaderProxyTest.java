@@ -13,46 +13,46 @@ import org.springframework.batch.repeat.support.RepeatSynchronizationManager;
 
 public class ExceptionThrowingItemReaderProxyTest {
 
-	// expected call count before exception is thrown (exception should be thrown in
-	// next iteration)
-	private static final int ITER_COUNT = 5;
+    // expected call count before exception is thrown (exception should be thrown in
+    // next iteration)
+    private static final int ITER_COUNT = 5;
 
-	@AfterEach
-	public void tearDown() throws Exception {
-		RepeatSynchronizationManager.clear();
-	}
+    @AfterEach
+    public void tearDown() throws Exception {
+        RepeatSynchronizationManager.clear();
+    }
 
-	@SuppressWarnings("serial")
-	@Test
-	public void testProcess() throws Exception {
+    @SuppressWarnings("serial")
+    @Test
+    public void testProcess() throws Exception {
 
-		// create module and set item processor and iteration count
-		final ExceptionThrowingItemReaderProxy<String> itemReader = new ExceptionThrowingItemReaderProxy<>();
-		itemReader.setDelegate(new ListItemReader<>(new ArrayList<String>() {
-			{
-				add("a");
-				add("b");
-				add("c");
-				add("d");
-				add("e");
-				add("f");
-			}
-		}));
+        // create module and set item processor and iteration count
+        final ExceptionThrowingItemReaderProxy<String> itemReader = new ExceptionThrowingItemReaderProxy<>();
+        itemReader.setDelegate(new ListItemReader<>(new ArrayList<String>() {
+            {
+                add("a");
+                add("b");
+                add("c");
+                add("d");
+                add("e");
+                add("f");
+            }
+        }));
 
-		itemReader.setThrowExceptionOnRecordNumber(ITER_COUNT + 1);
+        itemReader.setThrowExceptionOnRecordNumber(ITER_COUNT + 1);
 
-		RepeatSynchronizationManager.register(new RepeatContextSupport(null));
+        RepeatSynchronizationManager.register(new RepeatContextSupport(null));
 
-		// call process method multiple times and verify whether exception is thrown
-		// when expected
-		for (int i = 0; i <= ITER_COUNT; i++) {
-			try {
-				itemReader.read();
-				assertThat(i).isLessThan(ITER_COUNT);
-			} catch (final UnexpectedJobExecutionException bce) {
-				assertThat(i).isEqualTo(ITER_COUNT);
-			}
-		}
+        // call process method multiple times and verify whether exception is thrown
+        // when expected
+        for (int i = 0; i <= ITER_COUNT; i++) {
+            try {
+                itemReader.read();
+                assertThat(i).isLessThan(ITER_COUNT);
+            } catch (final UnexpectedJobExecutionException bce) {
+                assertThat(i).isEqualTo(ITER_COUNT);
+            }
+        }
 
-	}
+    }
 }

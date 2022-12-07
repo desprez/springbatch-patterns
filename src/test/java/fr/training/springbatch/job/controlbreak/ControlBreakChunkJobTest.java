@@ -17,29 +17,28 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		ControlBreakChunkJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, ControlBreakChunkJobConfig.class }, properties = "spring.batch.job.enabled=false")
 class ControlBreakChunkJobTest {
 
-	private static final String OUTPUT_FILE = "target/output/outputfile.csv";
+    private static final String OUTPUT_FILE = "target/output/outputfile.csv";
 
-	private static final String TRANSACTION_FILE = "src/main/resources/csv/transaction.csv";
+    private static final String TRANSACTION_FILE = "src/main/resources/csv/transaction.csv";
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void controlChunkJob_should_produce_expected_file() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
-				.addString("transaction-file", TRANSACTION_FILE) //
-				.addString("output-file", OUTPUT_FILE) //
-				.toJobParameters();
-		// When
-		final JobExecution jobExecution = testUtils.launchJob(jobParameters);
+    @Test
+    void controlChunkJob_should_produce_expected_file() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
+                .addString("transaction-file", TRANSACTION_FILE) //
+                .addString("output-file", OUTPUT_FILE) //
+                .toJobParameters();
+        // When
+        final JobExecution jobExecution = testUtils.launchJob(jobParameters);
 
-		// Then
-		assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-	}
+        // Then
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    }
 
 }
