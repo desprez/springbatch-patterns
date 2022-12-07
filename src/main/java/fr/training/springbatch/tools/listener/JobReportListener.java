@@ -21,7 +21,7 @@ public class JobReportListener implements JobExecutionListener, StepExecutionLis
 	public void afterJob(final JobExecution jobExecution) {
 		logger.info("{} ENDING", jobExecution.getJobInstance().getJobName());
 		for (final StepExecution stepExecution : jobExecution.getStepExecutions()) {
-			logger.info(stepExecution.getSummary()/* .replace(" ", "\n") */);
+			logger.info(stepExecution.getSummary().replace(" ", "\n") );
 		}
 	}
 

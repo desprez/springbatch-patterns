@@ -17,16 +17,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @EnableBatchProcessing
 public class BatchTestConfiguration {
 
-	/**
-	 * Define JdbcTemplate can be used for checking if DB records has been processed
-	 * well.
-	 *
-	 * @param dataSource injected by spring
-	 * @return a jdbcTemplate
-	 */
-	@Bean
-	public JdbcTemplate jdbcTemplate(final DataSource dataSource) {
-		return new JdbcTemplate(dataSource);
-	}
+    /**
+     * Define JdbcTemplate can be used for checking if DB records has been processed well.
+     *
+     * @param dataSource
+     *            injected by spring
+     * @return a jdbcTemplate
+     */
+    @Bean
+    public JdbcTemplate jdbcTemplate(final DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
 
 }

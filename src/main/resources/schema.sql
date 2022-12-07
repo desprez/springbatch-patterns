@@ -24,6 +24,8 @@ CREATE TABLE transaction
      amount           numeric,
      transaction_date DATE,
      processed        VARCHAR(1) DEFAULT 'N'
+     -- ,
+     -- PRIMARY KEY (customer_number, number)
   );
 
 DROP SEQUENCE IF EXISTS batch_staging_seq ;

@@ -17,6 +17,8 @@ logging:
   level:
     org.springframework.jdbc.core.JdbcTemplate: info
     org.springframework.batch.item.database.JdbcCursorItemReader: trace
-    fr.training.springbatch: debug
+    fr.training.springbatch: info
+    org.springframework.jdbc: info
+#    org.springframework.jdbc.datasource: debug
     jdbc: off
     jdbc.sqlonly: off
