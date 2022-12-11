@@ -140,18 +140,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			
-			<plugin>
-				<groupId>org.openrewrite.maven</groupId>
-				<artifactId>rewrite-maven-plugin</artifactId>
-				<version>4.37.0</version>
-				<configuration>
-					<activeRecipes>
-<!--						<recipe>org.openrewrite.java.cleanup.Cleanup</recipe> -->
-						<activeRecipe>org.openrewrite.java.cleanup.CommonStaticAnalysis</activeRecipe>
-					</activeRecipes>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 
