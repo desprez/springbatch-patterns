@@ -59,10 +59,10 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      * @return the job bean
      */
     @Bean
-    public Job file2TableSynchroJob(final Step file2TableSynchroStep /* injected by Spring */) {
+    Job file2TableSynchroJob(final Step file2TableSynchroStep /* injected by Spring */) {
         return jobBuilderFactory.get("file2tablesynchro-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "customer-file", "output-file" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"customer-file", "output-file"}, new String[]{})) //
                 .start(file2TableSynchroStep) //
                 .listener(reportListener()) //
                 .build();
@@ -76,11 +76,11 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      * @return a Step bean
      */
     @Bean
-    public Step file2TableSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
-            final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
+    Step file2TableSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
+                                                                                                                                                                                                                                                                                       final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
 
         return stepBuilderFactory.get("file2tablesynchro-step") //
-                .<Customer, Customer> chunk(chunkSize) //
+                .<Customer, Customer>chunk(chunkSize) //
                 .reader(masterDetailReader) //
                 .processor(processor()) //
                 .writer(customerWriter) //
@@ -95,7 +95,7 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Customer> customerReader(@Value("#{jobParameters['customer-file']}") final String customerFile) {
+    FlatFileItemReader<Customer> customerReader(@Value("#{jobParameters['customer-file']}") final String customerFile) {
 
         return new FlatFileItemReaderBuilder<Customer>() //
                 .name("customerReader") //
@@ -115,7 +115,7 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      * @return a {@link JdbcCursorItemReader} bean
      */
     @Bean
-    public JdbcCursorItemReader<Transaction> transactionReader() {
+    JdbcCursorItemReader<Transaction> transactionReader() {
 
         return new JdbcCursorItemReaderBuilder<Transaction>() //
                 .dataSource(dataSource) //
@@ -184,7 +184,7 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<Customer> customerWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
+    FlatFileItemWriter<Customer> customerWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
         return new FlatFileItemWriterBuilder<Customer>().name("customerWriter").resource(new FileSystemResource(outputFile)) //
                 .delimited() //

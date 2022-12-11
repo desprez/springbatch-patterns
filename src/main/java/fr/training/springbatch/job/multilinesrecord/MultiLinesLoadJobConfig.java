@@ -26,6 +26,7 @@ import org.springframework.batch.item.file.transform.LineTokenizer;
 import org.springframework.batch.item.support.ClassifierCompositeItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.classify.Classifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
@@ -52,7 +53,7 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     public DataSource dataSource;
 
     @Bean
-    public Job multilinesLoadJob(final Step multilinesLoadStep) {
+    Job multilinesLoadJob(final Step multilinesLoadStep) {
         return jobBuilderFactory.get("multilines-load-job") //
                 .validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})).incrementer(new RunIdIncrementer()) //
                 .flow(multilinesLoadStep) //
@@ -62,7 +63,7 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step multilinesLoadStep(final ClassifierCompositeItemWriter<Record> classifierRecordCompositeItemWriter, final ItemReader<Record> realFileReader) {
+    Step multilinesLoadStep(final ClassifierCompositeItemWriter<Record> classifierRecordCompositeItemWriter, final ItemReader<Record> realFileReader) {
         return stepBuilderFactory.get("multilines-load-step") //
                 .<Record, Record> chunk(chunkSize) //
                 .reader(realFileReader) //
@@ -81,8 +82,8 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
 
     @StepScope
     @Bean
-    public FlatFileItemReader<Record> realFileReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
-        final FlatFileItemReader<Record> fileReader = new FlatFileItemReader<Record>();
+    FlatFileItemReader<Record> realFileReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
+        final FlatFileItemReader<Record> fileReader = new FlatFileItemReader<>();
         fileReader.setResource(new FileSystemResource(inputFile));
         fileReader.setLineMapper(lineMapper());
         fileReader.setEncoding("UTF-8");
@@ -92,13 +93,13 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     public PatternMatchingCompositeLineMapper<Record> lineMapper() {
         final PatternMatchingCompositeLineMapper mapper = new PatternMatchingCompositeLineMapper<>();
 
-        final Map<String, LineTokenizer> tokenizers = new HashMap<String, LineTokenizer>(2);
+        final Map<String, LineTokenizer> tokenizers = new HashMap<>(2);
         tokenizers.put("*,C,*", customerLineTokenizer());
         tokenizers.put("*,T,*", transactionLineTokenizer());
 
         mapper.setTokenizers(tokenizers);
 
-        final Map<String, FieldSetMapper<?>> mappers = new HashMap<String, FieldSetMapper<?>>(2);
+        final Map<String, FieldSetMapper<?>> mappers = new HashMap<>(2);
         mappers.put("*,C,*", customerFieldSetMapper());
         mappers.put("*,T,*", transactionFieldSetMapper());
 
@@ -134,21 +135,21 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public ClassifierCompositeItemWriter<?> classifierRecordCompositeItemWriter(final Classifier<Record, ItemWriter> recordClassifier) throws Exception {
+    ClassifierCompositeItemWriter<?> classifierRecordCompositeItemWriter(final Classifier<Record, ItemWriter> recordClassifier) throws Exception {
         final ClassifierCompositeItemWriter compositeItemWriter = new ClassifierCompositeItemWriter();
         compositeItemWriter.setClassifier(recordClassifier);
         return compositeItemWriter;
     }
 
     @Bean
-    public Classifier<Record, ItemWriter> recordClassifier(final ItemWriter<CustomerRecord> customerWriter,
-            final ItemWriter<TransactionRecord> transactionWriter) {
+    Classifier<Record, ItemWriter> recordClassifier(final ItemWriter<CustomerRecord> customerWriter, final ItemWriter<TransactionRecord> transactionWriter) {
 
         return record -> record instanceof CustomerRecord ? customerWriter : transactionWriter;
     }
 
     @Bean
-    public JdbcBatchItemWriter<CustomerRecord> customerWriter() {
+    @DependsOnDatabaseInitialization
+    JdbcBatchItemWriter<CustomerRecord> customerWriter() {
         return new JdbcBatchItemWriterBuilder<CustomerRecord>() //
                 .dataSource(dataSource)
                 .sql("INSERT INTO Customer(number, first_name, last_name, address, city, state, post_code, birth_date) "
@@ -158,7 +159,7 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public ItemWriter<TransactionRecord> transactionWriter() {
+    ItemWriter<TransactionRecord> transactionWriter() {
         return new JdbcBatchItemWriterBuilder<TransactionRecord>() //
                 .dataSource(dataSource)
                 .sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "

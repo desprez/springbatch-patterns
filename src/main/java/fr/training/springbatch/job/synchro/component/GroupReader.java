@@ -28,7 +28,7 @@ public class GroupReader<T, K extends Comparable<K>> implements ItemStreamReader
     @Override
     public List<T> read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         final List<T> items = accumulator.readNextItems();
-        if (items == null || items.size() == 0) {
+        if (items == null || items.isEmpty()) {
             return null;
         }
         return items;

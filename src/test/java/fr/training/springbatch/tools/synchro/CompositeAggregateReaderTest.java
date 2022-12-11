@@ -1,8 +1,8 @@
 package fr.training.springbatch.tools.synchro;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.item.ExecutionContext;
@@ -85,34 +85,19 @@ class CompositeAggregateReaderTest {
     void testAfterPropertiesSet() {
         // Given
         compositeAggregateItemReader.setMasterItemReader(null);
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            // When
-            compositeAggregateItemReader.afterPropertiesSet();
-        });
+        assertThrows(IllegalArgumentException.class, compositeAggregateItemReader::afterPropertiesSet);
         // Given
         compositeAggregateItemReader.setMasterKeyExtractor(null);
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            // When
-            compositeAggregateItemReader.afterPropertiesSet();
-        });
+        assertThrows(IllegalArgumentException.class, compositeAggregateItemReader::afterPropertiesSet);
         // Given
         compositeAggregateItemReader.setSlaveItemReader(null);
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            // When
-            compositeAggregateItemReader.afterPropertiesSet();
-        });
+        assertThrows(IllegalArgumentException.class, compositeAggregateItemReader::afterPropertiesSet);
         // Given
         compositeAggregateItemReader.setSlaveKeyExtractor(null);
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            // When
-            compositeAggregateItemReader.afterPropertiesSet();
-        });
+        assertThrows(IllegalArgumentException.class, compositeAggregateItemReader::afterPropertiesSet);
         // Given
         compositeAggregateItemReader.setMasterAggregator(null);
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            // When
-            compositeAggregateItemReader.afterPropertiesSet();
-        });
+        assertThrows(IllegalArgumentException.class, compositeAggregateItemReader::afterPropertiesSet);
     }
 
     private void assertReadedItem(final Foo item, final String expectedName, final Bar... values) {

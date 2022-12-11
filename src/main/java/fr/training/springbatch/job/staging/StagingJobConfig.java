@@ -23,6 +23,7 @@ import org.springframework.batch.support.DatabaseType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
@@ -49,7 +50,7 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     public DataSource dataSource;
 
     @Bean
-    public Job stagingJob(final Step stagingStep, final Step loadingStep) {
+    Job stagingJob(final Step stagingStep, final Step loadingStep) {
         return jobBuilderFactory.get("staging-job") //
                 .incrementer(new RunIdIncrementer()) //
                 .validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})) //
@@ -60,7 +61,7 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step stagingStep(final ValidatingItemProcessor<Transaction> validatingProcessor, //
+    Step stagingStep(final ValidatingItemProcessor<Transaction> validatingProcessor, //
             final ItemWriter<Transaction> stagingItemWriter, final ItemReader<Transaction> fileItemReader) {
 
         return stepBuilderFactory.get("staging-step") //
@@ -73,7 +74,7 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step loadingStep(final ItemWriter<? super Transaction> transactionWriter) {
+    Step loadingStep(final ItemWriter<? super Transaction> transactionWriter) {
 
         return stepBuilderFactory.get("loading-step") //
                 .<ProcessIndicatorItemWrapper<Transaction>, Transaction> chunk(2) //
@@ -98,7 +99,7 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public ItemProcessor<? super ProcessIndicatorItemWrapper<Transaction>, ? extends Transaction> stagingProcessor() {
+    ItemProcessor<? super ProcessIndicatorItemWrapper<Transaction>, ? extends Transaction> stagingProcessor() {
         final StagingItemProcessor<Transaction> itemProcessor = new StagingItemProcessor<Transaction>();
         itemProcessor.setDataSource(dataSource);
         return itemProcessor;
@@ -106,7 +107,7 @@ public class StagingJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Transaction> fileItemReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
+    FlatFileItemReader<Transaction> fileItemReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
 
         return new FlatFileItemReaderBuilder<Transaction>() //
                 .name("simpleImportReader") //
@@ -124,20 +125,20 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean("fixedValidator")
-    public SpringValidator<Transaction> getSpringValidator() {
+    SpringValidator<Transaction> getSpringValidator() {
         final SpringValidator<Transaction> validator = new SpringValidator<Transaction>();
         validator.setValidator(new TransactionValidator());
         return validator;
     }
 
     @Bean("processor")
-    public ValidatingItemProcessor<Transaction> validatingProcessor(@Qualifier("fixedValidator") final SpringValidator<Transaction> fixedValidator) {
+    ValidatingItemProcessor<Transaction> validatingProcessor(@Qualifier("fixedValidator") final SpringValidator<Transaction> fixedValidator) {
         final ValidatingItemProcessor<Transaction> processor = new ValidatingItemProcessor<Transaction>(fixedValidator);
         return processor;
     }
 
     @Bean
-    public StagingItemWriter<Transaction> stagingItemWriter(final DataFieldMaxValueIncrementer StagingIncrementer) {
+    StagingItemWriter<Transaction> stagingItemWriter(final DataFieldMaxValueIncrementer StagingIncrementer) {
         final StagingItemWriter<Transaction> writer = new StagingItemWriter<Transaction>();
         writer.setDataSource(dataSource);
         writer.setIncrementer(StagingIncrementer);
@@ -145,18 +146,19 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public DataFieldMaxValueIncrementer stagingIncrementer() throws MetaDataAccessException {
+    DataFieldMaxValueIncrementer stagingIncrementer() throws MetaDataAccessException {
         final DataFieldMaxValueIncrementerFactory incrementerFactory = new DefaultDataFieldMaxValueIncrementerFactory(dataSource);
         return incrementerFactory.getIncrementer(DatabaseType.fromMetaData(dataSource).name(), "BATCH_STAGING_SEQ");
     }
 
     @Bean
-    public TaskExecutor taskExecutor() {
+    TaskExecutor taskExecutor() {
         return new SimpleAsyncTaskExecutor("spring_batch");
     }
 
     @Bean
-    public JdbcBatchItemWriter<Transaction> transactionWriter() {
+    @DependsOnDatabaseInitialization
+    JdbcBatchItemWriter<Transaction> transactionWriter() {
 
         return new JdbcBatchItemWriterBuilder<Transaction>() //
                 .dataSource(dataSource)
@@ -167,7 +169,7 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public ItemReader<? extends ProcessIndicatorItemWrapper<Transaction>> stagingReader() {
+    ItemReader<? extends ProcessIndicatorItemWrapper<Transaction>> stagingReader() {
         final StagingItemReader<Transaction> reader = new StagingItemReader<Transaction>();
         reader.setDataSource(dataSource);
         return reader;

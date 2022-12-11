@@ -51,10 +51,10 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      * @return the job bean
      */
     @Bean
-    public Job file2FileSynchroJob(final Step file2FileSynchroStep) {
+    Job file2FileSynchroJob(final Step file2FileSynchroStep) {
         return jobBuilderFactory.get("file2filesynchro-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "customer-file", "transaction-file", "output-file" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"customer-file", "transaction-file", "output-file"}, new String[]{})) //
                 .start(file2FileSynchroStep) //
                 .listener(reportListener()) //
                 .build();
@@ -68,11 +68,11 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      * @return a Step Bean
      */
     @Bean
-    public Step file2FileSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
-            final ItemWriter<Customer> customerWriter) {
+    Step file2FileSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
+                                                                                                                                                                                                                                                            final ItemWriter<Customer> customerWriter) {
 
         return stepBuilderFactory.get("file2filesynchro-step") //
-                .<Customer, Customer> chunk(chunkSize) //
+                .<Customer, Customer>chunk(chunkSize) //
                 .reader(masterDetailReader) //
                 .processor(processor()) //
                 .writer(customerWriter) //
@@ -87,7 +87,7 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Customer> customerReader(@Value("#{jobParameters['customer-file']}") final String customerFile) {
+    FlatFileItemReader<Customer> customerReader(@Value("#{jobParameters['customer-file']}") final String customerFile) {
 
         return new FlatFileItemReaderBuilder<Customer>() //
                 .name("customerReader") //
@@ -102,7 +102,7 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Transaction> transactionReader(
+    FlatFileItemReader<Transaction> transactionReader(
             @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
         return new FlatFileItemReaderBuilder<Transaction>() //
@@ -126,14 +126,11 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      * @return the processor
      */
     private ItemProcessor<Customer, Customer> processor() {
-        return new ItemProcessor<Customer, Customer>() {
-            @Override
-            public Customer process(final Customer customer) {
-                final double sum = customer.getTransactions().stream().mapToDouble(x -> x.getAmount()).sum();
-                customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
-                logger.debug(customer.toString());
-                return customer;
-            }
+        return customer -> {
+            final double sum = customer.getTransactions().stream().mapToDouble(x -> x.getAmount()).sum();
+            customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
+            logger.debug(customer.toString());
+            return customer;
         };
     }
 
@@ -144,7 +141,7 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<Customer> customerWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
+    FlatFileItemWriter<Customer> customerWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
         return new FlatFileItemWriterBuilder<Customer>().name("customerWriter").resource(new FileSystemResource(outputFile)) //
                 .delimited() //

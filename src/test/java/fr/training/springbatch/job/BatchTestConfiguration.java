@@ -25,7 +25,7 @@ public class BatchTestConfiguration {
      * @return a jdbcTemplate
      */
     @Bean
-    public JdbcTemplate jdbcTemplate(final DataSource dataSource) {
+    JdbcTemplate jdbcTemplate(final DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 

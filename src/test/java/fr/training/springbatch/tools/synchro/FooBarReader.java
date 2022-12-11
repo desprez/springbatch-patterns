@@ -17,7 +17,7 @@ public class FooBarReader implements ItemStreamReader<Foo> {
     @Override
     public Foo read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         final List<Foo> items = masterAccumulator.readNextItems();
-        if (items == null || items.size() == 0) {
+        if (items == null || items.isEmpty()) {
             return null;
         }
 

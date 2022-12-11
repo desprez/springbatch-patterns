@@ -54,9 +54,7 @@ class SimpleLoadJobTest {
         assertThat(new File(REJECT_FILE_PATH)).doesNotExist();
 
         // And expected read / write counts
-        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> {
-            return "simple-load-step".equals(e.getStepName());
-        }).findFirst();
+        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> "simple-load-step".equals(e.getStepName())).findFirst();
         assertThat(executionOpt.isPresent()).isTrue();
         final StepExecution stepExec = executionOpt.get();
 
@@ -79,9 +77,7 @@ class SimpleLoadJobTest {
         assertThat(new File(REJECT_FILE_PATH)).hasContent("019;17878417;19-08-31;3.96\r\n" + "025;17878461;2019-08-12;X76.23\r\n");
 
         // And expected read / write / skip counts
-        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> {
-            return "simple-load-step".equals(e.getStepName());
-        }).findFirst();
+        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> "simple-load-step".equals(e.getStepName())).findFirst();
         assertThat(executionOpt.isPresent()).isTrue();
         final StepExecution stepExec = executionOpt.get();
 

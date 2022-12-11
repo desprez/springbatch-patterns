@@ -23,6 +23,7 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
 
@@ -50,10 +51,10 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
     private DataSource dataSource;
 
     @Bean
-    public Job simpleImportJob(final Step loadStep) {
+    Job simpleImportJob(final Step loadStep) {
         return jobBuilderFactory.get("simple-load-job") //
                 // .incrementer(new RunIdIncrementer()) //
-                .validator(new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"input-file", "rejectfile"}, new String[]{})) //
                 .start(deleteStep()) //
                 .next(loadStep) //
                 .listener(reportListener()) //
@@ -66,7 +67,7 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
      * @return the Step
      */
     @Bean
-    public Step deleteStep() {
+    Step deleteStep() {
         return stepBuilderFactory.get("delete-step") //
                 .tasklet(deletePreviousRecordTasklet()) //
                 .build();
@@ -80,11 +81,11 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step loadStep(final ItemReader<Transaction> loadReader, //
-            final ItemWriter<Transaction> loadWriter, final RejectFileSkipListener<Transaction, Transaction> rejectListener) {
+    Step loadStep(final ItemReader<Transaction> loadReader, //
+                            final ItemWriter<Transaction> loadWriter, final RejectFileSkipListener<Transaction, Transaction> rejectListener) {
 
         return stepBuilderFactory.get("simple-load-step") //
-                .<Transaction, Transaction> chunk(chunkSize) //
+                .<Transaction, Transaction>chunk(chunkSize) //
                 .reader(loadReader) //
                 .processor(loadProcessor()) //
                 .writer(loadWriter) //
@@ -115,19 +116,15 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
      * @return an item processor
      */
     private ItemProcessor<Transaction, Transaction> loadProcessor() {
-        return new ItemProcessor<Transaction, Transaction>() {
-
-            @Override
-            public Transaction process(final Transaction transaction) throws Exception {
-                logger.debug("Processing {}", transaction);
-                return transaction;
-            }
+        return transaction -> {
+            logger.debug("Processing {}", transaction);
+            return transaction;
         };
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Transaction> loadReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
+    FlatFileItemReader<Transaction> loadReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
 
         return new FlatFileItemReaderBuilder<Transaction>() //
                 .name("simpleImportReader") //
@@ -145,22 +142,23 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public JdbcBatchItemWriter<Transaction> loadWriter() {
+    @DependsOnDatabaseInitialization
+    JdbcBatchItemWriter<Transaction> loadWriter() {
 
         return new JdbcBatchItemWriterBuilder<Transaction>() //
                 .dataSource(dataSource)
                 .sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
                         + "VALUES (:customerNumber, :number, :transactionDate, :amount )")
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Transaction>()) //
+                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>()) //
                 .build();
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public RejectFileSkipListener<Transaction, Transaction> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile)
+    RejectFileSkipListener<Transaction, Transaction> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile)
             throws IOException {
 
-        return new RejectFileSkipListener<Transaction, Transaction>(new File(rejectfile));
+        return new RejectFileSkipListener<>(new File(rejectfile));
     }
 
 }

@@ -38,22 +38,22 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
      * @return the job bean
      */
     @Bean
-    public Job sqlJoinSynchroJob(final Step sqlJoinSynchroStep) {
+    Job sqlJoinSynchroJob(final Step sqlJoinSynchroStep) {
 
         return jobBuilderFactory.get("sqljoinsynchro-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "output-file" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"output-file"}, new String[]{})) //
                 .start(sqlJoinSynchroStep) //
                 .listener(reportListener()) //
                 .build();
     }
 
     @Bean
-    public Step sqlJoinSynchroStep(final JdbcCursorItemReader<Customer> jdbcCustomerReader,
-            final ItemWriter<Customer> customerWriter /* injected by Spring */) {
+    Step sqlJoinSynchroStep(final JdbcCursorItemReader<Customer> jdbcCustomerReader,
+                                      final ItemWriter<Customer> customerWriter /* injected by Spring */) {
 
         return stepBuilderFactory.get("sqljoinsynchro-step") //
-                .<Customer, Customer> chunk(10) //
+                .<Customer, Customer>chunk(10) //
                 .reader(jdbcCustomerReader) //
                 .writer(customerWriter) //
                 .listener(reportListener()) //
@@ -61,7 +61,7 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public JdbcCursorItemReader<Customer> jdbcCustomerReader() {
+    JdbcCursorItemReader<Customer> jdbcCustomerReader() {
         return new JdbcCursorItemReaderBuilder<Customer>() //
                 .dataSource(dataSource) //
                 .name("customerReader") //
@@ -89,7 +89,7 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<Customer> customerWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
+    FlatFileItemWriter<Customer> customerWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
         return new FlatFileItemWriterBuilder<Customer>().name("customerWriter").resource(new FileSystemResource(outputFile)) //
                 .delimited() //

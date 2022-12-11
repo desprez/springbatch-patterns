@@ -47,10 +47,10 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
      * @return the job bean
      */
     @Bean
-    public Job groupingRecordJob(final Step groupingRecordStep /* injected by Spring */) {
+    Job groupingRecordJob(final Step groupingRecordStep /* injected by Spring */) {
         return jobBuilderFactory.get("groupingrecord-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"transaction-file", "output-file"}, new String[]{})) //
                 .start(groupingRecordStep) //
                 .listener(reportListener()) //
                 .build();
@@ -64,10 +64,10 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
      * @return a Step Bean
      */
     @Bean
-    public Step groupingRecordStep(final GroupReader<Transaction, Long> groupReader, final ItemWriter<TransactionSum> transactionSumWriter) {
+    Step groupingRecordStep(final GroupReader<Transaction, Long> groupReader, final ItemWriter<TransactionSum> transactionSumWriter) {
 
         return stepBuilderFactory.get("groupingrecord-step") //
-                .<List<Transaction>, TransactionSum> chunk(chunkSize) //
+                .<List<Transaction>, TransactionSum>chunk(chunkSize) //
                 .reader(groupReader) //
                 .processor(processor()) //
                 .writer(transactionSumWriter) //
@@ -83,9 +83,9 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
      * @return a {@link GroupReader} bean
      */
     @Bean(destroyMethod = "")
-    public GroupReader<Transaction, Long> groupReader(final FlatFileItemReader<Transaction> transactionReader) {
+    GroupReader<Transaction, Long> groupReader(final FlatFileItemReader<Transaction> transactionReader) {
 
-        final GroupReader<Transaction, Long> groupReader = new GroupReader<Transaction, Long>();
+        final GroupReader<Transaction, Long> groupReader = new GroupReader<>();
         groupReader.setAccumulator(new TransactionAccumulator(transactionReader));
 
         return groupReader;
@@ -98,8 +98,8 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Transaction> transactionReader(
-            @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
+    FlatFileItemReader<Transaction> transactionReader(
+             @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
         return new FlatFileItemReaderBuilder<Transaction>() //
                 .name("transactionReader") //
@@ -122,16 +122,13 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
      * @return the processor
      */
     private ItemProcessor<List<Transaction>, TransactionSum> processor() {
-        return new ItemProcessor<List<Transaction>, TransactionSum>() {
-            @Override
-            public TransactionSum process(final List<Transaction> items) throws Exception {
-                final TransactionSum transactionSum = new TransactionSum();
-                final double sum = items.stream().mapToDouble(x -> x.getAmount()).sum();
-                transactionSum.setCustomerNumber(items.get(0).getCustomerNumber());
-                transactionSum.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
-                logger.debug(transactionSum.toString());
-                return transactionSum;
-            }
+        return items -> {
+            final TransactionSum transactionSum = new TransactionSum();
+            final double sum = items.stream().mapToDouble(x -> x.getAmount()).sum();
+            transactionSum.setCustomerNumber(items.get(0).getCustomerNumber());
+            transactionSum.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
+            logger.debug(transactionSum.toString());
+            return transactionSum;
         };
     }
 
@@ -142,7 +139,7 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<TransactionSum> transactionSumWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
+    FlatFileItemWriter<TransactionSum> transactionSumWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
         return new FlatFileItemWriterBuilder<TransactionSum>().name("transactionSumWriter").resource(new FileSystemResource(outputFile)) //
                 .delimited() //

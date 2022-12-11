@@ -1,12 +1,12 @@
 package fr.training.springbatch.tools.tasklet;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ class RestServiceTaskletTest {
         tasklet.afterPropertiesSet();
 
         // Then
-        Assertions.assertThrows(UnexpectedJobExecutionException.class, () -> {
+        assertThrows(UnexpectedJobExecutionException.class, () -> {
             // When
             tasklet.execute(contribution, context);
         });

@@ -38,9 +38,9 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
     private JdbcTemplate jdbcTemplate;
 
     @Bean
-    public Job multilinesExtractJob(final Step multilinesExtractStep) {
+    Job multilinesExtractJob(final Step multilinesExtractStep) {
         return jobBuilderFactory.get("multilines-extract-job") //
-                .validator(new DefaultJobParametersValidator(new String[] { "output-file" }, new String[] {})).incrementer(new RunIdIncrementer()) //
+                .validator(new DefaultJobParametersValidator(new String[]{"output-file"}, new String[]{})).incrementer(new RunIdIncrementer()) //
                 .flow(multilinesExtractStep) //
                 .end() //
                 .listener(reportListener()) //
@@ -48,9 +48,9 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step multilinesExtractStep(final MultiLineCustomerItemWriter multilinesExtractWriter) {
+    Step multilinesExtractStep(final MultiLineCustomerItemWriter multilinesExtractWriter) {
         return stepBuilderFactory.get("multilines-extract-step") //
-                .<Customer, Customer> chunk(chunkSize) //
+                .<Customer, Customer>chunk(chunkSize) //
                 .reader(customerJDBCReader()) //
                 .processor(multilinesExtractProcessor()) //
                 .writer(multilinesExtractWriter) //
@@ -59,7 +59,7 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public JdbcCursorItemReader<Customer> customerJDBCReader() {
+    JdbcCursorItemReader<Customer> customerJDBCReader() {
 
         return new JdbcCursorItemReaderBuilder<Customer>() //
                 .name("customerJDBCReader") //
@@ -70,27 +70,23 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
     }
 
     private ItemProcessor<Customer, Customer> multilinesExtractProcessor() {
-        return new ItemProcessor<Customer, Customer>() {
-            @Override
-            public Customer process(final Customer item) throws Exception {
-                final List<Transaction> transactions = getTransactionForCustomer(item.getNumber());
-                return new Customer(item, transactions);
-            }
-
+        return item -> {
+            final List<Transaction> transactions = getTransactionForCustomer(item.getNumber());
+            return new Customer(item, transactions);
         };
     }
 
     private List<Transaction> getTransactionForCustomer(final Long number) {
         return jdbcTemplate.query("SELECT customer_number, number, amount, transaction_date" + " FROM Transaction WHERE customer_number = ?",
-                new Object[] { number }, (rs, row) -> new Transaction( //
+                (rs, row) -> new Transaction( //
                         rs.getLong("customer_number"), //
                         rs.getString("number"), //
                         rs.getTimestamp("transaction_date").toLocalDateTime().toLocalDate(), //
-                        rs.getDouble("amount")));
+                        rs.getDouble("amount")), new Object[] { number });
     }
 
     @Bean
-    public MultiLineCustomerItemWriter multilinesExtractWriter(final FlatFileItemWriter<String> fileItemWriter) {
+    MultiLineCustomerItemWriter multilinesExtractWriter(final FlatFileItemWriter<String> fileItemWriter) {
         final MultiLineCustomerItemWriter writer = new MultiLineCustomerItemWriter();
         writer.setDelegate(fileItemWriter);
         return writer;
@@ -98,11 +94,11 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<String> fileItemWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
+    FlatFileItemWriter<String> fileItemWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
         return new FlatFileItemWriterBuilder<String>() //
                 .name("fileItemWriter") //
                 .resource(new FileSystemResource(outputFile)) //
-                .lineAggregator(new PassThroughLineAggregator<String>()).build();
+                .lineAggregator(new PassThroughLineAggregator<>()).build();
     }
 
 }

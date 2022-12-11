@@ -1,12 +1,12 @@
 package fr.training.springbatch.tools.tasklet;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
@@ -76,7 +76,7 @@ class DecompressTaskletTest {
         tasklet.setTargetFile("products.txt");
 
         // Then
-        Assertions.assertThrows(IllegalStateException.class, () -> {
+        assertThrows(IllegalStateException.class, () -> {
             // When
             tasklet.execute(contribution, context);
         });

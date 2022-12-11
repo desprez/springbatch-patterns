@@ -66,9 +66,7 @@ public class ItemPeekingCompletionPolicyReader<T> extends SimpleCompletionPolicy
             } catch (final Exception e) {
                 throw new NonTransientResourceException("Unable to peek", e);
             }
-
-            boolean keyBreak = breakKeyStrategy.isKeyBreak(currentReadItem, nextReadItem);
-            return keyBreak;
+            return breakKeyStrategy.isKeyBreak(currentReadItem, nextReadItem);
         }
     }
 

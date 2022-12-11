@@ -15,7 +15,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * A {link Tasklet} that decompress files from an archive filename to a given directory.
@@ -34,11 +34,11 @@ public class DecompressTasklet implements Tasklet {
             inputResource = new ClassPathResource(jobParameters.getString("inputResource"));
         }
 
-        if (StringUtils.isEmpty(targetDirectory)) {
+        if (ObjectUtils.isEmpty(targetDirectory)) {
             targetDirectory = jobParameters.getString("targetDirectory");
         }
 
-        if (StringUtils.isEmpty(targetFile)) {
+        if (ObjectUtils.isEmpty(targetFile)) {
             targetFile = jobParameters.getString("targetFile");
         }
     }

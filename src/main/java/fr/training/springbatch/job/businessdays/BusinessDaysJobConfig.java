@@ -22,17 +22,17 @@ public class BusinessDaysJobConfig extends AbstractJobConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(DailyJobConfig.class);
 
     @Bean
-    public Job dailyjob(final Step dailyStep) {
+    Job dailyjob(final Step dailyStep) {
         return jobBuilderFactory.get("businessdays-job") //
                 .incrementer(new DailyJobTimestamper("processDate")) //
-                .validator(new DefaultJobParametersValidator(new String[] { "processDate" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"processDate"}, new String[]{})) //
                 .start(dailyStep) //
                 .build();
     }
 
     @JobScope
     @Bean
-    public Step dailyStep(@Value("#{jobParameters['processDate']}") final Date processDate) {
+    Step dailyStep(@Value("#{jobParameters['processDate']}") final Date processDate) {
         return stepBuilderFactory.get("businessdays-step") //
                 .tasklet((contribution, chunkContext) -> {
                     logger.info("Do some process with the date '{}'", processDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());

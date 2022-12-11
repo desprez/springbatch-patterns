@@ -25,6 +25,7 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.support.builder.CompositeItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -53,7 +54,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
      * For this job, jobinstance are defined by the <b>today-stock-file</b> JobParameter to ensure that the same file not be processed more than once.
      */
     @Bean
-    public Job computeDeltaJob(final Step createTable, final Step loadTodayStock, final Step processAddedItems, final Step processRemovedItems) {
+    Job computeDeltaJob(final Step createTable, final Step loadTodayStock, final Step processAddedItems, final Step processRemovedItems) {
         return jobBuilderFactory.get("compute-delta-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
                 .validator(new DefaultJobParametersValidator(new String[] { "today-stock-file" }, new String[] {})) //
@@ -70,7 +71,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
      * Create the stock N table
      */
     @Bean
-    public Step createTable() {
+    Step createTable() {
 
         final String createSql = "CREATE TABLE today_stock(number BIGINT NOT NULL, label VARCHAR(50), PRIMARY KEY (number));";
 
@@ -83,7 +84,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
      * Load stock N file to N table.
      */
     @Bean
-    public Step loadTodayStock(final FlatFileItemReader<Stock> fileReader, final JdbcBatchItemWriter<Stock> jdbcWriter) {
+    Step loadTodayStock(final FlatFileItemReader<Stock> fileReader, final JdbcBatchItemWriter<Stock> jdbcWriter) {
 
         return stepBuilderFactory.get("load-today-stock") //
                 .<Stock, Stock> chunk(chunkSize) //
@@ -101,7 +102,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Stock> fileReader(@Value("#{jobParameters['today-stock-file']}") final String stockFile) {
+    FlatFileItemReader<Stock> fileReader(@Value("#{jobParameters['today-stock-file']}") final String stockFile) {
         return new FlatFileItemReaderBuilder<Stock>() //
                 .name("fileReader") //
                 .resource(new FileSystemResource(stockFile)) //
@@ -117,9 +118,11 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
      * Write lines of the stockFile into the <b>today_stock</b> table.
      */
     @Bean
-    public JdbcBatchItemWriter<Stock> jdbcWriter() {
+    @DependsOnDatabaseInitialization
+    JdbcBatchItemWriter<Stock> jdbcWriter() {
         return new JdbcBatchItemWriterBuilder<Stock>() //
-                .dataSource(dataSource).sql("INSERT INTO today_stock (number, label) VALUES (:number, :label)") //
+                .dataSource(dataSource) //
+                .sql("INSERT INTO today_stock (number, label) VALUES (:number, :label)") //
                 .beanMapped() //
                 .build();
     }
@@ -128,7 +131,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
      * Process item present in N table but not in N-1 table (= added).
      */
     @Bean
-    public Step processAddedItems(final JdbcPagingItemReader<Stock> jdbcAddedItemReader) {
+    Step processAddedItems(final JdbcPagingItemReader<Stock> jdbcAddedItemReader) {
         return stepBuilderFactory.get("process-added-step") //
                 .<Stock, Stock> chunk(chunkSize) //
                 .reader(jdbcAddedItemReader) //
@@ -140,7 +143,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
      * Process item present in N-1 table but not in N table (= removed).
      */
     @Bean
-    public Step processRemovedItems(final JdbcPagingItemReader<Stock> jdbcRemovedItemReader) {
+    Step processRemovedItems(final JdbcPagingItemReader<Stock> jdbcRemovedItemReader) {
         return stepBuilderFactory.get("process-removed-step") //
                 .<Stock, Stock> chunk(chunkSize) //
                 .reader(jdbcRemovedItemReader) //
@@ -149,7 +152,8 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public JdbcPagingItemReader<Stock> jdbcAddedItemReader(final PagingQueryProvider addedItemsQueryProvider) {
+    @DependsOnDatabaseInitialization
+    JdbcPagingItemReader<Stock> jdbcAddedItemReader(final PagingQueryProvider addedItemsQueryProvider) {
 
         return new JdbcPagingItemReaderBuilder<Stock>() //
                 .name("jdbcAddedItemReader") //
@@ -161,7 +165,8 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public PagingQueryProvider addedItemsQueryProvider() throws Exception {
+    @DependsOnDatabaseInitialization
+    PagingQueryProvider addedItemsQueryProvider() throws Exception {
         final SqlPagingQueryProviderFactoryBean provider = new SqlPagingQueryProviderFactoryBean();
 
         provider.setDataSource(dataSource);
@@ -175,7 +180,8 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public JdbcPagingItemReader<Stock> jdbcRemovedItemReader(final PagingQueryProvider removedItemsQueryProvider) {
+    @DependsOnDatabaseInitialization
+    JdbcPagingItemReader<Stock> jdbcRemovedItemReader(final PagingQueryProvider removedItemsQueryProvider) {
 
         return new JdbcPagingItemReaderBuilder<Stock>() //
                 .name("jdbcRemovedItemReader") //
@@ -187,7 +193,8 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public PagingQueryProvider removedItemsQueryProvider() throws Exception {
+    @DependsOnDatabaseInitialization
+    PagingQueryProvider removedItemsQueryProvider() throws Exception {
         final SqlPagingQueryProviderFactoryBean provider = new SqlPagingQueryProviderFactoryBean();
 
         provider.setDataSource(dataSource);
@@ -224,7 +231,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
      * Swap the N table to the N-1 table.
      */
     @Bean
-    public Step swapTables() {
+    Step swapTables() {
 
         final String dropSql = "DROP TABLE yesterday_stock;";
         final String renameSql = "ALTER TABLE today_stock RENAME TO yesterday_stock;";

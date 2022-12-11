@@ -9,7 +9,7 @@ import org.springframework.util.StopWatch;
 
 public class ElapsedTimeJobListener implements JobExecutionListener {
 
-    private final static Logger logger = LoggerFactory.getLogger(ElapsedTimeJobListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElapsedTimeJobListener.class);
 
     private final StopWatch stopWatch = new StopWatch();
 

@@ -27,7 +27,7 @@ public class ExploreJobConfig extends AbstractJobConfiguration {
     private JobExplorer jobExplorer;
 
     @Bean
-    public Job dailyjob(final Step exploreStep) {
+    Job dailyjob(final Step exploreStep) {
         return jobBuilderFactory.get("explore-job") //
                 .incrementer(new RunIdIncrementer()) //
                 .start(exploreStep) //
@@ -35,14 +35,14 @@ public class ExploreJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step exploreStep(final Tasklet explorerTasklet) {
+    Step exploreStep(final Tasklet explorerTasklet) {
         return stepBuilderFactory.get("explore-step") //
                 .tasklet(explorerTasklet) //
                 .build();
     }
 
     @Bean
-    public Tasklet explorerTasklet() {
+    Tasklet explorerTasklet() {
         return new ExploringTasklet(jobExplorer);
     }
 

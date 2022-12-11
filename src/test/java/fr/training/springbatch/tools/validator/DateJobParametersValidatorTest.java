@@ -4,8 +4,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersInvalidException;
@@ -30,7 +31,7 @@ public class DateJobParametersValidatorTest {
                 .toJobParameters();
 
         // Then
-        Assertions.assertDoesNotThrow(() -> {
+        assertDoesNotThrow(() -> {
             // When
             validator.validate(parameters);
         });
@@ -47,7 +48,7 @@ public class DateJobParametersValidatorTest {
                 .toJobParameters();
 
         // Then
-        Assertions.assertDoesNotThrow(() -> {
+        assertDoesNotThrow(() -> {
             // When
             validator.validate(parameters);
         });

@@ -52,7 +52,7 @@ public class RestServiceTasklet implements Tasklet, InitializingBean {
         headers.add("Content-Type", contentType);
         headers.add("Accept", "application/json");
 
-        final HttpEntity<String> requestEntity = new HttpEntity<String>(requestBody, headers);
+        final HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         logger.debug(requestEntity.toString());
 

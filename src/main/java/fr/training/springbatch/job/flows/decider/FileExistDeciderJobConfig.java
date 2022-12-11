@@ -59,26 +59,26 @@ public class FileExistDeciderJobConfig {
     private StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Step producerStep(final ItemWriter<String> itemWriter) {
-        return stepBuilderFactory.get("producer-Step").<String, String> chunk(3) //
+    Step producerStep(final ItemWriter<String> itemWriter) {
+        return stepBuilderFactory.get("producer-Step").<String, String>chunk(3) //
                 .reader(emptyItemReader()) //
                 .writer(itemWriter) //
                 .build();
     }
 
     @Bean
-    public ListItemReader<String> emptyItemReader() {
+    ListItemReader<String> emptyItemReader() {
         return new ListItemReader<>(new ArrayList<String>());
     }
 
     @Bean
-    public ListItemReader<String> filledItemReader() {
+    ListItemReader<String> filledItemReader() {
         return new ListItemReader<>(Arrays.asList("Line 1", "Line 2", "Line 3", "Line 4", "Line 5", "Line 6"));
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<String> itemWriter(@Value("#{jobParameters['output-file']}") final String fileName) {
+    FlatFileItemWriter<String> itemWriter(@Value("#{jobParameters['output-file']}") final String fileName) {
         return new FlatFileItemWriterBuilder<String>() //
                 .name("lineWriter") //
                 .resource(new FileSystemResource(fileName)) //
@@ -88,23 +88,19 @@ public class FileExistDeciderJobConfig {
     }
 
     @Bean
-    public JobExecutionDecider fileExistDecider() {
-        return new JobExecutionDecider() {
-
-            @Override
-            public FlowExecutionStatus decide(final JobExecution jobExecution, final StepExecution stepExecution) {
-                final String filename = jobExecution.getJobParameters().getString("output-file");
-                if (new File(filename).exists()) {
-                    return new FlowExecutionStatus("CONTINUE");
-                } else {
-                    return FlowExecutionStatus.COMPLETED;
-                }
+    JobExecutionDecider fileExistDecider() {
+        return (jobExecution, stepExecution) -> {
+            final String filename = jobExecution.getJobParameters().getString("output-file");
+            if (new File(filename).exists()) {
+                return new FlowExecutionStatus("CONTINUE");
+            } else {
+                return FlowExecutionStatus.COMPLETED;
             }
         };
     }
 
     @Bean
-    public Flow sendAndArchiveFlow() {
+    Flow sendAndArchiveFlow() {
         // @formatter:off
         return new FlowBuilder<Flow>("send-archive-flow").start(stepBuilderFactory.get("send-step").tasklet(sendTasklet()).build())
                 .next(stepBuilderFactory.get("archive-step").tasklet(archiveTasklet()).build()).build();
@@ -112,29 +108,23 @@ public class FileExistDeciderJobConfig {
     }
 
     @Bean
-    public Tasklet sendTasklet() {
-        return new Tasklet() {
-            @Override
-            public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-                logger.debug("launch sendTasklet");
-                return RepeatStatus.FINISHED;
-            }
+    Tasklet sendTasklet() {
+        return (contribution, chunkContext) -> {
+            logger.debug("launch sendTasklet");
+            return RepeatStatus.FINISHED;
         };
     }
 
     @Bean
-    public Tasklet archiveTasklet() {
-        return new Tasklet() {
-            @Override
-            public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-                logger.debug("launch archiveTasklet");
-                return RepeatStatus.FINISHED;
-            }
+    Tasklet archiveTasklet() {
+        return (contribution, chunkContext) -> {
+            logger.debug("launch archiveTasklet");
+            return RepeatStatus.FINISHED;
         };
     }
 
     @Bean
-    public Flow mainFlow(final Step producerStep) {
+    Flow mainFlow(final Step producerStep) {
         // @formatter:off
         return new FlowBuilder<Flow>("main-flow").start(producerStep).on("*").to(fileExistDecider()).from(fileExistDecider()).on("CONTINUE")
                 .to(sendAndArchiveFlow()).from(fileExistDecider()).on("COMPLETED").end().build();
@@ -142,7 +132,7 @@ public class FileExistDeciderJobConfig {
     }
 
     @Bean
-    public Job job(final Flow mainFlow) {
+    Job job(final Flow mainFlow) {
         // @formatter:off
         return jobBuilderFactory.get("exampleJob").start(mainFlow).end().build();
         // @formatter:on

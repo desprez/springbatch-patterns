@@ -23,6 +23,7 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
 
@@ -45,21 +46,21 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
     private DataSource dataSource;
 
     @Bean
-    public Job simpleImportJob(final Step updateStep) {
+    Job simpleImportJob(final Step updateStep) {
         return jobBuilderFactory.get("simple-update-job") //
                 .incrementer(new RunIdIncrementer()) //
-                .validator(new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"input-file", "rejectfile"}, new String[]{})) //
                 .start(updateStep) //
                 .listener(reportListener()) //
                 .build();
     }
 
     @Bean
-    public Step updateStep(final ItemReader<Customer> updateReader, //
-            final ItemWriter<Customer> updateWriter, final RejectFileSkipListener<Customer, Customer> rejectListener) {
+    Step updateStep(final ItemReader<Customer> updateReader, //
+                              final ItemWriter<Customer> updateWriter, final RejectFileSkipListener<Customer, Customer> rejectListener) {
 
         return stepBuilderFactory.get("simple-update-step") //
-                .<Customer, Customer> chunk(chunkSize) //
+                .<Customer, Customer>chunk(chunkSize) //
                 .reader(updateReader) //
                 .processor(updateProcessor()) //
                 .writer(updateWriter) //
@@ -89,19 +90,15 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
      * @return an item processor
      */
     private ItemProcessor<Customer, Customer> updateProcessor() {
-        return new ItemProcessor<Customer, Customer>() {
-
-            @Override
-            public Customer process(final Customer customer) throws Exception {
-                logger.debug("Processing {}", customer);
-                return customer;
-            }
+        return customer -> {
+            logger.debug("Processing {}", customer);
+            return customer;
         };
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Customer> updateReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
+    FlatFileItemReader<Customer> updateReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
 
         return new FlatFileItemReaderBuilder<Customer>() //
                 .name("simpleUpdateReader") //
@@ -119,19 +116,20 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public JdbcBatchItemWriter<Customer> updateWriter() {
+    @DependsOnDatabaseInitialization
+    JdbcBatchItemWriter<Customer> updateWriter() {
 
         return new JdbcBatchItemWriterBuilder<Customer>() //
                 .dataSource(dataSource).sql("UPDATE Customer SET birth_date = :birthDate WHERE number = :number")
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Customer>()) //
+                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>()) //
                 .build();
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public RejectFileSkipListener<Customer, Customer> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
+    RejectFileSkipListener<Customer, Customer> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
 
-        return new RejectFileSkipListener<Customer, Customer>(new File(rejectfile));
+        return new RejectFileSkipListener<>(new File(rejectfile));
     }
 
 }

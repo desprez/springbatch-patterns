@@ -11,7 +11,7 @@ import fr.training.springbatch.app.dto.Transaction;
 
 public class CustomerFileReader implements ItemStreamReader<Customer> {
 
-    private Object curItem = null;
+    private Object curItem;
 
     private ItemStreamReader<Object> delegate;
 

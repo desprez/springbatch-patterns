@@ -30,7 +30,7 @@ public class ItemListPeekableItemReader<T> implements ItemStreamReader<List<T>> 
     @Override
     public List<T> read() throws UnexpectedInputException, ParseException, Exception {
 
-        final List<T> records = new ArrayList<T>();
+        final List<T> records = new ArrayList<>();
 
         final T item = delegate.read();
 
@@ -54,7 +54,7 @@ public class ItemListPeekableItemReader<T> implements ItemStreamReader<List<T>> 
     }
 
     public void setDelegate(final FlatFileItemReader<T> delegate) {
-        this.delegate = new SingleItemPeekableItemReader<T>();
+        this.delegate = new SingleItemPeekableItemReader<>();
         this.delegate.setDelegate(delegate);
     }
 

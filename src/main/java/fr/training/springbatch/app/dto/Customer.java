@@ -26,7 +26,7 @@ public class Customer implements Serializable {
     private int age;
 
     // computed
-    private List<Transaction> transactions = new ArrayList<Transaction>();
+    private List<Transaction> transactions = new ArrayList<>();
 
     // computed
     private double balance;

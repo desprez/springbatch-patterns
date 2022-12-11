@@ -1,9 +1,5 @@
 package fr.training.springbatch.job.extract.processindicator;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,11 +19,11 @@ import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.PagingQueryProvider;
 import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
 import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean;
-import org.springframework.batch.item.file.FlatFileHeaderCallback;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -60,7 +56,7 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     private DataSource dataSource;
 
     @Bean
-    public Job extractProcessIndicatorJob(final Step extractProcessIndicatorStep, final Step processedRemoverStep) {
+    Job extractProcessIndicatorJob(final Step extractProcessIndicatorStep, final Step processedRemoverStep) {
         return jobBuilderFactory.get("extract-process-indicator-job") //
                 .incrementer(new RunIdIncrementer()) //
                 .start(extractProcessIndicatorStep) //
@@ -70,7 +66,7 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step extractProcessIndicatorStep(final ItemReader<Transaction> unprocessedReader, final FlatFileItemWriter<Transaction> csvFileWriter) {
+    Step extractProcessIndicatorStep(final ItemReader<Transaction> unprocessedReader, final FlatFileItemWriter<Transaction> csvFileWriter) {
 
         return stepBuilderFactory.get("extract-process-indicator-step") //
                 .<Transaction, Transaction> chunk(chunkSize) //
@@ -82,7 +78,7 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step processedRemoverStep() {
+    Step processedRemoverStep() {
 
         return stepBuilderFactory.get("processedRemover-step") //
                 .tasklet(processedItemsRemover()) //
@@ -94,7 +90,8 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
      * The ItemReader unprocessedBillsReader always reads 1000 ids of unprocessed records and returns them one after another.
      */
     @Bean
-    public JdbcPagingItemReader<Transaction> unprocessedReader(final DataSource dataSource, final PagingQueryProvider queryProvider) {
+    @DependsOnDatabaseInitialization
+    JdbcPagingItemReader<Transaction> unprocessedReader(final DataSource dataSource, final PagingQueryProvider queryProvider) {
 
         return new JdbcPagingItemReaderBuilder<Transaction>() //
                 .name("unprocessedReader") //
@@ -107,7 +104,8 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public SqlPagingQueryProviderFactoryBean queryProvider(final DataSource dataSource) {
+    @DependsOnDatabaseInitialization
+    SqlPagingQueryProviderFactoryBean queryProvider(final DataSource dataSource) {
         final SqlPagingQueryProviderFactoryBean provider = new SqlPagingQueryProviderFactoryBean();
 
         provider.setDataSource(dataSource);
@@ -131,13 +129,10 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
      * The ItemProcessor processedMarker reads the corresponding items from the database and marks them as processed.
      */
     @Bean
-    public ItemProcessor<Transaction, Transaction> processedMarker() {
-        return new ItemProcessor<Transaction, Transaction>() {
-            @Override
-            public Transaction process(final Transaction item) throws Exception {
-                markAsProcessed(item);
-                return item;
-            }
+    ItemProcessor<Transaction, Transaction> processedMarker() {
+        return item -> {
+            markAsProcessed(item);
+            return item;
         };
     }
 
@@ -146,13 +141,10 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
      * @param item
      */
     private void markAsProcessed(final Transaction item) {
-        jdbcTemplate.update("UPDATE Transaction SET processed=? WHERE customer_number=? AND number=?", new PreparedStatementSetter() {
-            @Override
-            public void setValues(final PreparedStatement ps) throws SQLException {
-                ps.setString(1, DONE);
-                ps.setLong(2, item.getCustomerNumber());
-                ps.setString(3, item.getNumber());
-            }
+        jdbcTemplate.update("UPDATE Transaction SET processed=? WHERE customer_number=? AND number=?", (PreparedStatementSetter) ps -> {
+            ps.setString(1, DONE);
+            ps.setLong(2, item.getCustomerNumber());
+            ps.setString(3, item.getNumber());
         });
     }
 
@@ -161,7 +153,7 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<Transaction> csvFileWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
+    FlatFileItemWriter<Transaction> csvFileWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
         return new FlatFileItemWriterBuilder<Transaction>() //
                 .name("csvFileWriter") //
@@ -169,12 +161,7 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
                 .delimited() //
                 .delimiter(";") //
                 .names("customerNumber", "number", "transactionDate", "amount") //
-                .headerCallback(new FlatFileHeaderCallback() {
-                    @Override
-                    public void writeHeader(final Writer writer) throws IOException {
-                        writer.write("customerNumber;number;transactionDate;amount");
-                    }
-                }) //
+                .headerCallback(writer -> writer.write("customerNumber;number;transactionDate;amount")) //
                 .build();
     }
 
@@ -182,7 +169,7 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
      * The tasklet processedItemsRemover deletes all record marked as processed.
      */
     @Bean
-    public Tasklet processedItemsRemover() {
+    Tasklet processedItemsRemover() {
         final JdbcTasklet deleteRecordTasklet = new JdbcTasklet();
         deleteRecordTasklet.setDataSource(dataSource);
         deleteRecordTasklet.setSql("DELETE FROM Transaction WHERE processed = '" + DONE + "'");

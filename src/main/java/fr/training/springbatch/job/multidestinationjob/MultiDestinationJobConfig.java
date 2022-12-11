@@ -31,20 +31,20 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
     private DataSource dataSource;
 
     @Bean
-    public Job multiDestinationJob(final Step multiDestinationStep) {
+    Job multiDestinationJob(final Step multiDestinationStep) {
         return jobBuilderFactory.get("multi-destination-job") //
                 .start(multiDestinationStep) //
                 .build();
     }
 
     @Bean
-    public Step multiDestinationStep(final ItemWriter<Customer> classifierCustomerCompositeItemWriter, final FlatFileItemWriter<Customer> after50Writer,
-            final FlatFileItemWriter<Customer> before50Writer) throws Exception {
+    Step multiDestinationStep(final ItemWriter<Customer> classifierCustomerCompositeItemWriter, final FlatFileItemWriter<Customer> after50Writer,
+                                        final FlatFileItemWriter<Customer> before50Writer) throws Exception {
 
         return stepBuilderFactory.get("multi-destination-step") //
-                .<Customer, Customer> chunk(10) //
+                .<Customer, Customer>chunk(10) //
                 .reader(customerJDBCReader()) //
-                .processor(new FunctionItemProcessor<Customer, Customer>(c -> {
+                .processor(new FunctionItemProcessor<>(c -> {
                     // just compute age of the customer
                     c.computeAge();
                     return c;
@@ -56,7 +56,7 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public JdbcCursorItemReader<Customer> customerJDBCReader() {
+    JdbcCursorItemReader<Customer> customerJDBCReader() {
 
         return new JdbcCursorItemReaderBuilder<Customer>() //
                 .name("customerJDBCReader") //
@@ -67,8 +67,8 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public ClassifierCompositeItemWriter<Customer> classifierCustomerCompositeItemWriter(final ItemWriter<Customer> after50Writer,
-            final ItemWriter<Customer> before50Writer) throws Exception {
+    ClassifierCompositeItemWriter<Customer> classifierCustomerCompositeItemWriter(final ItemWriter<Customer> after50Writer,
+                                                                                            final ItemWriter<Customer> before50Writer) throws Exception {
 
         final ClassifierCompositeItemWriter<Customer> compositeItemWriter = new ClassifierCompositeItemWriter<>();
         compositeItemWriter.setClassifier(new CustomerClassifier(after50Writer, before50Writer));
@@ -77,7 +77,7 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<Customer> after50Writer(@Value("#{jobParameters['outputFile1']}") final String outputFile1) {
+    FlatFileItemWriter<Customer> after50Writer(@Value("#{jobParameters['outputFile1']}") final String outputFile1) {
 
         return new FlatFileItemWriterBuilder<Customer>() //
                 .name("itemWriter") //
@@ -90,7 +90,7 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<Customer> before50Writer(@Value("#{jobParameters['outputFile2']}") final String outputFile2) {
+    FlatFileItemWriter<Customer> before50Writer(@Value("#{jobParameters['outputFile2']}") final String outputFile2) {
         return new FlatFileItemWriterBuilder<Customer>() //
                 .name("itemWriter") //
                 .resource(new FileSystemResource(outputFile2)) //

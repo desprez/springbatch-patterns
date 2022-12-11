@@ -53,8 +53,7 @@ public class BreakKeyCompletionPolicy<T> extends CompletionPolicySupport {
             if (null == next) {
                 return true;
             }
-            boolean keyBreak = breakKeyStrategy.isKeyBreak((T) getAttribute("current"), (T) next);
-            return keyBreak;
+            return breakKeyStrategy.isKeyBreak((T) getAttribute("current"), (T) next);
         }
     }
 

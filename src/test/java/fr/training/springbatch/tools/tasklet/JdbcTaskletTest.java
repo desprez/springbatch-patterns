@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -15,11 +14,9 @@ import org.springframework.batch.test.MetaDataInstanceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
 
-@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { BatchTestConfiguration.class })
 @JdbcTest
 class JdbcTaskletTest {

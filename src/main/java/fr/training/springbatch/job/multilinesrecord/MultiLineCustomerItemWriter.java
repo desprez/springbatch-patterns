@@ -26,14 +26,14 @@ public class MultiLineCustomerItemWriter implements ItemWriter<Customer>, ItemSt
             lines.add(joinString(c.getNumber().toString(), "C", c.getFirstName(), c.getLastName(), c.getAddress(), c.getCity(), c.getPostCode(), c.getState()));
 
             for (final Transaction t : c.getTransactions()) {
-                lines.add(joinString(c.getNumber().toString(), "T", t.getNumber().toString(), t.getTransactionDate().toString(), t.getAmount().toString()));
+                lines.add(joinString(c.getNumber().toString(), "T", t.getNumber(), t.getTransactionDate().toString(), t.getAmount().toString()));
             }
         }
         delegate.write(lines);
     }
 
     private String joinString(final String... tokens) {
-        return Stream.of(tokens).map(n -> n.toString()).collect(Collectors.joining(","));
+        return Stream.of(tokens).map(n -> n).collect(Collectors.joining(","));
     }
 
     public void setDelegate(final FlatFileItemWriter<String> delegate) {

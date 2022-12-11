@@ -1,8 +1,9 @@
 package fr.training.springbatch.tools.validator;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -15,7 +16,7 @@ class DisplayUsageJobParametersValidatorTest {
         // Given
         final DisplayUsageJobParametersValidator validator = DisplayUsageJobParametersValidator.builder().build();
 
-        final Throwable exceptionThatWasThrown = Assertions.assertThrows(JobParametersInvalidException.class, () -> {
+        final Throwable exceptionThatWasThrown = assertThrows(JobParametersInvalidException.class, () -> {
             // When
             validator.validate(null);
         });
@@ -28,7 +29,7 @@ class DisplayUsageJobParametersValidatorTest {
     void testValidateNoRequiredValues() {
         final DisplayUsageJobParametersValidator validator = DisplayUsageJobParametersValidator.builder().build();
 
-        Assertions.assertDoesNotThrow(() -> {
+        assertDoesNotThrow(() -> {
             validator.validate(new JobParametersBuilder().addString("name", "foo").toJobParameters());
         });
     }
@@ -39,7 +40,7 @@ class DisplayUsageJobParametersValidatorTest {
                 .requiredKeys(new String[] { "name", "value" }) //
                 .build();
 
-        Assertions.assertDoesNotThrow(() -> {
+        assertDoesNotThrow(() -> {
             validator.validate(new JobParametersBuilder().addString("name", "foo").addLong("value", 111L).toJobParameters());
         });
     }
@@ -51,7 +52,7 @@ class DisplayUsageJobParametersValidatorTest {
                 .requiredKeys(new String[] { "name", "value" }) //
                 .build();
 
-        final Throwable exceptionThatWasThrown = Assertions.assertThrows(JobParametersInvalidException.class, () -> {
+        final Throwable exceptionThatWasThrown = assertThrows(JobParametersInvalidException.class, () -> {
             // When
             validator.validate(new JobParameters());
         });
@@ -68,7 +69,7 @@ class DisplayUsageJobParametersValidatorTest {
                 .build();
 
         // Then
-        Assertions.assertDoesNotThrow(() -> {
+        assertDoesNotThrow(() -> {
             // When
             validator.validate(new JobParameters());
         });
@@ -81,7 +82,7 @@ class DisplayUsageJobParametersValidatorTest {
                 .optionalKeys(new String[] { "name", "value" }) //
                 .build();
 
-        final Throwable exceptionThatWasThrown = Assertions.assertThrows(JobParametersInvalidException.class, () -> {
+        final Throwable exceptionThatWasThrown = assertThrows(JobParametersInvalidException.class, () -> {
             // When
             validator.validate(new JobParametersBuilder().addString("foo", "bar").toJobParameters());
         });
@@ -97,7 +98,7 @@ class DisplayUsageJobParametersValidatorTest {
                 .requiredKeys(new String[] { "foo" }) //
                 .build();
         // Then
-        Assertions.assertDoesNotThrow(() -> {
+        assertDoesNotThrow(() -> {
             // When
             validator.validate(new JobParametersBuilder().addString("foo", "bar").toJobParameters());
         });
@@ -112,10 +113,7 @@ class DisplayUsageJobParametersValidatorTest {
                 .build();
 
         // Then
-        final Throwable exceptionThatWasThrown = Assertions.assertThrows(IllegalStateException.class, () -> {
-            // When
-            validator.afterPropertiesSet();
-        });
+        final Throwable exceptionThatWasThrown = assertThrows(IllegalStateException.class, validator::afterPropertiesSet);
         // Then
         assertThat(exceptionThatWasThrown.getMessage()).isEqualTo("Optional keys cannot be required: value");
     }

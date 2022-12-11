@@ -18,7 +18,7 @@ public class PurgeHistoryJobConfig extends AbstractJobConfiguration {
     private JdbcTemplate jdbcTemplate;
 
     @Bean
-    public Job job() {
+    Job job() {
 
         final Step purgeHistoryStep = stepBuilderFactory.get("purgehistorystep") //
                 .tasklet(new RemoveSpringBatchHistoryTasklet() {

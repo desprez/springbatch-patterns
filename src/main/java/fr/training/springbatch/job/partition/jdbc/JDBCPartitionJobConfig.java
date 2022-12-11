@@ -16,6 +16,7 @@ import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilde
 import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
@@ -31,7 +32,7 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
     private DataSource dataSource;
 
     @Bean
-    public Job partitionJob(final Step masterStep) {
+    Job partitionJob(final Step masterStep) {
 
         return jobBuilderFactory.get("partition-job") //
                 .start(masterStep)//
@@ -40,7 +41,7 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
 
     // Master
     @Bean
-    public Step masterStep(final Step slaveStep) {
+    Step masterStep(final Step slaveStep) {
 
         return stepBuilderFactory.get("master-step") //
                 .partitioner(slaveStep.getName(), partitioner()) //
@@ -52,17 +53,18 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
 
     // slave step
     @Bean
-    public Step slaveStep(final ItemReader<Customer> pagingItemReader, final JdbcBatchItemWriter<Customer> customerItemWriter) {
+    Step slaveStep(final ItemReader<Customer> pagingItemReader, final JdbcBatchItemWriter<Customer> customerItemWriter) {
 
         return stepBuilderFactory.get("slave-step") //
-                .<Customer, Customer> chunk(1000) //
+                .<Customer, Customer>chunk(1000) //
                 .reader(pagingItemReader) //
                 .writer(customerItemWriter) //
                 .build();
     }
 
     @Bean
-    public ColumnRangePartitioner partitioner() {
+    @DependsOnDatabaseInitialization
+    ColumnRangePartitioner partitioner() {
         final ColumnRangePartitioner columnRangePartitioner = new ColumnRangePartitioner();
         columnRangePartitioner.setColumn("number");
         columnRangePartitioner.setDataSource(dataSource);
@@ -72,8 +74,9 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public JdbcPagingItemReader<Customer> pagingItemReader(@Value("#{stepExecutionContext['minValue']}") final Long minValue,
-            @Value("#{stepExecutionContext['maxValue']}") final Long maxValue) {
+    @DependsOnDatabaseInitialization
+    JdbcPagingItemReader<Customer> pagingItemReader(@Value("#{stepExecutionContext['minValue']}") final Long minValue,
+                                                                                                                   @Value("#{stepExecutionContext['maxValue']}") final Long maxValue) {
         System.out.println("reading " + minValue + " to " + maxValue);
 
         final Map<String, Order> sortKeys = new HashMap<>();
@@ -105,7 +108,8 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public JdbcBatchItemWriter<Customer> customerItemWriter() {
+    @DependsOnDatabaseInitialization
+    JdbcBatchItemWriter<Customer> customerItemWriter() {
         return new JdbcBatchItemWriterBuilder<Customer>() //
                 .dataSource(dataSource)
                 .sql("INSERT INTO new_customer( first_name, last_name, address, city, post_code, state, number) VALUES (:firstName, :lastName, :address, :city, :postCode, :state, :number)")

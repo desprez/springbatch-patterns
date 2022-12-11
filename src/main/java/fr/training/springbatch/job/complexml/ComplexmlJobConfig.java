@@ -19,7 +19,6 @@ import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.xml.StaxEventItemReader;
 import org.springframework.batch.item.xml.builder.StaxEventItemReaderBuilder;
@@ -48,10 +47,10 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
     private int chunkSize;
 
     @Bean
-    public Job complexmlJob(final Step fixXmlFileStep, final Step complexmlStep /* injected by Spring */) {
+    Job complexmlJob(final Step fixXmlFileStep, final Step complexmlStep /* injected by Spring */) {
         return jobBuilderFactory.get("complex-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "xml-file" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"xml-file"}, new String[]{})) //
                 .start(fixXmlFileStep) //
                 .next(complexmlStep).listener(reportListener()) //
                 .build();
@@ -59,28 +58,25 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
 
     @JobScope // Mandatory for using jobParameters
     @Bean
-    public Step fixXmlFileStep(@Value("#{jobParameters['xml-file']}") final String xmlFile /* injected by Spring */) {
+    Step fixXmlFileStep(@Value("#{jobParameters['xml-file']}") final String xmlFile /* injected by Spring */) {
         return stepBuilderFactory.get("fixXmlFile-step") //
-                .tasklet(new Tasklet() {
-                    @Override
-                    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+                .tasklet((contribution, chunkContext) -> {
 
-                        final FileInputStream fis = new FileInputStream(xmlFile);
+                    final FileInputStream fis = new FileInputStream(xmlFile);
 
-                        final List<InputStream> streams = Arrays.asList(new ByteArrayInputStream("<root>".getBytes()), fis,
-                                new ByteArrayInputStream("</root>".getBytes()));
+                    final List<InputStream> streams = Arrays.asList(new ByteArrayInputStream("<root>".getBytes()), fis,
+                    new ByteArrayInputStream("</root>".getBytes()));
 
-                        final File workFile = File.createTempFile("input", ".xml");
+                    final File workFile = File.createTempFile("input", ".xml");
 
-                        StreamUtils.copy(new SequenceInputStream(Collections.enumeration(streams)), new FileOutputStream(workFile));
+                    StreamUtils.copy(new SequenceInputStream(Collections.enumeration(streams)), new FileOutputStream(workFile));
 
-                        // Put file path to job execution context to share it with others steps
-                        chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("workfile", workFile.getAbsoluteFile());
+                    // Put file path to job execution context to share it with others steps
+                    chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("workfile", workFile.getAbsoluteFile());
 
-                        logger.info("work file path is {}", workFile.getAbsoluteFile());
+                    logger.info("work file path is {}", workFile.getAbsoluteFile());
 
-                        return RepeatStatus.FINISHED;
-                    }
+                    return RepeatStatus.FINISHED;
                 }).listener(reportListener()) //
                 .build();
     }
@@ -90,10 +86,10 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
      * @return a Step Bean
      */
     @Bean
-    public Step complexmlStep(final StaxEventItemReader<Record> complexmlReader) {
+    Step complexmlStep(final StaxEventItemReader<Record> complexmlReader) {
 
         return stepBuilderFactory.get("complexml-step") //
-                .<Record, Record> chunk(chunkSize) //
+                .<Record, Record>chunk(chunkSize) //
                 .reader(complexmlReader) //
                 .processor(processor()) //
                 .writer(complexmlWriter()) //
@@ -103,7 +99,7 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
 
     @JobScope // Mandatory for using jobParameters
     @Bean
-    public StaxEventItemReader<Record> complexmlReader(@Value("#{jobExecutionContext['workfile']}") final String workFile /* injected by Spring */) {
+    StaxEventItemReader<Record> complexmlReader(@Value("#{jobExecutionContext['workfile']}") final String workFile /* injected by Spring */) {
         return new StaxEventItemReaderBuilder<Record>() //
                 .name("itemReader") //
                 .resource(new FileSystemResource(workFile)) //
@@ -114,34 +110,30 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Jaxb2Marshaller jaxbMarshaller() {
+    Jaxb2Marshaller jaxbMarshaller() {
         final Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
         marshaller.setClassesToBeBound(RemiseBancaire.class, OperationOrph.class);
         return marshaller;
     }
 
     @Bean
-    public ItemProcessor<Record, Record> processor() {
-        return new ItemProcessor<Record, Record>() {
+    ItemProcessor<Record, Record> processor() {
+        return item -> {
 
-            @Override
-            public Record process(final Record item) throws Exception {
-
-                if (item instanceof RemiseBancaire) {
-                    final RemiseBancaire rb = (RemiseBancaire) item;
-                    logger.info("Processing {}", rb);
-                }
-                if (item instanceof OperationOrph) {
-                    final OperationOrph oo = (OperationOrph) item;
-                    logger.info("Processing {}", oo);
-                }
-                return item;
+            if (item instanceof RemiseBancaire) {
+                final RemiseBancaire rb = (RemiseBancaire) item;
+                logger.info("Processing {}", rb);
             }
+            if (item instanceof OperationOrph) {
+                final OperationOrph oo = (OperationOrph) item;
+                logger.info("Processing {}", oo);
+            }
+            return item;
         };
     }
 
     private NoOpWriter<Record> complexmlWriter() {
-        return new NoOpWriter<Record>();
+        return new NoOpWriter<>();
     }
 
 }

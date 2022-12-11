@@ -39,16 +39,16 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
     public static final BigDecimal FIXED_AMOUNT = new BigDecimal("5");
 
     @Bean
-    public Job partitionJob(final Step masterStep) {
+    Job partitionJob(final Step masterStep) {
 
         return jobBuilderFactory.get("partition-job") //
-                .validator(new DefaultJobParametersValidator(new String[] { "output-path" }, new String[] {})).start(masterStep)//
+                .validator(new DefaultJobParametersValidator(new String[]{"output-path"}, new String[]{})).start(masterStep)//
                 .build();
     }
 
     // Master
     @Bean
-    public Step masterStep(final Step slaveStep, final MultiResourcePartitioner partitioner) throws IOException {
+    Step masterStep(final Step slaveStep, final MultiResourcePartitioner partitioner) throws IOException {
 
         return stepBuilderFactory.get("master-step") //
                 .partitioner(slaveStep.getName(), partitioner) //
@@ -60,7 +60,7 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public MultiResourcePartitioner partitioner(@Value("#{jobParameters['input-path']}") final Resource[] inputResources) throws IOException {
+    MultiResourcePartitioner partitioner(@Value("#{jobParameters['input-path']}") final Resource[] inputResources) throws IOException {
         final MultiResourcePartitioner partitioner = new MultiResourcePartitioner();
         partitioner.partition(10);
         partitioner.setResources(inputResources);
@@ -69,13 +69,13 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
 
     // slave step
     @Bean
-    public Step slaveStep(final FlatFileItemReader<Customer> itemReader, //
-            final ItemProcessor<Customer, Customer> processor, //
-            final FlatFileItemWriter<Customer> itemWriter, //
-            final OutputFileListener fileNameListener) {
+    Step slaveStep(final FlatFileItemReader<Customer> itemReader, //
+                                                final ItemProcessor<Customer, Customer> processor, //
+                                                final FlatFileItemWriter<Customer> itemWriter, //
+                                                final OutputFileListener fileNameListener) {
 
         return stepBuilderFactory.get("slave-step") //
-                .<Customer, Customer> chunk(10) //
+                .<Customer, Customer>chunk(10) //
                 .reader(itemReader) //
                 .processor(processor) //
                 .writer(itemWriter) //
@@ -85,7 +85,7 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public OutputFileListener fileNameListener(@Value("#{jobParameters['output-path']}") final String outputPath) {
+    OutputFileListener fileNameListener(@Value("#{jobParameters['output-path']}") final String outputPath) {
         final OutputFileListener listener = new OutputFileListener();
         listener.setPath(outputPath);
         return listener;
@@ -93,7 +93,7 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Customer> itemReader(@Value("#{stepExecutionContext['fileName']}") final String fileName) throws MalformedURLException {
+    FlatFileItemReader<Customer> itemReader(@Value("#{stepExecutionContext['fileName']}") final String fileName) throws MalformedURLException {
         logger.info("fileName {}", fileName);
 
         return new FlatFileItemReaderBuilder<Customer>() //
@@ -112,18 +112,13 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public ItemProcessor<Customer, Customer> itemProcessor() {
-        return new ItemProcessor<Customer, Customer>() {
-            @Override
-            public Customer process(final Customer item) throws Exception {
-                return item.increaseAmountBy(FIXED_AMOUNT);
-            }
-        };
+    ItemProcessor<Customer, Customer> itemProcessor() {
+        return item -> item.increaseAmountBy(FIXED_AMOUNT);
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<Customer> itemWriter(@Value("#{stepExecutionContext['outputFile']}") final String outputFile) {
+    FlatFileItemWriter<Customer> itemWriter(@Value("#{stepExecutionContext['outputFile']}") final String outputFile) {
         return new FlatFileItemWriterBuilder<Customer>() //
                 .name("itemWriter") //
                 .resource(new FileSystemResource(outputFile)) //

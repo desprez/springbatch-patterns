@@ -17,7 +17,7 @@ public class BooleanJobParametersValidator implements JobParametersValidator {
 
         final String paramValue = parameters.getString(parameterKey);
 
-        if (!(paramValue.equalsIgnoreCase("true") || paramValue.equalsIgnoreCase("false"))) {
+        if (!("true".equalsIgnoreCase(paramValue) || "false".equalsIgnoreCase(paramValue))) {
             throw new JobParametersInvalidException("Expect only 'true' or 'false' values for the parameter " + parameterKey);
         }
     }

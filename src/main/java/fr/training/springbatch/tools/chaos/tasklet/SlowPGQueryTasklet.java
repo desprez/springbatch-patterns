@@ -31,13 +31,13 @@ public class SlowPGQueryTasklet implements StoppableTasklet {
 
     private long maxQueries = 1; // Default 1 query
 
-    private long queryCount = 0;
+    private long queryCount;
 
     private JdbcTemplate jdbcTemplate;
 
     private Mode mode = Mode.FIXED;
 
-    private boolean stopped = false;
+    private boolean stopped;
 
     public enum Mode {
         FIXED, RANDOM, RAMPUP

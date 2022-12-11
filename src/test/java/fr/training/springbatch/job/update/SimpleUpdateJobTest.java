@@ -44,9 +44,7 @@ class SimpleUpdateJobTest {
         assertThat(new File(REJECT_FILE_PATH)).doesNotExist();
 
         // And expected read / write counts
-        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> {
-            return "simple-update-step".equals(e.getStepName());
-        }).findFirst();
+        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> "simple-update-step".equals(e.getStepName())).findFirst();
         assertThat(executionOpt.isPresent()).isTrue();
         final StepExecution stepExec = executionOpt.get();
 

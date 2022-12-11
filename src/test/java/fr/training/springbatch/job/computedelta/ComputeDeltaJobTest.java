@@ -68,9 +68,7 @@ class ComputeDeltaJobTest {
 
     private void assertWriteCount(final JobExecution jobExec, final String stepName, final int expectedWriteCounts) {
         // And expected read / write counts
-        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> {
-            return stepName.equals(e.getStepName());
-        }).findFirst();
+        final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> stepName.equals(e.getStepName())).findFirst();
         assertThat(executionOpt.isPresent()).isTrue();
         final StepExecution stepExec = executionOpt.get();
 

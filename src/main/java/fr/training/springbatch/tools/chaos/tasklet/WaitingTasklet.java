@@ -29,7 +29,7 @@ public class WaitingTasklet implements StoppableTasklet, InitializingBean {
 
     private long i;
 
-    private boolean stopped = false;
+    private boolean stopped;
 
     public WaitingTasklet(final Duration duration) throws Exception {
         this.duration = duration;

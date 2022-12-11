@@ -9,7 +9,7 @@ public class ExceptionThrowingProcessor<T> implements ItemProcessor<T, T> {
 
     private static final Logger log = LoggerFactory.getLogger(ExceptionThrowingProcessor.class);
 
-    private int counter = 0;
+    private int counter;
 
     private int throwExceptionOnNumber = Integer.MAX_VALUE;
 

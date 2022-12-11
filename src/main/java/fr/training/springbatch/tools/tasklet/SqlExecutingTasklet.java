@@ -36,12 +36,12 @@ public class SqlExecutingTasklet implements Tasklet {
 
     private static final Logger logger = LoggerFactory.getLogger(SqlExecutingTasklet.class);
 
-    private final static String EXECUTION_COUNT = "sql.execution.count";
+    private static final String EXECUTION_COUNT = "sql.execution.count";
 
     private JdbcTemplate jdbcTemplate;
     private final ExecutionContextUserSupport ecSupport;
     private String[] sqlCommands;
-    private int count = 0;
+    private int count;
 
     public SqlExecutingTasklet() {
         ecSupport = new ExecutionContextUserSupport(SqlExecutingTasklet.class.getSimpleName());

@@ -102,7 +102,7 @@ public abstract class ItemAccumulator<T, K extends Comparable<K>> implements Ite
         if (lastItem == null) {
             lastItem = reader.read();
         } else if (getKey(lastItem).compareTo(key) > 0) {
-            return new ArrayList<T>(0);
+            return new ArrayList<>(0);
         }
 
         // does last read list match requested key ?
@@ -115,7 +115,7 @@ public abstract class ItemAccumulator<T, K extends Comparable<K>> implements Ite
 
         if (lastItem != null) {
 
-            lastItemList = new ArrayList<T>();
+            lastItemList = new ArrayList<>();
 
             while (lastItem != null && checkEqualKey(lastItem, key)) {
                 lastItemList.add(lastItem);
@@ -123,7 +123,7 @@ public abstract class ItemAccumulator<T, K extends Comparable<K>> implements Ite
                 lastItem = reader.read();
             }
         } else {
-            lastItemList = new ArrayList<T>(0);
+            lastItemList = new ArrayList<>(0);
         }
 
         return lastItemList;
@@ -178,7 +178,7 @@ public abstract class ItemAccumulator<T, K extends Comparable<K>> implements Ite
 
         final K lastKey = lastItem == null ? null : getKey(lastItem);
 
-        lastItemList = new ArrayList<T>();
+        lastItemList = new ArrayList<>();
 
         // Haven't reached EOF for the data,
         // so look for more data for the current key

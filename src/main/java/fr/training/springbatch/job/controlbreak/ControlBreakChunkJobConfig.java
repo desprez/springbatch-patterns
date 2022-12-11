@@ -35,10 +35,10 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
     private int chunkSize;
 
     @Bean
-    public Job controlBreakChunkJob(final Step controlBreakStep /* injected by Spring */) {
+    Job controlBreakChunkJob(final Step controlBreakStep /* injected by Spring */) {
         return jobBuilderFactory.get("controlbreak-chunk-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"transaction-file", "output-file"}, new String[]{})) //
                 .start(controlBreakStep) //
                 .listener(reportListener()) //
                 .build();
@@ -53,12 +53,12 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
      * @return a Step Bean
      */
     @Bean
-    public Step controlBreakChunkStep(final ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy,
-            final ItemWriter<Transaction> transactionWriter
-    /* injected by Spring */) {
+    Step controlBreakChunkStep(final ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy,
+                                                                                                                                                                                                                                                                                                                                                 final ItemWriter<Transaction> transactionWriter
+                                                                                                                                                                                                                                                                                                                                                 /* injected by Spring */) {
 
         return stepBuilderFactory.get("controlbreak-step") //
-                .<Transaction, Transaction> chunk(breakKeyCompletionPolicy) //
+                .<Transaction, Transaction>chunk(breakKeyCompletionPolicy) //
                 .reader(breakKeyCompletionPolicy) //
                 .writer(transactionWriter) //
                 .listener(reportListener()) //
@@ -90,23 +90,17 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy(final SingleItemPeekableItemReader<Transaction> controlBreakReader) {
+    ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy(final SingleItemPeekableItemReader<Transaction> controlBreakReader) {
         final ItemPeekingCompletionPolicyReader<Transaction> policy = new ItemPeekingCompletionPolicyReader<>();
         policy.setDelegate(controlBreakReader);
-        policy.setBreakKeyStrategy(new BreakKeyStrategy<Transaction>() {
-
-            @Override
-            public boolean isKeyBreak(final Transaction item1, final Transaction item2) {
-                return !item1.getCustomerNumber().equals(item1.getCustomerNumber());
-            }
-        });
+        policy.setBreakKeyStrategy((item1, item2) -> !item1.getCustomerNumber().equals(item1.getCustomerNumber()));
         return policy;
     }
 
     @Bean(destroyMethod = "")
-    public SingleItemPeekableItemReader<Transaction> controlBreakReader(final FlatFileItemReader<Transaction> transactionReader) {
+    SingleItemPeekableItemReader<Transaction> controlBreakReader(final FlatFileItemReader<Transaction> transactionReader) {
 
-        final SingleItemPeekableItemReader<Transaction> groupReader = new SingleItemPeekableItemReader<Transaction>();
+        final SingleItemPeekableItemReader<Transaction> groupReader = new SingleItemPeekableItemReader<>();
         groupReader.setDelegate(transactionReader);
 
         return groupReader;
@@ -114,8 +108,8 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Transaction> transactionReader(
-            @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
+    FlatFileItemReader<Transaction> transactionReader(
+             @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
         return new FlatFileItemReaderBuilder<Transaction>() //
                 .name("transactionReader") //
@@ -152,8 +146,8 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
     // }
 
     @Bean
-    public ConsoleItemWriter<Transaction> transactionWriter() {
-        return new ConsoleItemWriter<Transaction>();
+    ConsoleItemWriter<Transaction> transactionWriter() {
+        return new ConsoleItemWriter<>();
     }
 
 }

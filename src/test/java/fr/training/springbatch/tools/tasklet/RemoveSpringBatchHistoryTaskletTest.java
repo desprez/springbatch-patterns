@@ -1,10 +1,10 @@
 package fr.training.springbatch.tools.tasklet;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 
 import javax.sql.DataSource;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.JobInstance;
@@ -51,7 +51,7 @@ class RemoveSpringBatchHistoryTaskletTest {
 
         // 2. Check the dataset before removing history
         List<JobInstance> jobInstances = jobExplorer.getJobInstances("jobTest", 0, 5);
-        assertEquals("2 job instances before the purge", 2, jobInstances.size());
+        assertEquals(2, jobInstances.size(), "2 job instances before the purge");
 
         final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
         final StepContribution stepContribution = new StepContribution(stepExecution);
@@ -63,10 +63,10 @@ class RemoveSpringBatchHistoryTaskletTest {
         tasklet.execute(stepContribution, chunkContext);
 
         // 4. Assertions
-        assertEquals("6 lines should be deleted from the history", 6, stepContribution.getWriteCount());
+        assertEquals(6, stepContribution.getWriteCount(), "6 lines should be deleted from the history");
         jobInstances = jobExplorer.getJobInstances("jobTest", 0, 5);
-        assertEquals("Just a single job instance after the delete", 1, jobInstances.size());
+        assertEquals(1, jobInstances.size(), "Just a single job instance after the delete");
         final JobInstance jobInstance = jobInstances.get(0);
-        assertEquals("Only the job instance number 2 should remain into the history", Long.valueOf(-102), jobInstance.getId());
+        assertEquals(Long.valueOf(-102), jobInstance.getId(), "Only the job instance number 2 should remain into the history");
     }
 }

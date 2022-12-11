@@ -37,8 +37,8 @@ public abstract class AbstractSynchroJob extends AbstractJobConfiguration {
     // }
 
     @Bean(destroyMethod = "")
-    public CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader(final AbstractItemStreamItemReader<Customer> customerReader,
-            final AbstractItemStreamItemReader<Transaction> transactionReader) {
+    CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader(final AbstractItemStreamItemReader<Customer> customerReader,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 final AbstractItemStreamItemReader<Transaction> transactionReader) {
 
         final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader = new CompositeAggregateReader<>();
         masterDetailReader.setMasterItemReader(customerReader);

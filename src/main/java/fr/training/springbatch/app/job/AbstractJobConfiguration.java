@@ -26,14 +26,13 @@ public abstract class AbstractJobConfiguration {
     protected StepBuilderFactory stepBuilderFactory;
 
     public AbstractJobConfiguration() {
-        super();
     }
 
     /**
      * Display report at the end of the job
      */
     @Bean
-    public JobReportListener reportListener() {
+    protected JobReportListener reportListener() {
         return new JobReportListener();
     }
 
@@ -41,7 +40,7 @@ public abstract class AbstractJobConfiguration {
      * Used for logging step progression
      */
     @Bean
-    public ItemCountListener progressListener() {
+    protected ItemCountListener progressListener() {
         final ItemCountListener listener = new ItemCountListener();
         listener.setItemName("Transaction(s)");
         listener.setLoggingInterval(50); // Log process item count every 50
@@ -55,7 +54,7 @@ public abstract class AbstractJobConfiguration {
     public ConversionService localDateConverter() {
         final DefaultConversionService dcs = new DefaultConversionService();
         DefaultConversionService.addDefaultConverters(dcs);
-        dcs.addConverter(new Converter<String, LocalDate>() {
+        dcs.addConverter(new Converter<String, LocalDate>() { 
             @Override
             public LocalDate convert(final String text) {
                 return LocalDate.parse(text, DateTimeFormatter.ISO_DATE);

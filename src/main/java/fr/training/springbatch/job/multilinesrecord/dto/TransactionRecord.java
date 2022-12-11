@@ -7,6 +7,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class TransactionRecord extends Record {
 
+    private static final long serialVersionUID = 1;
+
     private Long customerNumber;
     private String number;
     private LocalDate transactionDate;

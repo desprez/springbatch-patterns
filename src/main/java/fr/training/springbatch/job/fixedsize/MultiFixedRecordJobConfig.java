@@ -3,7 +3,6 @@ package fr.training.springbatch.job.fixedsize;
 import static org.springframework.util.Assert.isTrue;
 import static org.springframework.util.Assert.notNull;
 
-import java.io.IOException;
 import java.io.Writer;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -69,11 +68,11 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     private int chunkSize;
 
     @Bean
-    public Job fixedJob(final Step validationStep, final Step processStep) {
+    Job fixedJob(final Step validationStep, final Step processStep) {
 
         return jobBuilderFactory.get("fixed-job") //
                 .validator(new DefaultJobParametersValidator(
-                        new String[] { INPUTFILE_PARAMETER_NAME, OUTPUTFILE_PARAMETER_NAME, RECEIVER_CODE_PARAMETER, CREATED_DATE_PARAMETER }, new String[] {})) //
+                        new String[]{INPUTFILE_PARAMETER_NAME, OUTPUTFILE_PARAMETER_NAME, RECEIVER_CODE_PARAMETER, CREATED_DATE_PARAMETER}, new String[]{})) //
                 .incrementer(new RunIdIncrementer()) //
                 .start(validationStep) //
                 .next(processStep) //
@@ -82,16 +81,13 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step validationStep(final FlatFileItemReader<AbstractLine> itemReader) throws Exception {
+    Step validationStep(final FlatFileItemReader<AbstractLine> itemReader) throws Exception {
         return stepBuilderFactory.get("validation-step") //
-                .<AbstractLine, AbstractLine> chunk(chunkSize) //
+                .<AbstractLine, AbstractLine>chunk(chunkSize) //
                 .reader(itemReader) //
                 .processor(validationProcessor()) //
-                .writer(new ItemWriter<AbstractLine>() {
-                    @Override
-                    public void write(final List<? extends AbstractLine> items) throws Exception {
-                        // do nothing
-                    }
+                .writer(items -> {
+                    // do nothing
                 }) //
                 .listener(validationProcessor()) //
                 .listener(reportListener()) //
@@ -99,22 +95,22 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step processStep(final FlatFileItemReader<AbstractLine> itemReader, final ItemWriter<Detail> fixedItemWriter) throws Exception {
+    Step processStep(final FlatFileItemReader<AbstractLine> itemReader, final ItemWriter<Detail> fixedItemWriter) throws Exception {
 
         return stepBuilderFactory.get("process-step") //
-                .<AbstractLine, Detail> chunk(chunkSize) //
+                .<AbstractLine, Detail>chunk(chunkSize) //
                 .reader(itemReader) //
                 // return only detail items
-                .processor((Function<AbstractLine, Detail>) (item) -> item instanceof Detail ? (Detail) item : null).writer(fixedItemWriter) //
+                .processor((Function<AbstractLine, Detail>) item -> item instanceof Detail ? (Detail) item : null).writer(fixedItemWriter) //
                 .listener(reportListener()) //
                 .build();
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<AbstractLine> itemReader(@Value("#{jobParameters['inputfile']}") final String inputFile) throws Exception {
+    FlatFileItemReader<AbstractLine> itemReader(@Value("#{jobParameters['inputfile']}") final String inputFile) throws Exception {
 
-        final FlatFileItemReader<AbstractLine> reader = new FlatFileItemReader<AbstractLine>();
+        final FlatFileItemReader<AbstractLine> reader = new FlatFileItemReader<>();
         reader.setResource(new FileSystemResource(inputFile));
         reader.setLineMapper(abstractLineMapper());
         return reader;
@@ -126,8 +122,8 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
      * @return a PatternMatchingCompositeLineMapper instance
      */
     @Bean
-    public PatternMatchingCompositeLineMapper<AbstractLine> abstractLineMapper() {
-        final PatternMatchingCompositeLineMapper<AbstractLine> lineMapper = new PatternMatchingCompositeLineMapper<AbstractLine>();
+    PatternMatchingCompositeLineMapper<AbstractLine> abstractLineMapper() {
+        final PatternMatchingCompositeLineMapper<AbstractLine> lineMapper = new PatternMatchingCompositeLineMapper<>();
 
         final Map<String, LineTokenizer> tokenizers = new HashMap<>(3);
         tokenizers.put(HEADER_RECORD_TYPE, headerTokenizer());
@@ -225,7 +221,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
      * @return a {@link BeanWrapperFieldSetMapper} instance
      */
     private FieldSetMapper<AbstractLine> simpleFieldSetMapper(final Class<? extends AbstractLine> type) {
-        final BeanWrapperFieldSetMapper<AbstractLine> mapper = new BeanWrapperFieldSetMapper<AbstractLine>();
+        final BeanWrapperFieldSetMapper<AbstractLine> mapper = new BeanWrapperFieldSetMapper<>();
         mapper.setTargetType(type);
         mapper.setConversionService(localDateConverter());
         return mapper;
@@ -237,31 +233,27 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
      * @return an IntegrityFileValidator instance.
      */
     @Bean
-    public ItemProcessor<AbstractLine, AbstractLine> validationProcessor() {
+    ItemProcessor<AbstractLine, AbstractLine> validationProcessor() {
         return new IntegrityFileValidator();
     }
 
     @Bean
-    public ItemProcessor<AbstractLine, Detail> detailProcessor() {
-        return new ItemProcessor<AbstractLine, Detail>() {
-            @Override
-            public Detail process(final AbstractLine item) throws Exception {
-                if (item instanceof Header) {
-                    // final Header header = (Header) item;
-                }
-                if (item instanceof Detail) {
-                    final Detail detail = (Detail) item;
-                    return detail;
-                }
-                return null;
+    ItemProcessor<AbstractLine, Detail> detailProcessor() {
+        return item -> {
+            if (item instanceof Header) {
+                // final Header header = (Header) item;
             }
+            if (item instanceof Detail) {
+                return (Detail) item;
+            }
+            return null;
         };
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<Detail> fixedItemWriter(@Value("#{jobParameters['outputfile']}") final String fileName,
-            final FlatFileFooterCallback footerProvider, final FlatFileHeaderCallback headerProvider) throws Exception {
+    FlatFileItemWriter<Detail> fixedItemWriter(@Value("#{jobParameters['outputfile']}") final String fileName,
+                                                                                                              final FlatFileFooterCallback footerProvider, final FlatFileHeaderCallback headerProvider) throws Exception {
 
         return new FlatFileItemWriterBuilder<Detail>() //
                 .name("fixedItemWriter") //
@@ -281,18 +273,15 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileHeaderCallback headerProvider(@Value("#{jobParameters['created-date']}") final Date createdDate,
-            @Value("${application.batch.transmitterCode}") final String transmitterCode, @Value("#{jobParameters['receivercode']}") final String receiverCode) {
-        return new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(final Writer writer) throws IOException {
-                final Header header = new Header(createdDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), transmitterCode, receiverCode, "00001");
+    FlatFileHeaderCallback headerProvider(@Value("#{jobParameters['created-date']}") final Date createdDate,
+                                                                                                         @Value("${application.batch.transmitterCode}") final String transmitterCode, @Value("#{jobParameters['receivercode']}") final String receiverCode) {
+        return writer -> {
+            final Header header = new Header(createdDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), transmitterCode, receiverCode, "00001");
 
-                writer.write(String.format("%2s%10s%-10s%-10s%5s", //
-                        header.getRecordType(), header.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), header.getTransmitterCode(), //
-                        header.getReceiverCode(), //
-                        header.getSequenceNumber()));
-            }
+            writer.write(String.format("%2s%10s%-10s%-10s%5s", //
+            header.getRecordType(), header.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), header.getTransmitterCode(), //
+            header.getReceiverCode(), //
+            header.getSequenceNumber()));
         };
     }
 
@@ -302,14 +291,11 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileFooterCallback footerProvider(@Value("#{stepExecutionContext['fixedItemWriter.written']}") final Integer writeCount) {
+    FlatFileFooterCallback footerProvider(@Value("#{stepExecutionContext['fixedItemWriter.written']}") final Integer writeCount) {
 
-        return new FlatFileFooterCallback() {
-            @Override
-            public void writeFooter(final Writer writer) throws IOException {
-                final Footer footer = new Footer(writeCount);
-                writer.write(String.format("%2s%010d", footer.getRecordType(), footer.getDetailRecordCount()));
-            }
+        return writer -> {
+            final Footer footer = new Footer(writeCount);
+            writer.write(String.format("%2s%010d", footer.getRecordType(), footer.getDetailRecordCount()));
         };
     }
 
@@ -318,8 +304,8 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
      */
     static class IntegrityFileValidator extends StepExecutionListenerSupport implements ItemProcessor<AbstractLine, AbstractLine> {
 
-        private boolean headerFound = false;
-        private boolean footerFound = false;
+        private boolean headerFound;
+        private boolean footerFound;
         private Integer expectedCount;
         private Integer detailCount = 0;
 

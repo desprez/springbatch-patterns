@@ -36,77 +36,77 @@ public class BatchApplication {
     }
 
     @Bean
-    public ApplicationContextFactory simpleExtractJobContextFactory() {
+    ApplicationContextFactory simpleExtractJobContextFactory() {
         return new GenericApplicationContextFactory(SimpleExtractJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory simpleLoadJobContextFactory() {
+    ApplicationContextFactory simpleLoadJobContextFactory() {
         return new GenericApplicationContextFactory(SimpleLoadJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory stagingJobContextFactory() {
+    ApplicationContextFactory stagingJobContextFactory() {
         return new GenericApplicationContextFactory(StagingJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory table2FileSynchroJobContextFactory() {
+    ApplicationContextFactory table2FileSynchroJobContextFactory() {
         return new GenericApplicationContextFactory(Table2FileSynchroJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory file2TableSynchroJobContextFactory() {
+    ApplicationContextFactory file2TableSynchroJobContextFactory() {
         return new GenericApplicationContextFactory(File2TableSynchroJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory file2FileSynchroJobContextFactory() {
+    ApplicationContextFactory file2FileSynchroJobContextFactory() {
         return new GenericApplicationContextFactory(File2FileSynchroJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory groupingRecordsJobContextFactory() {
+    ApplicationContextFactory groupingRecordsJobContextFactory() {
         return new GenericApplicationContextFactory(GroupingRecordsJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory controlBreakJobConfigJobContextFactory() {
+    ApplicationContextFactory controlBreakJobConfigJobContextFactory() {
         return new GenericApplicationContextFactory(ControlBreakJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory sqlJoinSynchroJobContextFactory() {
+    ApplicationContextFactory sqlJoinSynchroJobContextFactory() {
         return new GenericApplicationContextFactory(SQLJoinSynchroJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory purgeHistoryJobContextFactory() {
+    ApplicationContextFactory purgeHistoryJobContextFactory() {
         return new GenericApplicationContextFactory(PurgeHistoryJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory multiFixedRecordJobConfigContextFactory() {
+    ApplicationContextFactory multiFixedRecordJobConfigContextFactory() {
         return new GenericApplicationContextFactory(MultiFixedRecordJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory dailyJobConfigContextFactory() {
+    ApplicationContextFactory dailyJobConfigContextFactory() {
         return new GenericApplicationContextFactory(DailyJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory partitionJobConfigContextFactory() {
+    ApplicationContextFactory partitionJobConfigContextFactory() {
         return new GenericApplicationContextFactory(JDBCPartitionJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory extractProcessIndicatorJobConfigContextFactory() {
+    ApplicationContextFactory extractProcessIndicatorJobConfigContextFactory() {
         return new GenericApplicationContextFactory(ExtractProcessIndicatorJobConfig.class);
     }
 
     @Bean
-    public ApplicationContextFactory exploreJobConfigContextFactory() {
+    ApplicationContextFactory exploreJobConfigContextFactory() {
         return new GenericApplicationContextFactory(ExploreJobConfig.class);
     }
 }

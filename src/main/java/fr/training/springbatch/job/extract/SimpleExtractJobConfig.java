@@ -49,9 +49,9 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
     public DataSource dataSource;
 
     @Bean
-    public Job simpleExtractJob(final Step extractStep) {
+    Job simpleExtractJob(final Step extractStep) {
         return jobBuilderFactory.get("simple-extract-job") //
-                .validator(new DefaultJobParametersValidator(new String[] { "output-dir" }, new String[] {})).incrementer(new RunIdIncrementer()) //
+                .validator(new DefaultJobParametersValidator(new String[]{"output-dir"}, new String[]{})).incrementer(new RunIdIncrementer()) //
                 .flow(extractStep) //
                 .end() //
                 .listener(reportListener()) //
@@ -59,9 +59,9 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    public Step extractStep(final FlatFileItemWriter<Transaction> extractWriter) {
+    Step extractStep(final FlatFileItemWriter<Transaction> extractWriter) {
         return stepBuilderFactory.get("simple-extract-step") //
-                .<Transaction, Transaction> chunk(chunkSize) //
+                .<Transaction, Transaction>chunk(chunkSize) //
                 .reader(simpleExtractReader()) //
                 .processor(simpleExtractProcessor()) //
                 .writer(extractWriter) //
@@ -73,7 +73,7 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
      * ItemReader is an abstract representation of how data is provided as input to a Step. When the inputs are exhausted, the ItemReader returns null.
      */
     @Bean
-    public JdbcCursorItemReader<Transaction> simpleExtractReader() {
+    JdbcCursorItemReader<Transaction> simpleExtractReader() {
 
         return new JdbcCursorItemReaderBuilder<Transaction>() //
                 .name("simpleExtractReader") //
@@ -89,7 +89,7 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
      * written by ItemWriter.
      */
     @Bean
-    public ItemProcessor<Transaction, Transaction> simpleExtractProcessor() {
+    ItemProcessor<Transaction, Transaction> simpleExtractProcessor() {
         return transaction -> {
             logger.debug("Processing {}", transaction);
             return transaction;
@@ -103,7 +103,7 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
      *            spring injected resource
      */
     @Bean
-    public FlatFileItemWriter<Transaction> simpleExtractWriter(final Resource incrementalFilename) {
+    FlatFileItemWriter<Transaction> simpleExtractWriter(final Resource incrementalFilename) {
 
         return new FlatFileItemWriterBuilder<Transaction>() //
                 .name("simpleExtractWriter") //
@@ -128,8 +128,8 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public Resource incrementalFilename(@Value("#{jobParameters['output-dir']}") final String outputdir,
-            @Value("#{jobParameters['run.id']}") final Long runId) {
+    Resource incrementalFilename(@Value("#{jobParameters['output-dir']}") final String outputdir,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @Value("#{jobParameters['run.id']}") final Long runId) {
 
         final String baseFilename = StringUtils.stripFilenameExtension(FILENAME);
         final String extension = StringUtils.getFilenameExtension(FILENAME);

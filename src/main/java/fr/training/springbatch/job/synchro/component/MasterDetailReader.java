@@ -23,7 +23,7 @@ public class MasterDetailReader implements ItemStreamReader<Customer> {
     @Override
     public Customer read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         final List<Customer> items = masterAccumulator.readNextItems();
-        if (items == null || items.size() == 0) {
+        if (items == null || items.isEmpty()) {
             return null;
         }
 

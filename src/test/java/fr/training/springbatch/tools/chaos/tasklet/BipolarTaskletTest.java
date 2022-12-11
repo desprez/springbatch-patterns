@@ -57,14 +57,14 @@ class BipolarTaskletTest {
         public StepBuilderFactory stepBuilderFactory;
 
         @Bean
-        public Step step() {
+        Step step() {
             return stepBuilderFactory.get("step1") //
                     .tasklet(bipolarTasklet()) //
                     .build();
         }
 
         @Bean
-        public Job job() {
+        Job job() {
             return jobBuilderFactory.get("job") //
                     .incrementer(new RunIdIncrementer()) //
                     .flow(step()) //
@@ -73,12 +73,12 @@ class BipolarTaskletTest {
         }
 
         @Bean
-        public BipolarTasklet bipolarTasklet() {
+        BipolarTasklet bipolarTasklet() {
             return new BipolarTasklet();
         }
 
         @Bean
-        public JobLauncherTestUtils testUtils() {
+        JobLauncherTestUtils testUtils() {
             final JobLauncherTestUtils jobLauncherTestUtils = new JobLauncherTestUtils();
             jobLauncherTestUtils.setJob(job());
             return jobLauncherTestUtils;

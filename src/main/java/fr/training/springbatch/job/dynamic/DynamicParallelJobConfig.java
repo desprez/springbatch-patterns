@@ -31,7 +31,7 @@ public class DynamicParallelJobConfig extends AbstractJobConfiguration {
     List<String> filenames = Arrays.asList("customer01.csv", "customer02.csv");
 
     @Bean
-    public Job dynamicParallelJob() {
+    Job dynamicParallelJob() {
 
         final List<Step> steps = filenames.stream().map(this::createStep).collect(Collectors.toList());
 

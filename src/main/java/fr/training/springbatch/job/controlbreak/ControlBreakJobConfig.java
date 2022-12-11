@@ -42,10 +42,10 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
     private int chunkSize;
 
     @Bean
-    public Job controlBreakJob(final Step controlBreakStep /* injected by Spring */) {
+    Job controlBreakJob(final Step controlBreakStep /* injected by Spring */) {
         return jobBuilderFactory.get("controlbreak-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
+                .validator(new DefaultJobParametersValidator(new String[]{"transaction-file", "output-file"}, new String[]{})) //
                 .start(controlBreakStep) //
                 .listener(reportListener()) //
                 .build();
@@ -59,11 +59,11 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
      * @return a Step Bean
      */
     @Bean
-    public Step controlBreakStep(final ItemListPeekableItemReader<Transaction> controlBreakReader,
-            final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
+    Step controlBreakStep(final ItemListPeekableItemReader<Transaction> controlBreakReader,
+                                                                                                                                                                                                                                                                                                                final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
 
         return stepBuilderFactory.get("controlbreak-step") //
-                .<List<Transaction>, TransactionSum> chunk(chunkSize) //
+                .<List<Transaction>, TransactionSum>chunk(chunkSize) //
                 .reader(controlBreakReader) //
                 .processor(processor()) //
                 .writer(transactionSumWriter) //
@@ -72,9 +72,9 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean(destroyMethod = "")
-    public ItemListPeekableItemReader<Transaction> controlBreakReader(final FlatFileItemReader<Transaction> transactionReader) {
+    ItemListPeekableItemReader<Transaction> controlBreakReader(final FlatFileItemReader<Transaction> transactionReader) {
 
-        final ItemListPeekableItemReader<Transaction> groupReader = new ItemListPeekableItemReader<Transaction>();
+        final ItemListPeekableItemReader<Transaction> groupReader = new ItemListPeekableItemReader<>();
         groupReader.setDelegate(transactionReader);
         groupReader.setBreakKeyStrategy((item1, item2) -> !item1.getCustomerNumber().equals(item2.getCustomerNumber()));
         return groupReader;
@@ -82,8 +82,8 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemReader<Transaction> transactionReader(
-            @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
+    FlatFileItemReader<Transaction> transactionReader(
+             @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
         return new FlatFileItemReaderBuilder<Transaction>() //
                 .name("transactionReader") //
@@ -123,7 +123,7 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    public FlatFileItemWriter<TransactionSum> transactionSumWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
+    FlatFileItemWriter<TransactionSum> transactionSumWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
         return new FlatFileItemWriterBuilder<TransactionSum>().name("transactionSumWriter").resource(new FileSystemResource(outputFile)) //
                 .delimited() //
