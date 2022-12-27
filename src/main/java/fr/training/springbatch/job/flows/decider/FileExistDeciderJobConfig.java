@@ -7,12 +7,9 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -22,7 +19,6 @@ import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 import org.springframework.batch.core.job.flow.JobExecutionDecider;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemWriter;
@@ -60,7 +56,7 @@ public class FileExistDeciderJobConfig {
 
     @Bean
     Step producerStep(final ItemWriter<String> itemWriter) {
-        return stepBuilderFactory.get("producer-Step").<String, String>chunk(3) //
+        return stepBuilderFactory.get("producer-Step").<String, String> chunk(3) //
                 .reader(emptyItemReader()) //
                 .writer(itemWriter) //
                 .build();
@@ -93,9 +89,8 @@ public class FileExistDeciderJobConfig {
             final String filename = jobExecution.getJobParameters().getString("output-file");
             if (new File(filename).exists()) {
                 return new FlowExecutionStatus("CONTINUE");
-            } else {
-                return FlowExecutionStatus.COMPLETED;
             }
+            return FlowExecutionStatus.COMPLETED;
         };
     }
 

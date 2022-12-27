@@ -14,11 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.xml.StaxEventItemReader;
 import org.springframework.batch.item.xml.builder.StaxEventItemReaderBuilder;
@@ -50,7 +48,7 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
     Job complexmlJob(final Step fixXmlFileStep, final Step complexmlStep /* injected by Spring */) {
         return jobBuilderFactory.get("complex-job") //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[]{"xml-file"}, new String[]{})) //
+                .validator(new DefaultJobParametersValidator(new String[] { "xml-file" }, new String[] {})) //
                 .start(fixXmlFileStep) //
                 .next(complexmlStep).listener(reportListener()) //
                 .build();
@@ -65,7 +63,7 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
                     final FileInputStream fis = new FileInputStream(xmlFile);
 
                     final List<InputStream> streams = Arrays.asList(new ByteArrayInputStream("<root>".getBytes()), fis,
-                    new ByteArrayInputStream("</root>".getBytes()));
+                            new ByteArrayInputStream("</root>".getBytes()));
 
                     final File workFile = File.createTempFile("input", ".xml");
 
@@ -89,7 +87,7 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
     Step complexmlStep(final StaxEventItemReader<Record> complexmlReader) {
 
         return stepBuilderFactory.get("complexml-step") //
-                .<Record, Record>chunk(chunkSize) //
+                .<Record, Record> chunk(chunkSize) //
                 .reader(complexmlReader) //
                 .processor(processor()) //
                 .writer(complexmlWriter()) //

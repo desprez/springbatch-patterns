@@ -91,7 +91,7 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     }
 
     public PatternMatchingCompositeLineMapper<Record> lineMapper() {
-        final PatternMatchingCompositeLineMapper mapper = new PatternMatchingCompositeLineMapper<>();
+        final PatternMatchingCompositeLineMapper<Record> mapper = new PatternMatchingCompositeLineMapper<>();
 
         final Map<String, LineTokenizer> tokenizers = new HashMap<>(2);
         tokenizers.put("*,C,*", customerLineTokenizer());
@@ -99,7 +99,7 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
 
         mapper.setTokenizers(tokenizers);
 
-        final Map<String, FieldSetMapper<?>> mappers = new HashMap<>(2);
+        final Map<String, FieldSetMapper<Record>> mappers = new HashMap<>(2);
         mappers.put("*,C,*", customerFieldSetMapper());
         mappers.put("*,T,*", transactionFieldSetMapper());
 
@@ -120,15 +120,15 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
         return tokenizer;
     }
 
-    public FieldSetMapper<CustomerRecord> customerFieldSetMapper() {
-        final BeanWrapperFieldSetMapper<CustomerRecord> mapper = new BeanWrapperFieldSetMapper<>();
+    public FieldSetMapper<Record> customerFieldSetMapper() {
+        final BeanWrapperFieldSetMapper<Record> mapper = new BeanWrapperFieldSetMapper<>();
         mapper.setTargetType(CustomerRecord.class);
         mapper.setConversionService(localDateConverter());
         return mapper;
     }
 
-    public FieldSetMapper<TransactionRecord> transactionFieldSetMapper() {
-        final BeanWrapperFieldSetMapper<TransactionRecord> mapper = new BeanWrapperFieldSetMapper<>();
+    public FieldSetMapper<Record> transactionFieldSetMapper() {
+        final BeanWrapperFieldSetMapper<Record> mapper = new BeanWrapperFieldSetMapper<>();
         mapper.setTargetType(TransactionRecord.class);
         mapper.setConversionService(localDateConverter());
         return mapper;
