@@ -21,7 +21,7 @@ class CopyFileTaskletTest {
     private static File outputDir = new File("target/copyfiletasklet/");
 
     @BeforeEach
-    public void cleanup() throws IOException {
+    void cleanup() throws IOException {
         if (outputDir.exists()) {
             FileUtils.deleteDirectory(outputDir);
         }
@@ -29,7 +29,7 @@ class CopyFileTaskletTest {
     }
 
     @Test
-    public void execute_with_existing_file_should_success() throws Exception {
+    void execute_with_existing_file_should_success() throws Exception {
         // Given
         final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
         final StepContribution contribution = new StepContribution(stepExecution);

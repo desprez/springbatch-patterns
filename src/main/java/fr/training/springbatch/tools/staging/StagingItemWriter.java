@@ -61,7 +61,7 @@ public class StagingItemWriter<T> extends JdbcDaoSupport implements StepExecutio
     public void write(final List<? extends T> items) {
         final ListIterator<? extends T> itemIterator = items.listIterator();
 
-        getJdbcTemplate().batchUpdate("INSERT into BATCH_STAGING (ID, JOB_ID, VALUE, PROCESSED) values (?,?,?,?)", new BatchPreparedStatementSetter() {
+        getJdbcTemplate().batchUpdate("INSERT into BATCH_STAGING (ID, JOB_ID, VALUE_, PROCESSED) values (?,?,?,?)", new BatchPreparedStatementSetter() {
             @Override
             public int getBatchSize() {
                 return items.size();

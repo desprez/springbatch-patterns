@@ -112,7 +112,7 @@ public class JdbcTasklet implements Tasklet, InitializingBean {
             contribution.incrementWriteCount(updated);
             msg = "Updated: " + updated + " rows";
         }
-        log.debug(msg);
+        log.info(msg);
         stepExecution.setExitStatus(exitStatus.addExitDescription(msg));
 
         return RepeatStatus.FINISHED;

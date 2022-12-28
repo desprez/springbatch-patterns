@@ -11,7 +11,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersInvalidException;
 
-public class DateJobParametersValidatorTest {
+class DateJobParametersValidatorTest {
 
     private static final LocalDate TODAY = LocalDate.now();
     private static final LocalDate YESTERDAY = TODAY.minusDays(1L);

@@ -28,6 +28,7 @@ class MultiDestinationJobConfigTest {
 
     @Test
     void launch_MultiDestinationJob_nominal_should_success() throws Exception {
+
         // Given
         final JobParameters jobParameters = new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters()).addString("outputFile1", OUTPUT_FILE1) //
                 .addString("outputFile2", OUTPUT_FILE2) //

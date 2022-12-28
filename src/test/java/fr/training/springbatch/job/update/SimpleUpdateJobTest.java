@@ -31,7 +31,7 @@ class SimpleUpdateJobTest {
     private JobLauncherTestUtils testUtils;
 
     @Test
-    public void launch_SimpleUpdateJob_nominal_should_success() throws Exception {
+    void launch_SimpleUpdateJob_nominal_should_success() throws Exception {
         // Given
         final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
                 .addString("input-file", "src/main/resources/csv/customer-update.csv") //

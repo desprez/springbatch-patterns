@@ -23,14 +23,14 @@ class CompressTaskletTest {
     private static File outputDir = new File("target/compresstasklet");
 
     @BeforeEach
-    public void createOutputDir() throws IOException {
+    void createOutputDir() throws IOException {
         if (outputDir.exists()) {
             FileUtils.deleteDirectory(outputDir);
         }
     }
 
     @Test
-    public void execute_should_generate_archive_file() throws Exception {
+    void execute_should_generate_archive_file() throws Exception {
         // Given
         final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
         final StepContribution contribution = new StepContribution(stepExecution);

@@ -75,7 +75,7 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
 
     private ItemProcessor<Record, Record> multilinesExtractProcessor() {
         return item -> {
-            logger.info("=> {}", item);
+            logger.debug("=> {}", item);
             return item;
         };
     }

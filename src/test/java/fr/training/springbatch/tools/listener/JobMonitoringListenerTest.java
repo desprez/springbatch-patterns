@@ -33,7 +33,7 @@ class JobMonitoringListenerTest {
     private ArgumentCaptor<SimpleMailMessage> captor;
 
     @Test
-    public void afterJob_with_failed_JobExecution_should_send_mail() throws Exception {
+    void afterJob_with_failed_JobExecution_should_send_mail() throws Exception {
         // Given
         final SimpleMailMessage templateMessage = new SimpleMailMessage();
         templateMessage.setFrom("customerservice@mycompany.com");

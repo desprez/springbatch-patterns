@@ -21,7 +21,7 @@ CREATE TABLE transaction
   (
      customer_number  VARCHAR(3) NOT NULL,
      number           BIGINT NOT NULL,
-     amount           numeric,
+     amount           DECIMAL(8,2),
      transaction_date DATE,
      processed        VARCHAR(1) DEFAULT 'N'
      -- ,
@@ -32,13 +32,13 @@ DROP SEQUENCE IF EXISTS batch_staging_seq ;
 
 CREATE SEQUENCE batch_staging_seq;
 
-DROP TABLE  IF EXISTS batch_staging ;
+DROP TABLE IF EXISTS batch_staging ;
 
 CREATE TABLE batch_staging
   (
 	id BIGINT  NOT NULL PRIMARY KEY ,
 	job_id BIGINT NOT NULL,
-	value BYTEA NOT NULL,
+	value_ BYTEA NOT NULL,
 	processed CHAR(1) NOT NULL
   );
 

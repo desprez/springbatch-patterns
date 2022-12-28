@@ -1,6 +1,5 @@
 package fr.training.springbatch.tools.staging;
 
-import java.sql.ResultSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -63,7 +62,7 @@ public class StagingItemReader<T> implements ItemReader<ProcessIndicatorItemWrap
 
                     "SELECT ID FROM BATCH_STAGING WHERE JOB_ID=? AND PROCESSED=? ORDER BY ID",
 
-            (rs, rowNum) -> rs.getLong(1),
+                    (rs, rowNum) -> rs.getLong(1),
 
                     stepExecution.getJobExecution().getJobId(), StagingItemWriter.NEW);
         }
@@ -89,7 +88,7 @@ public class StagingItemReader<T> implements ItemReader<ProcessIndicatorItemWrap
             return null;
         }
         @SuppressWarnings("unchecked")
-        final T result = (T) jdbcTemplate.queryForObject("SELECT VALUE FROM BATCH_STAGING WHERE ID=?", (rs, rowNum) -> {
+        final T result = (T) jdbcTemplate.queryForObject("SELECT VALUE_ FROM BATCH_STAGING WHERE ID=?", (rs, rowNum) -> {
             final byte[] blob = rs.getBytes(1);
             return SerializationUtils.deserialize(blob);
         }, id);

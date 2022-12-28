@@ -1,18 +1,24 @@
 debug: false
 spring:
-   datasource:
-      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
-      driver-class-name: org.h2.Driver
-      username: sa
-      password: null
-   mail:
-      host: 127.0.0.1
-      port: 3025 # default protocol port + 3000 as offset
-      protocol: smtp   
-      password: springboot
-      username: duke
-      test-connection: true
-      
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: null
+
+  sql:
+    init:
+      mode: always
+      platform: h2
+
+  mail:
+    host: 127.0.0.1
+    port: 3025 # default protocol port + 3000 as offset
+    protocol: smtp   
+    password: springboot
+    username: duke
+    test-connection: true
+ 
 logging:
   level:
     org.springframework.jdbc.core.JdbcTemplate: info
@@ -21,4 +27,7 @@ logging:
     org.springframework.jdbc: info
 #    org.springframework.jdbc.datasource: debug
     jdbc: off
-    jdbc.sqlonly: off
+    jdbc.connection: off
+#    jdbc.sqlonly: TRACE
+#    jdbc.resultset: TRACE
+    jdbc.resultsettable: off

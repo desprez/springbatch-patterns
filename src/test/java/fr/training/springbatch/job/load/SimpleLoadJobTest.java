@@ -41,7 +41,7 @@ class SimpleLoadJobTest {
     }
 
     @Test
-    public void launch_SimpleLoadJob_nominal_should_success() throws Exception {
+    void launch_SimpleLoadJob_nominal_should_success() throws Exception {
         // Given
         final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
                 .addString("input-file", "src/main/resources/csv/transaction.csv") //
@@ -63,7 +63,7 @@ class SimpleLoadJobTest {
     }
 
     @Test
-    public void launch_SimpleLoadJob_with_bad_records_should_success_with_reject_file() throws Exception {
+    void launch_SimpleLoadJob_with_bad_records_should_success_with_reject_file() throws Exception {
         // Given
         final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
                 .addString("input-file", "src/main/resources/csv/transaction_bad.csv") //

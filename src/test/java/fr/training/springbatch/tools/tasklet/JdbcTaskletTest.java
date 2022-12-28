@@ -35,7 +35,7 @@ class JdbcTaskletTest {
 
         final JdbcTasklet tasklet = new JdbcTasklet();
         tasklet.setDataSource(dataSource);
-        tasklet.setSql("SELECT * FROM TRANSACTION");
+        tasklet.setSql("select 1 from dual");
 
         // When
         final RepeatStatus status = tasklet.execute(contribution, context);

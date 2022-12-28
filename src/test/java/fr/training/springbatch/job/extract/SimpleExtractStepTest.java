@@ -32,6 +32,7 @@ class SimpleExtractStepTest {
     @Test
     void simpleExtractStep_should_produce_expected_csv_file() throws Exception {
         // Given
+
         final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
                 .addString("output-dir", OUTPUT_DIR) //
                 .toJobParameters();

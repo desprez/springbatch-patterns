@@ -11,20 +11,20 @@ import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.batch.repeat.context.RepeatContextSupport;
 import org.springframework.batch.repeat.support.RepeatSynchronizationManager;
 
-public class ExceptionThrowingItemReaderProxyTest {
+class ExceptionThrowingItemReaderProxyTest {
 
     // expected call count before exception is thrown (exception should be thrown in
     // next iteration)
     private static final int ITER_COUNT = 5;
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         RepeatSynchronizationManager.clear();
     }
 
     @SuppressWarnings("serial")
     @Test
-    public void testProcess() throws Exception {
+    void testProcess() throws Exception {
 
         // create module and set item processor and iteration count
         final ExceptionThrowingItemReaderProxy<String> itemReader = new ExceptionThrowingItemReaderProxy<>();
