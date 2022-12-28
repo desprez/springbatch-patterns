@@ -3,12 +3,10 @@ package fr.training.springbatch.job.fixedsize;
 import static org.springframework.util.Assert.isTrue;
 import static org.springframework.util.Assert.notNull;
 
-import java.io.Writer;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -72,7 +70,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
 
         return jobBuilderFactory.get("fixed-job") //
                 .validator(new DefaultJobParametersValidator(
-                        new String[]{INPUTFILE_PARAMETER_NAME, OUTPUTFILE_PARAMETER_NAME, RECEIVER_CODE_PARAMETER, CREATED_DATE_PARAMETER}, new String[]{})) //
+                        new String[] { INPUTFILE_PARAMETER_NAME, OUTPUTFILE_PARAMETER_NAME, RECEIVER_CODE_PARAMETER, CREATED_DATE_PARAMETER }, new String[] {})) //
                 .incrementer(new RunIdIncrementer()) //
                 .start(validationStep) //
                 .next(processStep) //
@@ -83,7 +81,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     @Bean
     Step validationStep(final FlatFileItemReader<AbstractLine> itemReader) throws Exception {
         return stepBuilderFactory.get("validation-step") //
-                .<AbstractLine, AbstractLine>chunk(chunkSize) //
+                .<AbstractLine, AbstractLine> chunk(chunkSize) //
                 .reader(itemReader) //
                 .processor(validationProcessor()) //
                 .writer(items -> {
@@ -98,7 +96,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     Step processStep(final FlatFileItemReader<AbstractLine> itemReader, final ItemWriter<Detail> fixedItemWriter) throws Exception {
 
         return stepBuilderFactory.get("process-step") //
-                .<AbstractLine, Detail>chunk(chunkSize) //
+                .<AbstractLine, Detail> chunk(chunkSize) //
                 .reader(itemReader) //
                 // return only detail items
                 .processor((Function<AbstractLine, Detail>) item -> item instanceof Detail ? (Detail) item : null).writer(fixedItemWriter) //
@@ -252,8 +250,8 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    FlatFileItemWriter<Detail> fixedItemWriter(@Value("#{jobParameters['outputfile']}") final String fileName,
-                                                                                                              final FlatFileFooterCallback footerProvider, final FlatFileHeaderCallback headerProvider) throws Exception {
+    FlatFileItemWriter<Detail> fixedItemWriter(@Value("#{jobParameters['outputfile']}") final String fileName, final FlatFileFooterCallback footerProvider,
+            final FlatFileHeaderCallback headerProvider) throws Exception {
 
         return new FlatFileItemWriterBuilder<Detail>() //
                 .name("fixedItemWriter") //
@@ -274,14 +272,14 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     @StepScope // Mandatory for using jobParameters
     @Bean
     FlatFileHeaderCallback headerProvider(@Value("#{jobParameters['created-date']}") final Date createdDate,
-                                                                                                         @Value("${application.batch.transmitterCode}") final String transmitterCode, @Value("#{jobParameters['receivercode']}") final String receiverCode) {
+            @Value("${application.batch.transmitterCode}") final String transmitterCode, @Value("#{jobParameters['receivercode']}") final String receiverCode) {
         return writer -> {
             final Header header = new Header(createdDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), transmitterCode, receiverCode, "00001");
 
             writer.write(String.format("%2s%10s%-10s%-10s%5s", //
-            header.getRecordType(), header.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), header.getTransmitterCode(), //
-            header.getReceiverCode(), //
-            header.getSequenceNumber()));
+                    header.getRecordType(), header.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), header.getTransmitterCode(), //
+                    header.getReceiverCode(), //
+                    header.getSequenceNumber()));
         };
     }
 

@@ -19,7 +19,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.jdbc.JdbcTestUtils;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
-import fr.training.springbatch.job.computedelta.ComputeDeltaJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest

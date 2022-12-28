@@ -4,8 +4,6 @@ import java.util.Collections;
 
 import javax.sql.DataSource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -38,8 +36,6 @@ import fr.training.springbatch.tools.writer.ConsoleItemWriter;
 import fr.training.springbatch.tools.writer.NoOpWriter;
 
 public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
-
-    private static final Logger logger = LoggerFactory.getLogger(ComputeDeltaJobConfig.class);
 
     @Value("${application.compute-delta-load-step.chunksize:10}")
     private int chunkSize;

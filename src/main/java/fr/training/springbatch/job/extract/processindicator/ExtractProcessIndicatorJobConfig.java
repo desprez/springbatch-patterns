@@ -5,8 +5,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -39,10 +37,6 @@ import fr.training.springbatch.tools.tasklet.JdbcTasklet;
  * @author desprez
  */
 public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
-
-    private static final Logger log = LoggerFactory.getLogger(ExtractProcessIndicatorJobConfig.class);
-
-    private static final String NEW = "N";
 
     private static final String DONE = "Y";
 

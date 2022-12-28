@@ -14,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import fr.training.springbatch.job.BatchTestConfiguration;
-import fr.training.springbatch.job.complexml.ComplexmlJobConfig;
 
 @ActiveProfiles("test")
 @SpringBatchTest

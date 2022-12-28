@@ -44,6 +44,8 @@ class BipolarTaskletTest {
 
         // then it pass
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+
+        ((AnnotationConfigApplicationContext) context).close();
     }
 
     @Configuration
