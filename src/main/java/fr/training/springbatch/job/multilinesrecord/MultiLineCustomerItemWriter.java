@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemStreamException;
@@ -19,7 +20,7 @@ public class MultiLineCustomerItemWriter implements ItemWriter<Customer>, ItemSt
     private FlatFileItemWriter<String> delegate;
 
     @Override
-    public void write(final List<? extends Customer> items) throws Exception {
+    public void write(final Chunk<? extends Customer> items) throws Exception {
         final List<String> lines = new ArrayList<>();
 
         for (final Customer c : items) {
@@ -29,7 +30,7 @@ public class MultiLineCustomerItemWriter implements ItemWriter<Customer>, ItemSt
                 lines.add(joinString(c.getNumber().toString(), "T", t.getNumber(), t.getTransactionDate().toString(), t.getAmount().toString()));
             }
         }
-        delegate.write(lines);
+        delegate.write(new Chunk<String>(lines));
     }
 
     private String joinString(final String... tokens) {

@@ -21,7 +21,7 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 @ActiveProfiles("test")
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class, MultiFixedRecordJobConfig.class }, properties = { "spring.batch.job.enabled=false",
-        "application.batch.transmitterCode=AP99325" })
+        "spring.batch.job.names=fixed-job", "application.batch.transmitterCode=AP99325" })
 class MultiFixedRecordJobConfigTest {
 
     private static final String OUTPUT_FILE_PATH = "target/fixedresult.txt";

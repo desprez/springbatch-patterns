@@ -1,9 +1,8 @@
 package fr.training.springbatch.tools.listener;
 
-import static org.springframework.batch.core.metrics.BatchMetrics.calculateDuration;
-import static org.springframework.batch.core.metrics.BatchMetrics.formatDuration;
+import static org.springframework.batch.core.observability.BatchMetrics.calculateDuration;
+import static org.springframework.batch.core.observability.BatchMetrics.formatDuration;
 
-import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
@@ -12,7 +11,6 @@ import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.JobParameter;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 
@@ -38,9 +36,7 @@ public class FullReportListener implements JobExecutionListener, StepExecutionLi
         jobReport.append(SEPARATOR_LINE + NEW_LINE);
 
         jobReport.append("Job-Parameter:" + NEW_LINE);
-        final JobParameters jp = jobExecution.getJobParameters();
-        for (final Iterator<Entry<String, JobParameter>> iter = jp.getParameters().entrySet().iterator(); iter.hasNext();) {
-            final Entry<String, JobParameter> entry = iter.next();
+        for (final Entry<String, JobParameter<?>> entry : jobExecution.getJobParameters().getParameters().entrySet()) {
             jobReport.append("  " + entry.getKey() + "=" + entry.getValue() + NEW_LINE);
         }
         jobReport.append(" executed in ").append(formatDuration(calculateDuration(jobExecution.getStartTime(), jobExecution.getEndTime())));

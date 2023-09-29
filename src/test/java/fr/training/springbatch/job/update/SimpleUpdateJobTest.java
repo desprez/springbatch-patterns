@@ -21,7 +21,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, SimpleUpdateJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, SimpleUpdateJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=simple-update-job" })
 class SimpleUpdateJobTest {
 
     private static final String REJECT_FILE_PATH = "target/output/reject-updates.csv";

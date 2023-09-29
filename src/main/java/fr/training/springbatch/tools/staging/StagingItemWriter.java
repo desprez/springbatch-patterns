@@ -2,12 +2,12 @@ package fr.training.springbatch.tools.staging;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.ListIterator;
 
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
@@ -58,8 +58,8 @@ public class StagingItemWriter<T> extends JdbcDaoSupport implements StepExecutio
      * @see ItemWriter#write(java.util.List)
      */
     @Override
-    public void write(final List<? extends T> items) {
-        final ListIterator<? extends T> itemIterator = items.listIterator();
+    public void write(final Chunk<? extends T> items) throws Exception {
+        final ListIterator<? extends T> itemIterator = items.getItems().listIterator();
 
         getJdbcTemplate().batchUpdate("INSERT into BATCH_STAGING (ID, JOB_ID, VALUE_, PROCESSED) values (?,?,?,?)", new BatchPreparedStatementSetter() {
             @Override

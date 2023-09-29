@@ -17,7 +17,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, MultiLinesExtractJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, MultiLinesExtractJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=multilines-extract-job" })
 class MultiLinesExtractJobTest {
 
     private static final String OUTPUT_FILE = "target/output/multilines-outputfile.csv";

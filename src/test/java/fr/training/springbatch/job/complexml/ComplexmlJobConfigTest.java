@@ -17,8 +17,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, ComplexmlJobConfig.class }, properties = "spring.batch.job.enabled=false")
-
+@SpringBootTest(classes = { BatchTestConfiguration.class, ComplexmlJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=complex-job" })
 class ComplexmlJobConfigTest {
 
     @Autowired
@@ -27,7 +27,6 @@ class ComplexmlJobConfigTest {
     @Test
     void launch_ComplexmlJob_nominal_should_success() throws Exception {
         // Given
-
         final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
                 .addString("xml-file", "src/test/resources/datas/xml/input-complex.xml") //
                 .toJobParameters();

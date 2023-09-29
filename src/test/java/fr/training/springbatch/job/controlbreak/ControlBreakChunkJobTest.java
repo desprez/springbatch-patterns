@@ -17,7 +17,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, ControlBreakChunkJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, ControlBreakChunkJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=controlbreak-chunk-job" })
 class ControlBreakChunkJobTest {
 
     private static final String OUTPUT_FILE = "target/output/outputfile.csv";

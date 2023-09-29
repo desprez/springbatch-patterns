@@ -2,12 +2,12 @@ package fr.training.springbatch.tools.notifier;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.listener.JobExecutionListenerSupport;
+import org.springframework.batch.core.JobExecutionListener;
 
 /**
  * {@link Listener} who send notification via a NotificationService
  */
-public class JobMonitoringListener extends JobExecutionListenerSupport {
+public class JobMonitoringListener implements JobExecutionListener {
 
     private final NotificationService notifier;
 

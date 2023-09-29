@@ -11,6 +11,9 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -23,9 +26,12 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -40,9 +46,13 @@ import fr.training.springbatch.tools.tasklet.JdbcTasklet;
  *
  * @author desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = SimpleLoadJobConfig.SIMPLE_LOAD_JOB)
 public class SimpleLoadJobConfig extends AbstractJobConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleLoadJobConfig.class);
+
+    protected static final String SIMPLE_LOAD_JOB = "simple-load-job";
 
     @Value("${application.simple-load-step.chunksize:10}")
     private int chunkSize;
@@ -51,11 +61,11 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
     private DataSource dataSource;
 
     @Bean
-    Job simpleImportJob(final Step loadStep) {
-        return jobBuilderFactory.get("simple-load-job") //
+    Job simpleImportJob(final JobRepository jobRepository, final Step loadStep, final Step deleteStep) {
+        return new JobBuilder(SIMPLE_LOAD_JOB, jobRepository) //
                 // .incrementer(new RunIdIncrementer()) //
-                .validator(new DefaultJobParametersValidator(new String[]{"input-file", "rejectfile"}, new String[]{})) //
-                .start(deleteStep()) //
+                .validator(new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
+                .start(deleteStep) //
                 .next(loadStep) //
                 .listener(reportListener()) //
                 .build();
@@ -67,9 +77,9 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
      * @return the Step
      */
     @Bean
-    Step deleteStep() {
-        return stepBuilderFactory.get("delete-step") //
-                .tasklet(deletePreviousRecordTasklet()) //
+    Step deleteStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager) {
+        return new StepBuilder("delete-step", jobRepository) //
+                .tasklet(deletePreviousRecordTasklet(), transactionManager) //
                 .build();
     }
 
@@ -81,11 +91,11 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step loadStep(final ItemReader<Transaction> loadReader, //
-                            final ItemWriter<Transaction> loadWriter, final RejectFileSkipListener<Transaction, Transaction> rejectListener) {
+    Step loadStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final ItemReader<Transaction> loadReader, //
+            final ItemWriter<Transaction> loadWriter, final RejectFileSkipListener<Transaction, Transaction> rejectListener) {
 
-        return stepBuilderFactory.get("simple-load-step") //
-                .<Transaction, Transaction>chunk(chunkSize) //
+        return new StepBuilder("simple-load-step", jobRepository) //
+                .<Transaction, Transaction> chunk(chunkSize, transactionManager) //
                 .reader(loadReader) //
                 .processor(loadProcessor()) //
                 .writer(loadWriter) //
@@ -155,8 +165,7 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    RejectFileSkipListener<Transaction, Transaction> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile)
-            throws IOException {
+    RejectFileSkipListener<Transaction, Transaction> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
 
         return new RejectFileSkipListener<>(new File(rejectfile));
     }

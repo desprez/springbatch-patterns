@@ -2,8 +2,7 @@ package fr.training.springbatch.tools.writer;
 
 import static org.springframework.util.Assert.notNull;
 
-import java.util.List;
-
+import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 
 /**
@@ -28,7 +27,7 @@ public class DryRunItemWriter<T> implements ItemWriter<T> {
     private ItemWriter<T> delegate;
 
     @Override
-    public void write(final List<? extends T> items) throws Exception {
+    public void write(final Chunk<? extends T> items) throws Exception {
         notNull(delegate, "delegate is required");
         if (!dryrun) {
             delegate.write(items);

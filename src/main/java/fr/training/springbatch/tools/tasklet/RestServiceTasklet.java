@@ -15,7 +15,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -62,7 +61,7 @@ public class RestServiceTasklet implements Tasklet, InitializingBean {
             logger.debug(responseEntity.getBody());
 
             // set step status based on HTTP status
-            final HttpStatus code = responseEntity.getStatusCode();
+            final var code = responseEntity.getStatusCode();
             logger.debug("HttpStatus {} ", code);
 
             // if ok, return HttpStatus

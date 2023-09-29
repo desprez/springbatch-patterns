@@ -11,7 +11,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -23,9 +26,12 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -35,9 +41,13 @@ import fr.training.springbatch.tools.listener.RejectFileSkipListener;
 /**
  *
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = SimpleUpdateJobConfig.SIMPLE_UPDATE_JOB)
 public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleUpdateJobConfig.class);
+
+    protected static final String SIMPLE_UPDATE_JOB = "simple-update-job";
 
     @Value("${application.simple-update-step.chunksize:10}")
     private int chunkSize;
@@ -46,21 +56,21 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
     private DataSource dataSource;
 
     @Bean
-    Job simpleImportJob(final Step updateStep) {
-        return jobBuilderFactory.get("simple-update-job") //
+    Job simpleImportJob(final Step updateStep, final JobRepository jobRepository) {
+        return new JobBuilder(SIMPLE_UPDATE_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) //
-                .validator(new DefaultJobParametersValidator(new String[]{"input-file", "rejectfile"}, new String[]{})) //
+                .validator(new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
                 .start(updateStep) //
                 .listener(reportListener()) //
                 .build();
     }
 
     @Bean
-    Step updateStep(final ItemReader<Customer> updateReader, //
-                              final ItemWriter<Customer> updateWriter, final RejectFileSkipListener<Customer, Customer> rejectListener) {
+    Step updateStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final ItemReader<Customer> updateReader, //
+            final ItemWriter<Customer> updateWriter, final RejectFileSkipListener<Customer, Customer> rejectListener) {
 
-        return stepBuilderFactory.get("simple-update-step") //
-                .<Customer, Customer>chunk(chunkSize) //
+        return new StepBuilder("simple-update-step", jobRepository) //
+                .<Customer, Customer> chunk(chunkSize, transactionManager) //
                 .reader(updateReader) //
                 .processor(updateProcessor()) //
                 .writer(updateWriter) //

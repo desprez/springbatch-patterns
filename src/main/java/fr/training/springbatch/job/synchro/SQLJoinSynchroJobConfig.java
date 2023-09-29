@@ -6,7 +6,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
@@ -14,8 +17,11 @@ import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -27,7 +33,11 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
  *
  * @author Desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = SQLJoinSynchroJobConfig.SQL_JOIN_SYNCHRO_JOB)
 public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
+
+    protected static final String SQL_JOIN_SYNCHRO_JOB = "sqljoinsynchro-job";
 
     @Autowired
     private DataSource dataSource;
@@ -38,22 +48,22 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
      * @return the job bean
      */
     @Bean
-    Job sqlJoinSynchroJob(final Step sqlJoinSynchroStep) {
+    Job sqlJoinSynchroJob(final Step sqlJoinSynchroStep, final JobRepository jobRepository) {
 
-        return jobBuilderFactory.get("sqljoinsynchro-job") //
+        return new JobBuilder(SQL_JOIN_SYNCHRO_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[]{"output-file"}, new String[]{})) //
+                .validator(new DefaultJobParametersValidator(new String[] { "output-file" }, new String[] {})) //
                 .start(sqlJoinSynchroStep) //
                 .listener(reportListener()) //
                 .build();
     }
 
     @Bean
-    Step sqlJoinSynchroStep(final JdbcCursorItemReader<Customer> jdbcCustomerReader,
-                                      final ItemWriter<Customer> customerWriter /* injected by Spring */) {
+    Step sqlJoinSynchroStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final JdbcCursorItemReader<Customer> jdbcCustomerReader, final ItemWriter<Customer> customerWriter /* injected by Spring */) {
 
-        return stepBuilderFactory.get("sqljoinsynchro-step") //
-                .<Customer, Customer>chunk(10) //
+        return new StepBuilder("sqljoinsynchro-step", jobRepository) //
+                .<Customer, Customer> chunk(10, transactionManager) //
                 .reader(jdbcCustomerReader) //
                 .writer(customerWriter) //
                 .listener(reportListener()) //

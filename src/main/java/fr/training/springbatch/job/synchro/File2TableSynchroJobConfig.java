@@ -11,7 +11,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
@@ -23,8 +26,11 @@ import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
@@ -43,9 +49,13 @@ import fr.training.springbatch.tools.synchro.ItemAccumulator;
  *
  * @author Desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = File2TableSynchroJobConfig.FILE2TABLE_SYNCHRO_JOB)
 public class File2TableSynchroJobConfig extends AbstractSynchroJob {
 
     private static final Logger logger = LoggerFactory.getLogger(File2TableSynchroJobConfig.class);
+
+    protected static final String FILE2TABLE_SYNCHRO_JOB = "file2tablesynchro-job";
 
     @Value("${application.file2tablesynchro-step.chunksize:10}")
     private int chunkSize;
@@ -59,10 +69,10 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      * @return the job bean
      */
     @Bean
-    Job file2TableSynchroJob(final Step file2TableSynchroStep /* injected by Spring */) {
-        return jobBuilderFactory.get("file2tablesynchro-job") //
+    Job file2TableSynchroJob(final Step file2TableSynchroStep, final JobRepository jobRepository) {
+        return new JobBuilder(FILE2TABLE_SYNCHRO_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[]{"customer-file", "output-file"}, new String[]{})) //
+                .validator(new DefaultJobParametersValidator(new String[] { "customer-file", "output-file" }, new String[] {})) //
                 .start(file2TableSynchroStep) //
                 .listener(reportListener()) //
                 .build();
@@ -76,11 +86,12 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      * @return a Step bean
      */
     @Bean
-    Step file2TableSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
-                                                                                                                                                                                                                                                                                       final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
+    Step file2TableSynchroStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
+            final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
 
-        return stepBuilderFactory.get("file2tablesynchro-step") //
-                .<Customer, Customer>chunk(chunkSize) //
+        return new StepBuilder("file2tablesynchro-step", jobRepository) //
+                .<Customer, Customer> chunk(chunkSize, transactionManager) //
                 .reader(masterDetailReader) //
                 .processor(processor()) //
                 .writer(customerWriter) //

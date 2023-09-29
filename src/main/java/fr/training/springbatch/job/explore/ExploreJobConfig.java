@@ -10,34 +10,44 @@ import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ExploreJobConfig.EXPLORE_JOB)
 public class ExploreJobConfig extends AbstractJobConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(ExploreJobConfig.class);
+
+    protected static final String EXPLORE_JOB = "explore-job";
 
     @Autowired
     private JobExplorer jobExplorer;
 
     @Bean
-    Job dailyjob(final Step exploreStep) {
-        return jobBuilderFactory.get("explore-job") //
+    Job dailyjob(final Step exploreStep, final JobRepository jobRepository) {
+        return new JobBuilder(EXPLORE_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) //
                 .start(exploreStep) //
                 .build();
     }
 
     @Bean
-    Step exploreStep(final Tasklet explorerTasklet) {
-        return stepBuilderFactory.get("explore-step") //
-                .tasklet(explorerTasklet) //
+    Step exploreStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final Tasklet explorerTasklet) {
+        return new StepBuilder("explore-step", jobRepository) //
+                .tasklet(explorerTasklet, transactionManager) //
                 .build();
     }
 

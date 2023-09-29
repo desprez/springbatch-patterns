@@ -21,7 +21,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, ExtractProcessIndicatorJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, ExtractProcessIndicatorJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=extract-process-indicator-job" })
 class ExtractProcessIndicatorJobTest {
 
     private static final String OUTPUT_FILE = "target/output/extract_process_indicator.csv";

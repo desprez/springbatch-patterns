@@ -9,6 +9,8 @@ spring:
   batch:
     jdbc:
       initialize-schema: always
+    job:
+      names: ${job.name}
   sql:
     init:
       mode: always
@@ -17,7 +19,7 @@ logging:
   level:
     root: info  
 #    fr.training.springbatch: debug
-#    org.springframework.batch: debug
+    org.springframework.batch: debug
 #    org.springframework.boot.autoconfigure.batch: debug
 #    org.springframework.jdbc: debug
     jdbc: off

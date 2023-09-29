@@ -2,7 +2,6 @@ package fr.training.springbatch.job;
 
 import javax.sql.DataSource;
 
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +13,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 @Configuration
 @EnableAutoConfiguration(exclude = MailSenderAutoConfiguration.class)
-@EnableBatchProcessing
 public class BatchTestConfiguration {
 
     /**

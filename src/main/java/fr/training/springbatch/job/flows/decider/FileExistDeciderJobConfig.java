@@ -10,15 +10,15 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 import org.springframework.batch.core.job.flow.JobExecutionDecider;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemWriter;
@@ -26,13 +26,14 @@ import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * This SpringBatch job configuration ilustrate the JobDecider usage :
@@ -43,20 +44,16 @@ import org.springframework.core.io.FileSystemResource;
  *
  */
 @Configuration
-@EnableBatchProcessing
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = FileExistDeciderJobConfig.EXAMPLE_JOB)
 public class FileExistDeciderJobConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(FileExistDeciderJobConfig.class);
 
-    @Autowired
-    private JobBuilderFactory jobBuilderFactory;
-
-    @Autowired
-    private StepBuilderFactory stepBuilderFactory;
+    protected static final String EXAMPLE_JOB = "exampleJob";
 
     @Bean
-    Step producerStep(final ItemWriter<String> itemWriter) {
-        return stepBuilderFactory.get("producer-Step").<String, String> chunk(3) //
+    Step producerStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final ItemWriter<String> itemWriter) {
+        return new StepBuilder("producer-Step", jobRepository).<String, String> chunk(3, transactionManager) //
                 .reader(emptyItemReader()) //
                 .writer(itemWriter) //
                 .build();
@@ -95,10 +92,10 @@ public class FileExistDeciderJobConfig {
     }
 
     @Bean
-    Flow sendAndArchiveFlow() {
+    Flow sendAndArchiveFlow(final JobRepository jobRepository, final PlatformTransactionManager transactionManager) {
         // @formatter:off
-        return new FlowBuilder<Flow>("send-archive-flow").start(stepBuilderFactory.get("send-step").tasklet(sendTasklet()).build())
-                .next(stepBuilderFactory.get("archive-step").tasklet(archiveTasklet()).build()).build();
+        return new FlowBuilder<Flow>("send-archive-flow").start(new StepBuilder("send-step", jobRepository).tasklet(sendTasklet(), transactionManager).build())
+                .next(new StepBuilder("archive-step", jobRepository).tasklet(archiveTasklet(), transactionManager).build()).build();
         // @formatter:on
     }
 
@@ -119,17 +116,17 @@ public class FileExistDeciderJobConfig {
     }
 
     @Bean
-    Flow mainFlow(final Step producerStep) {
+    Flow mainFlow(final Step producerStep, final Step sendAndArchiveFlow) {
         // @formatter:off
         return new FlowBuilder<Flow>("main-flow").start(producerStep).on("*").to(fileExistDecider()).from(fileExistDecider()).on("CONTINUE")
-                .to(sendAndArchiveFlow()).from(fileExistDecider()).on("COMPLETED").end().build();
+                .to(sendAndArchiveFlow).from(fileExistDecider()).on("COMPLETED").end().build();
         // @formatter:on
     }
 
     @Bean
-    Job job(final Flow mainFlow) {
+    Job job(final Flow mainFlow, final JobRepository jobRepository) {
         // @formatter:off
-        return jobBuilderFactory.get("exampleJob").start(mainFlow).end().build();
+        return new JobBuilder(EXAMPLE_JOB, jobRepository).start(mainFlow).end().build();
         // @formatter:on
     }
 

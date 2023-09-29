@@ -17,7 +17,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, MultiDestinationJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, MultiDestinationJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=multi-destination-job" })
 class MultiDestinationJobConfigTest {
 
     private static final String OUTPUT_FILE1 = "target/output/outputfile1.csv";

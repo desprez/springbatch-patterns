@@ -9,7 +9,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -18,8 +21,11 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
@@ -38,9 +44,13 @@ import fr.training.springbatch.tools.synchro.ItemAccumulator;
  *
  * @author Desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = File2FileSynchroJobConfig.FILE2FILE_SYNCHRO_JOB)
 public class File2FileSynchroJobConfig extends AbstractSynchroJob {
 
     private static final Logger logger = LoggerFactory.getLogger(File2FileSynchroJobConfig.class);
+
+    protected static final String FILE2FILE_SYNCHRO_JOB = "file2filesynchro-job";
 
     @Value("${application.file2filesynchro-step.chunksize:10}")
     private int chunkSize;
@@ -51,10 +61,10 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      * @return the job bean
      */
     @Bean
-    Job file2FileSynchroJob(final Step file2FileSynchroStep) {
-        return jobBuilderFactory.get("file2filesynchro-job") //
+    Job file2FileSynchroJob(final Step file2FileSynchroStep, final JobRepository jobRepository) {
+        return new JobBuilder(FILE2FILE_SYNCHRO_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[]{"customer-file", "transaction-file", "output-file"}, new String[]{})) //
+                .validator(new DefaultJobParametersValidator(new String[] { "customer-file", "transaction-file", "output-file" }, new String[] {})) //
                 .start(file2FileSynchroStep) //
                 .listener(reportListener()) //
                 .build();
@@ -68,11 +78,11 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      * @return a Step Bean
      */
     @Bean
-    Step file2FileSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
-                                                                                                                                                                                                                                                            final ItemWriter<Customer> customerWriter) {
+    Step file2FileSynchroStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader, final ItemWriter<Customer> customerWriter) {
 
-        return stepBuilderFactory.get("file2filesynchro-step") //
-                .<Customer, Customer>chunk(chunkSize) //
+        return new StepBuilder("file2filesynchro-step", jobRepository) //
+                .<Customer, Customer> chunk(chunkSize, transactionManager) //
                 .reader(masterDetailReader) //
                 .processor(processor()) //
                 .writer(customerWriter) //
@@ -102,8 +112,7 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    FlatFileItemReader<Transaction> transactionReader(
-            @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
+    FlatFileItemReader<Transaction> transactionReader(@Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
         return new FlatFileItemReaderBuilder<Transaction>() //
                 .name("transactionReader") //
@@ -127,7 +136,7 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      */
     private ItemProcessor<Customer, Customer> processor() {
         return customer -> {
-            final double sum = customer.getTransactions().stream().mapToDouble(x -> x.getAmount()).sum();
+            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::getAmount).sum();
             customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
             logger.debug(customer.toString());
             return customer;

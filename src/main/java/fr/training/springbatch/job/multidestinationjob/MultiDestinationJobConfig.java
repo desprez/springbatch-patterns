@@ -5,6 +5,9 @@ import javax.sql.DataSource;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
@@ -14,9 +17,12 @@ import org.springframework.batch.item.function.FunctionItemProcessor;
 import org.springframework.batch.item.support.ClassifierCompositeItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -25,24 +31,29 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
  * This job use a custom {@link org.springframework.classify.Classifier} to distinguish customers and {@link ClassifierCompositeItemWriter} to route items to
  * the accoring itemWriter.
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = MultiDestinationJobConfig.MULTI_DESTINATION_JOB)
 public class MultiDestinationJobConfig extends AbstractJobConfiguration {
+
+    protected static final String MULTI_DESTINATION_JOB = "multi-destination-job";
 
     @Autowired
     private DataSource dataSource;
 
     @Bean
-    Job multiDestinationJob(final Step multiDestinationStep) {
-        return jobBuilderFactory.get("multi-destination-job") //
+    Job multiDestinationJob(final Step multiDestinationStep, final JobRepository jobRepository) {
+        return new JobBuilder(MULTI_DESTINATION_JOB, jobRepository) //
                 .start(multiDestinationStep) //
                 .build();
     }
 
     @Bean
-    Step multiDestinationStep(final ItemWriter<Customer> classifierCustomerCompositeItemWriter, final FlatFileItemWriter<Customer> after50Writer,
-                                        final FlatFileItemWriter<Customer> before50Writer) throws Exception {
+    Step multiDestinationStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final ItemWriter<Customer> classifierCustomerCompositeItemWriter, final FlatFileItemWriter<Customer> after50Writer,
+            final FlatFileItemWriter<Customer> before50Writer) throws Exception {
 
-        return stepBuilderFactory.get("multi-destination-step") //
-                .<Customer, Customer>chunk(10) //
+        return new StepBuilder("multi-destination-step", jobRepository) //
+                .<Customer, Customer> chunk(10, transactionManager) //
                 .reader(customerJDBCReader()) //
                 .processor(new FunctionItemProcessor<>(c -> {
                     // just compute age of the customer
@@ -68,7 +79,7 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
 
     @Bean
     ClassifierCompositeItemWriter<Customer> classifierCustomerCompositeItemWriter(final ItemWriter<Customer> after50Writer,
-                                                                                            final ItemWriter<Customer> before50Writer) throws Exception {
+            final ItemWriter<Customer> before50Writer) throws Exception {
 
         final ClassifierCompositeItemWriter<Customer> compositeItemWriter = new ClassifierCompositeItemWriter<>();
         compositeItemWriter.setClassifier(new CustomerClassifier(after50Writer, before50Writer));

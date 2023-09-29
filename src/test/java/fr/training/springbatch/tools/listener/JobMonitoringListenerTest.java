@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Date;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,8 +56,8 @@ class JobMonitoringListenerTest {
         final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecutionWithStepExecutions(122L, Arrays.asList("step"));
         jobExecution.setStatus(BatchStatus.FAILED);
         jobExecution.setExitStatus(ExitStatus.FAILED);
-        jobExecution.setStartTime(new Date());
-        jobExecution.setEndTime(new Date(jobExecution.getStartTime().getTime() + 100));
+        jobExecution.setStartTime(LocalDateTime.now());
+        jobExecution.setEndTime(jobExecution.getStartTime().plusSeconds(100));
         jobExecution.addFailureException(new RuntimeException("exception example"));
         return jobExecution;
     }

@@ -28,12 +28,12 @@ public class ItemCountListener implements ChunkListener {
     @Override
     public void afterChunk(final ChunkContext context) {
 
-        final int count = context.getStepContext().getStepExecution().getReadCount();
+        final long count = context.getStepContext().getStepExecution().getReadCount();
 
         // If the number of records processed so far is a multiple of the logging
         // interval then output a log message.
         if (count > 0 && count % loggingInterval == 0) {
-            LOGGER.info(fmt.format(new Object[] { Integer.valueOf(count) }));
+            LOGGER.info(fmt.format(new Object[] { Long.valueOf(count) }));
         }
     }
 

@@ -16,15 +16,21 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.xml.StaxEventItemReader;
 import org.springframework.batch.item.xml.builder.StaxEventItemReaderBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StreamUtils;
 
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -33,20 +39,20 @@ import fr.training.springbatch.job.complexml.model.Record;
 import fr.training.springbatch.job.complexml.model.RemiseBancaire;
 import fr.training.springbatch.tools.writer.NoOpWriter;
 
-/**
- *
- * @author Desprez
- */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ComplexmlJobConfig.COMPLEX_JOB)
 public class ComplexmlJobConfig extends AbstractJobConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(ComplexmlJobConfig.class);
+
+    protected static final String COMPLEX_JOB = "complex-job";
 
     @Value("${application.complexml-step.chunksize:10}")
     private int chunkSize;
 
     @Bean
-    Job complexmlJob(final Step fixXmlFileStep, final Step complexmlStep /* injected by Spring */) {
-        return jobBuilderFactory.get("complex-job") //
+    Job complexmlJob(final Step fixXmlFileStep, final Step complexmlStep, final JobRepository jobRepository) {
+        return new JobBuilder(COMPLEX_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
                 .validator(new DefaultJobParametersValidator(new String[] { "xml-file" }, new String[] {})) //
                 .start(fixXmlFileStep) //
@@ -56,8 +62,9 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
 
     @JobScope // Mandatory for using jobParameters
     @Bean
-    Step fixXmlFileStep(@Value("#{jobParameters['xml-file']}") final String xmlFile /* injected by Spring */) {
-        return stepBuilderFactory.get("fixXmlFile-step") //
+    Step fixXmlFileStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            @Value("#{jobParameters['xml-file']}") final String xmlFile /* injected by Spring */) {
+        return new StepBuilder("fixXmlFile-step", jobRepository) //
                 .tasklet((contribution, chunkContext) -> {
 
                     final FileInputStream fis = new FileInputStream(xmlFile);
@@ -75,7 +82,7 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
                     logger.info("work file path is {}", workFile.getAbsoluteFile());
 
                     return RepeatStatus.FINISHED;
-                }).listener(reportListener()) //
+                }, transactionManager).listener(reportListener()) //
                 .build();
     }
 
@@ -84,10 +91,11 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
      * @return a Step Bean
      */
     @Bean
-    Step complexmlStep(final StaxEventItemReader<Record> complexmlReader) {
+    Step complexmlStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final StaxEventItemReader<Record> complexmlReader) {
 
-        return stepBuilderFactory.get("complexml-step") //
-                .<Record, Record> chunk(chunkSize) //
+        return new StepBuilder("complexml-step", jobRepository) //
+                .<Record, Record> chunk(chunkSize, transactionManager) //
                 .reader(complexmlReader) //
                 .processor(processor()) //
                 .writer(complexmlWriter()) //

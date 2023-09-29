@@ -10,7 +10,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -19,8 +22,11 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
@@ -34,18 +40,22 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
  *
  * @author Desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ControlBreakJobConfig.CONTROLBREAK_JOB)
 public class ControlBreakJobConfig extends AbstractJobConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(ControlBreakJobConfig.class);
+
+    protected static final String CONTROLBREAK_JOB = "controlbreak-job";
 
     @Value("${application.controlbreak-step.chunksize:10}")
     private int chunkSize;
 
     @Bean
-    Job controlBreakJob(final Step controlBreakStep /* injected by Spring */) {
-        return jobBuilderFactory.get("controlbreak-job") //
+    Job controlBreakJob(final Step controlBreakStep, final JobRepository jobRepository) {
+        return new JobBuilder(CONTROLBREAK_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[]{"transaction-file", "output-file"}, new String[]{})) //
+                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
                 .start(controlBreakStep) //
                 .listener(reportListener()) //
                 .build();
@@ -59,11 +69,11 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
      * @return a Step Bean
      */
     @Bean
-    Step controlBreakStep(final ItemListPeekableItemReader<Transaction> controlBreakReader,
-                                                                                                                                                                                                                                                                                                                final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
+    Step controlBreakStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final ItemListPeekableItemReader<Transaction> controlBreakReader, final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
 
-        return stepBuilderFactory.get("controlbreak-step") //
-                .<List<Transaction>, TransactionSum>chunk(chunkSize) //
+        return new StepBuilder("controlbreak-step", jobRepository) //
+                .<List<Transaction>, TransactionSum> chunk(chunkSize, transactionManager) //
                 .reader(controlBreakReader) //
                 .processor(processor()) //
                 .writer(transactionSumWriter) //
@@ -82,8 +92,7 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    FlatFileItemReader<Transaction> transactionReader(
-             @Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
+    FlatFileItemReader<Transaction> transactionReader(@Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
         return new FlatFileItemReaderBuilder<Transaction>() //
                 .name("transactionReader") //
