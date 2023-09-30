@@ -22,10 +22,13 @@ import fr.training.springbatch.tools.chaos.BatchChaosException;
 @ExtendWith(SpringExtension.class)
 class BipolarTaskletTest {
 
+    private static final long FIRST_LAUNCH = 1L;
+    private static final long SECOND_LAUNCH = 2L;
+
     @Test
     void execute_with_odd_job_instanceId_should_success() throws Exception {
         // Given
-        final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecution("myJob", 1L, 1L);
+        final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecution("myJob", FIRST_LAUNCH, 1L);
         final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution(jobExecution, "MyStep", null);
         final StepContribution contrib = new StepContribution(stepExecution);
         final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
@@ -42,7 +45,7 @@ class BipolarTaskletTest {
     @Test
     void execute_with_even_job_instanceId_should_fails() throws Exception {
         // Given
-        final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecution("myJob", 2L, 1L);
+        final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecution("myJob", SECOND_LAUNCH, 1L);
         final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution(jobExecution, "MyStep", null);
         final StepContribution contrib = new StepContribution(stepExecution);
         final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
