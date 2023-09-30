@@ -11,47 +11,45 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * This {@link Tasklet} execute PostgreSQL's ANALYSE command upon a given Tables
- * names and a given schema.
+ * This {@link Tasklet} execute PostgreSQL's ANALYSE command upon a given Tables names and a given schema.
  *
- * This use a JDBCTemplate that ca be injected in the bean that declare this
- * Tasklet.
+ * This use a JDBCTemplate that ca be injected in the bean that declare this Tasklet.
  */
 public class AnalyzePGTasklet implements Tasklet {
 
-	private static final Logger log = LoggerFactory.getLogger(AnalyzePGTasklet.class);
+    private static final Logger log = LoggerFactory.getLogger(AnalyzePGTasklet.class);
 
-	private String[] tableNames;
+    private String[] tableNames;
 
-	private String schema;
+    private String schema;
 
-	private JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
-	@Override
-	public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-		notNull(tableNames, "A list names is required");
+    @Override
+    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+        notNull(tableNames, "A list names is required");
 
-		for (final String tableName : tableNames) {
-			final String sql = String.format("ANALYSE %s.%s;", schema, tableName);
-			log.debug("Executing {}", sql);
+        for (final String tableName : tableNames) {
+            final String sql = String.format("ANALYSE %s.%s;", schema, tableName);
+            log.debug("Executing {}", sql);
 
-			jdbcTemplate.execute(sql);
+            jdbcTemplate.execute(sql);
 
-			contribution.incrementWriteCount(1);
-		}
-		return RepeatStatus.FINISHED;
-	}
+            contribution.incrementWriteCount(1);
+        }
+        return RepeatStatus.FINISHED;
+    }
 
-	public void setSchema(final String schema) {
-		this.schema = schema;
-	}
+    public void setSchema(final String schema) {
+        this.schema = schema;
+    }
 
-	public void setJdbcTemplate(final JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+    public void setJdbcTemplate(final JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
-	public void setTableNames(final String... tableNames) {
-		this.tableNames = tableNames;
-	}
+    public void setTableNames(final String... tableNames) {
+        this.tableNames = tableNames;
+    }
 
 }

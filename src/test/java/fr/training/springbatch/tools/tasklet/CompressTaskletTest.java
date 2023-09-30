@@ -19,34 +19,34 @@ import org.springframework.core.io.Resource;
 
 class CompressTaskletTest {
 
-	private static Resource csvFilesPath = new ClassPathResource("csv");
-	private static File outputDir = new File("target/compresstasklet");
+    private static Resource csvFilesPath = new ClassPathResource("csv");
+    private static File outputDir = new File("target/compresstasklet");
 
-	@BeforeEach
-	public void createOutputDir() throws IOException {
-		if (outputDir.exists()) {
-			FileUtils.deleteDirectory(outputDir);
-		}
-	}
+    @BeforeEach
+    void createOutputDir() throws IOException {
+        if (outputDir.exists()) {
+            FileUtils.deleteDirectory(outputDir);
+        }
+    }
 
-	@Test
-	public void execute_should_generate_archive_file() throws Exception {
-		// Given
-		final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
-		final StepContribution contribution = new StepContribution(stepExecution);
-		final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
+    @Test
+    void execute_should_generate_archive_file() throws Exception {
+        // Given
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution();
+        final StepContribution contribution = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-		final String archiveFilename = outputDir.getAbsolutePath() + "/archive.zip";
-		final CompressTasklet tasklet = new CompressTasklet();
-		tasklet.setBaseDirectoryToCompress(csvFilesPath.getFile().getAbsolutePath());
-		tasklet.setArchiveFilename(archiveFilename);
+        final String archiveFilename = outputDir.getAbsolutePath() + "/archive.zip";
+        final CompressTasklet tasklet = new CompressTasklet();
+        tasklet.setBaseDirectoryToCompress(csvFilesPath.getFile().getAbsolutePath());
+        tasklet.setArchiveFilename(archiveFilename);
 
-		// When
-		final RepeatStatus status = tasklet.execute(contribution, context);
+        // When
+        final RepeatStatus status = tasklet.execute(contribution, context);
 
-		// Then
-		assertThat(status).isEqualTo(RepeatStatus.FINISHED);
-		final File file = new File(archiveFilename);
-		assertThat(file).exists();
-	}
+        // Then
+        assertThat(status).isEqualTo(RepeatStatus.FINISHED);
+        final File file = new File(archiveFilename);
+        assertThat(file).exists();
+    }
 }

@@ -11,6 +11,9 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -23,8 +26,12 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -33,137 +40,134 @@ import fr.training.springbatch.tools.listener.RejectFileSkipListener;
 import fr.training.springbatch.tools.tasklet.JdbcTasklet;
 
 /**
- * This Job load one Transaction csv file at once and insert each read line in a
- * Transaction Table.
+ * This Job load one Transaction csv file at once and insert each read line in a Transaction Table.
  *
- * Nota : the deleteStep is for testing purpose to remove existing Transaction
- * records before insertig new lines.
+ * Nota : the deleteStep is for testing purpose to remove existing Transaction records before inserting new lines.
  *
  * @author desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = SimpleLoadJobConfig.SIMPLE_LOAD_JOB)
 public class SimpleLoadJobConfig extends AbstractJobConfiguration {
 
-	private static final Logger logger = LoggerFactory.getLogger(SimpleLoadJobConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleLoadJobConfig.class);
 
-	@Value("${application.simple-load-step.chunksize:10}")
-	private int chunkSize;
+    protected static final String SIMPLE_LOAD_JOB = "simple-load-job";
 
-	@Autowired
-	private DataSource dataSource;
+    @Value("${application.simple-load-step.chunksize:10}")
+    private int chunkSize;
 
-	@Bean
-	public Job simpleImportJob(final Step loadStep) {
-		return jobBuilderFactory.get("simple-load-job") //
-				// .incrementer(new RunIdIncrementer()) //
-				.validator(
-						new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
-				.start(deleteStep()) //
-				.next(loadStep) //
-				.listener(reportListener()) //
-				.build();
-	}
+    @Autowired
+    private DataSource dataSource;
 
-	/**
-	 * Delete Step for deleting all previous records.
-	 *
-	 * @return the Step
-	 */
-	@Bean
-	public Step deleteStep() {
-		return stepBuilderFactory.get("delete-step") //
-				.tasklet(deletePreviousRecordTasklet()) //
-				.build();
-	}
+    @Bean
+    Job simpleImportJob(final JobRepository jobRepository, final Step loadStep, final Step deleteStep) {
+        return new JobBuilder(SIMPLE_LOAD_JOB, jobRepository) //
+                // .incrementer(new RunIdIncrementer()) //
+                .validator(new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
+                .start(deleteStep) //
+                .next(loadStep) //
+                .listener(reportListener()) //
+                .build();
+    }
 
-	private Tasklet deletePreviousRecordTasklet() {
-		final JdbcTasklet deleteRecordTasklet = new JdbcTasklet();
-		deleteRecordTasklet.setDataSource(dataSource);
-		deleteRecordTasklet.setSql("DELETE FROM Transaction");
-		return deleteRecordTasklet;
-	}
+    /**
+     * Delete Step for deleting all previous records.
+     *
+     * @return the Step
+     */
+    @Bean
+    Step deleteStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager) {
+        return new StepBuilder("delete-step", jobRepository) //
+                .tasklet(deletePreviousRecordTasklet(), transactionManager) //
+                .build();
+    }
 
-	@Bean
-	public Step loadStep(final ItemReader<Transaction> loadReader, //
-			final ItemWriter<Transaction> loadWriter,
-			final RejectFileSkipListener<Transaction, Transaction> rejectListener) {
+    private Tasklet deletePreviousRecordTasklet() {
+        final JdbcTasklet deleteRecordTasklet = new JdbcTasklet();
+        deleteRecordTasklet.setDataSource(dataSource);
+        deleteRecordTasklet.setSql("DELETE FROM Transaction");
+        return deleteRecordTasklet;
+    }
 
-		return stepBuilderFactory.get("simple-load-step") //
-				.<Transaction, Transaction>chunk(chunkSize) //
-				.reader(loadReader) //
-				.processor(loadProcessor()) //
-				.writer(loadWriter) //
-				.faultTolerant() //
-				// .skipPolicy(new AlwaysSkipItemSkipPolicy())
-				.skipLimit(100) //
-				.skip(RuntimeException.class).listener(progressListener()) //
-				.listener(rejectListener) //
-				.build();
-	}
+    @Bean
+    Step loadStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final ItemReader<Transaction> loadReader, //
+            final ItemWriter<Transaction> loadWriter, final RejectFileSkipListener<Transaction, Transaction> rejectListener) {
 
-	/**
-	 * Used for logging step progression
-	 */
-	@Override
-	@Bean
-	public ItemCountListener progressListener() {
-		final ItemCountListener listener = new ItemCountListener();
-		listener.setItemName("Transaction(s)");
-		listener.setLoggingInterval(50); // Log process item count every 50
-		return listener;
-	}
+        return new StepBuilder("simple-load-step", jobRepository) //
+                .<Transaction, Transaction> chunk(chunkSize, transactionManager) //
+                .reader(loadReader) //
+                .processor(loadProcessor()) //
+                .writer(loadWriter) //
+                .faultTolerant() //
+                // .skipPolicy(new AlwaysSkipItemSkipPolicy())
+                .skipLimit(100) //
+                .skip(RuntimeException.class) //
+                .listener(progressListener()) //
+                .listener(rejectListener) //
+                .build();
+    }
 
-	/**
-	 * Fake processor that only logs
-	 *
-	 * @return an item processor
-	 */
-	private ItemProcessor<Transaction, Transaction> loadProcessor() {
-		return new ItemProcessor<Transaction, Transaction>() {
+    /**
+     * Used for logging step progression
+     */
+    @Override
+    @Bean
+    public ItemCountListener progressListener() {
+        final ItemCountListener listener = new ItemCountListener();
+        listener.setItemName("Transaction(s)");
+        listener.setLoggingInterval(50); // Log process item count every 50
+        return listener;
+    }
 
-			@Override
-			public Transaction process(final Transaction transaction) throws Exception {
-				logger.debug("Processing {}", transaction);
-				return transaction;
-			}
-		};
-	}
+    /**
+     * Fake processor that only logs
+     *
+     * @return an item processor
+     */
+    private ItemProcessor<Transaction, Transaction> loadProcessor() {
+        return transaction -> {
+            logger.debug("Processing {}", transaction);
+            return transaction;
+        };
+    }
 
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public FlatFileItemReader<Transaction> loadReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    FlatFileItemReader<Transaction> loadReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
 
-		return new FlatFileItemReaderBuilder<Transaction>() //
-				.name("simpleImportReader") //
-				.resource(new FileSystemResource(inputFile)) //
-				.delimited() //
-				.delimiter(";") //
-				.names(new String[] { "customerNumber", "number", "transactionDate", "amount" }) //
-				.linesToSkip(1) //
-				.fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-					{
-						setTargetType(Transaction.class);
-						setConversionService(localDateConverter());
-					}
-				}).build();
-	}
+        return new FlatFileItemReaderBuilder<Transaction>() //
+                .name("simpleImportReader") //
+                .resource(new FileSystemResource(inputFile)) //
+                .delimited() //
+                .delimiter(";") //
+                .names("customerNumber", "number", "transactionDate", "amount") //
+                .linesToSkip(1) //
+                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
+                    {
+                        setTargetType(Transaction.class);
+                        setConversionService(localDateConverter());
+                    }
+                }).build();
+    }
 
-	@Bean
-	public JdbcBatchItemWriter<Transaction> loadWriter() {
+    @Bean
+    @DependsOnDatabaseInitialization
+    JdbcBatchItemWriter<Transaction> loadWriter() {
 
-		return new JdbcBatchItemWriterBuilder<Transaction>() //
-				.dataSource(dataSource)
-				.sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
-						+ "VALUES (:customerNumber, :number, :transactionDate, :amount )")
-				.itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Transaction>()) //
-				.build();
-	}
+        return new JdbcBatchItemWriterBuilder<Transaction>() //
+                .dataSource(dataSource)
+                .sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
+                        + "VALUES (:customerNumber, :number, :transactionDate, :amount )")
+                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>()) //
+                .build();
+    }
 
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public RejectFileSkipListener<Transaction, Transaction> rejectListener(
-			@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    RejectFileSkipListener<Transaction, Transaction> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
 
-		return new RejectFileSkipListener<Transaction, Transaction>(new File(rejectfile));
-	}
+        return new RejectFileSkipListener<>(new File(rejectfile));
+    }
 
 }

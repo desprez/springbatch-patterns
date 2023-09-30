@@ -16,14 +16,13 @@ import fr.training.springbatch.tools.chaos.BatchChaosException;
  */
 public class RandomFailTasket implements Tasklet {
 
-	@Override
-	public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext)
-			throws Exception {
+    @Override
+    public RepeatStatus execute(final StepContribution stepContribution, final ChunkContext chunkContext) throws Exception {
 
-		if (Math.random() < 0.5) {
-			throw new BatchChaosException("RandomFailTasket expected fail");
-		}
+        if (Math.random() < 0.5) {
+            throw new BatchChaosException("RandomFailTasket expected fail");
+        }
 
-		return RepeatStatus.FINISHED;
-	}
+        return RepeatStatus.FINISHED;
+    }
 }

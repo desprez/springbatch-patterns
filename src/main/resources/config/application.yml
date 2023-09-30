@@ -4,20 +4,28 @@ spring:
     url: jdbc:postgresql://localhost:5432/batch-patterns
     driver-class-name: org.postgresql.Driver
     username: postgres
-    password: admin
-    initialization-mode: always
+    password: postgres
     
   batch:
-    enabled: false
-#    initialize-schema: always
+    jdbc:
+      initialize-schema: always
+    job:
+      names: ${job.name}
+  sql:
+    init:
+      mode: always
 
 logging:
   level:
-    fr.training.springbatch: info
-    org.springframework.batch: info
-    org.springframework.boot.autoconfigure.batch: debug
-    org.springframework.jdbc: warn
-    
+    root: info  
+#    fr.training.springbatch: debug
+    org.springframework.batch: debug
+#    org.springframework.boot.autoconfigure.batch: debug
+#    org.springframework.jdbc: debug
+    jdbc: off
+    jdbc.sqlonly: off
+    jdbc.connection: off
+
 application:
   simple-extract-step:
     chunksize: 10

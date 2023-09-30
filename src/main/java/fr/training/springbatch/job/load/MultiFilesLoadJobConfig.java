@@ -6,7 +6,9 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -15,80 +17,86 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 
 /**
- * This Job load Transaction csv files present in a directory sequentialy insert
- * each read line in a Transaction Table.
+ * This Job load Transaction csv files present in a directory sequentialy insert each read line in a Transaction Table.
  *
  * @author desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = MultiFilesLoadJobConfig.MULTI_LOAD_JOB)
 public class MultiFilesLoadJobConfig extends AbstractJobConfiguration {
 
-	@Value("${application.multi-load-step.chunksize:10}")
-	private int chunkSize;
+    protected static final String MULTI_LOAD_JOB = "multi-load-job";
 
-	@Autowired
-	private DataSource dataSource;
+    @Value("${application.multi-load-step.chunksize:10}")
+    private int chunkSize;
 
-	@Bean
-	public Job multiLoadJob(final Step multiLoadStep) {
-		return jobBuilderFactory.get("multi-load-job") //
-				.incrementer(new RunIdIncrementer()) //
-				.validator(new DefaultJobParametersValidator(new String[] { "input-path" }, new String[] {})) //
-				.start(multiLoadStep) //
-				.build();
-	}
+    @Autowired
+    private DataSource dataSource;
 
-	@Bean
-	public Step multiLoadStep(final MultiResourceItemReader<Customer> multiResourceItemReader,
-			final JdbcBatchItemWriter<Customer> writer) {
+    @Bean
+    Job multiLoadJob(final Step multiLoadStep, final JobRepository jobRepository) {
+        return new JobBuilder(MULTI_LOAD_JOB, jobRepository) //
+                .validator(new DefaultJobParametersValidator(new String[] { "input-path" }, new String[] {})) //
+                .start(multiLoadStep) //
+                .build();
+    }
 
-		return stepBuilderFactory.get("multi-load-step") //
-				.<Customer, Customer>chunk(chunkSize) //
-				.reader(multiResourceItemReader) //
-				.writer(writer) //
-				.build();
-	}
+    @Bean
+    Step multiLoadStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final MultiResourceItemReader<Customer> multiResourceItemReader, final JdbcBatchItemWriter<Customer> writer) {
 
-	@StepScope // Mandatory for using jobParameters
-	@Bean
-	public MultiResourceItemReader<Customer> multiResourceItemReader(
-			@Value("#{jobParameters['input-path']}") final Resource[] inputResources) {
+        return new StepBuilder("multi-load-step", jobRepository) //
+                .<Customer, Customer> chunk(chunkSize, transactionManager) //
+                .reader(multiResourceItemReader) //
+                .writer(writer) //
+                .build();
+    }
 
-		final MultiResourceItemReader<Customer> resourceItemReader = new MultiResourceItemReader<Customer>();
-		resourceItemReader.setResources(inputResources);
-		resourceItemReader.setDelegate(reader());
-		return resourceItemReader;
-	}
+    @StepScope // Mandatory for using jobParameters
+    @Bean
+    MultiResourceItemReader<Customer> multiResourceItemReader(@Value("#{jobParameters['input-path']}") final Resource[] inputResources) {
 
-	@Bean
-	public FlatFileItemReader<Customer> reader() {
-		return new FlatFileItemReaderBuilder<Customer>() //
-				.name("itemReader") //
-				.delimited() //
-				.delimiter(";") //
-				.names("number", "firstName", "lastName", "address", "city", "state", "postCode", "birtDate") //
-				.fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {
-					{
-						setTargetType(Customer.class);
-						setConversionService(localDateConverter());
-					}
-				}).build();
-	}
+        final MultiResourceItemReader<Customer> resourceItemReader = new MultiResourceItemReader<>();
+        resourceItemReader.setResources(inputResources);
+        resourceItemReader.setDelegate(reader());
+        return resourceItemReader;
+    }
 
-	@Bean
-	public JdbcBatchItemWriter<Customer> writer() {
-		return new JdbcBatchItemWriterBuilder<Customer>() //
-				.dataSource(dataSource)
-				.sql("INSERT INTO Customer(number, first_name, last_name, address, city, state, post_code, birth_date) "
-						+ "VALUES (:number, :firstName, :lastName, :address, :city, :state, :postCode, :birthDate)")
-				.beanMapped() //
-				.build();
-	}
+    @Bean
+    FlatFileItemReader<Customer> reader() {
+        return new FlatFileItemReaderBuilder<Customer>() //
+                .name("itemReader") //
+                .delimited() //
+                .delimiter(";") //
+                .names("number", "firstName", "lastName", "address", "city", "state", "postCode", "birtDate") //
+                .fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {
+                    {
+                        setTargetType(Customer.class);
+                        setConversionService(localDateConverter());
+                    }
+                }).build();
+    }
+
+    @Bean
+    @DependsOnDatabaseInitialization
+    JdbcBatchItemWriter<Customer> writer() {
+        return new JdbcBatchItemWriterBuilder<Customer>() //
+                .dataSource(dataSource)
+                .sql("INSERT INTO Customer(number, first_name, last_name, address, city, state, post_code, birth_date) "
+                        + "VALUES (:number, :firstName, :lastName, :address, :city, :state, :postCode, :birthDate)")
+                .beanMapped() //
+                .build();
+    }
 
 }

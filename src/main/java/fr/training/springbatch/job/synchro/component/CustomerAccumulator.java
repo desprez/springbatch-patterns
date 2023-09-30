@@ -10,13 +10,13 @@ import fr.training.springbatch.tools.synchro.ItemAccumulator;
  */
 public class CustomerAccumulator extends ItemAccumulator<Customer, Long> {
 
-	public CustomerAccumulator(final ItemReader<Customer> reader) {
-		super(reader);
-	}
+    public CustomerAccumulator(final ItemReader<Customer> reader) {
+        super(reader);
+    }
 
-	@Override
-	public Long getKey(final Customer item) {
-		return item.getNumber();
-	}
+    @Override
+    public Long getKey(final Customer item) {
+        return item.getNumber();
+    }
 
 }

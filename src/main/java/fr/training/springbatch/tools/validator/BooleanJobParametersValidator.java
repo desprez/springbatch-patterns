@@ -6,21 +6,20 @@ import org.springframework.batch.core.JobParametersValidator;
 
 public class BooleanJobParametersValidator implements JobParametersValidator {
 
-	private final String parameterKey;
+    private final String parameterKey;
 
-	public BooleanJobParametersValidator(final String parameterName) {
-		parameterKey = parameterName;
-	}
+    public BooleanJobParametersValidator(final String parameterName) {
+        parameterKey = parameterName;
+    }
 
-	@Override
-	public void validate(final JobParameters parameters) throws JobParametersInvalidException {
+    @Override
+    public void validate(final JobParameters parameters) throws JobParametersInvalidException {
 
-		final String paramValue = parameters.getString(parameterKey);
+        final String paramValue = parameters.getString(parameterKey);
 
-		if (!(paramValue.equalsIgnoreCase("true") || paramValue.equalsIgnoreCase("false"))) {
-			throw new JobParametersInvalidException(
-					"Expect only 'true' or 'false' values for the parameter " + parameterKey);
-		}
-	}
+        if (!("true".equalsIgnoreCase(paramValue) || "false".equalsIgnoreCase(paramValue))) {
+            throw new JobParametersInvalidException("Expect only 'true' or 'false' values for the parameter " + parameterKey);
+        }
+    }
 
 }

@@ -12,7 +12,7 @@ It use **postgreSQL** database and **H2** for tests.
 
 ![alt text](./images/simpleExtractJob.svg "Extract Job")
 
-[SimpleExportJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/SimpleExtractJobConfig.java)
+[SimpleExtractJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/SimpleExtractJobConfig.java)
 
 This is the simplest job configuration (no really inovation here).
 One step use the reader / processor / writer pattern to read a database table and write the content "as is" to a comma separated flat file.
@@ -24,7 +24,7 @@ One step use the reader / processor / writer pattern to read a database table an
 ![alt text](./images/simpleLoadJob.svg "Load Job")
 
 [SimpleLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/load/SimpleLoadJobConfig.java)
- 
+
 Another job configuration that read a file to fill a table like an ETL (extract, transform and load).
 
 The 1st Step (deleteStep) erase table records before the "load" Step. It use a **JdbcTasklet** (from Pivotal) to execute SQL command against the table.
@@ -66,6 +66,8 @@ Another variation of the previous patterns. This time, the "Master" data comes f
 ![alt text](./images/groupingRecordJob.svg "groupingRecordJob")
 
 [GroupingRecordsJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/GroupingRecordsJobConfig.java)
+
+This pattern reads items packets that share the same key and returns lists that can be summed or whatever... (this is a "read  many and write one" example)
 
 ## Pattern 7 : Grouping tables records (with SQL)
 
@@ -120,9 +122,34 @@ This pattern show how to configure a job that run once per day and prevent to no
 
 [MultiFilesLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/load/MultiFilesLoadJobConfig.java)
 
+This Job load Transaction csv files present in a directory sequentialy insert each read line in a Transaction Table. It use **MultiResourceItemReader** class to loop over all files found and delegate the file loading the to a reader.
+
 ## Pattern 13 : Extract with Process Indicator Job
 
-[ExtractProcessIndicatorJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/processindicatorjob/ExtractProcessIndicatorJobConfig.java)
+[ExtractProcessIndicatorJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/processindicator/ExtractProcessIndicatorJobConfig.java)
+
+This pattern use a process indicator to flag processed records (unlike the staging job Processed Column is present in the table)
+
+## Pattern 14 : File Partition Job
+
+[FilePartitionJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/partition/file/FilePartitionJobConfig.java)
+
+This pattern use **MultiResourcePartitioner** to create partitions upon files presents in a folder.
+
+## Pattern 15 : Jdbc partition Job
+
+[JDBCPartitionJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/partition/jdbc/JDBCPartitionJobConfig.java)
+
+## Pattern 16 : Compute Delta Job
+
+![alt text](./images/computeDeltaJob.svg "computeDeltaJob")
+
+[ComputeDeltaJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/computedelta/ComputeDeltaJobConfig.java)
+
+Imagine that you receive a different file every day from your partner with all the data.
+
+And that you have to update your system with the added or deleted data, this is exactly what this job does, it compute the delta between the file recevied at day N-1 with the file received at day N (usually used in companies that use files to transmit data).
+
 
 ## Some usefull tools can be used in patterns
 

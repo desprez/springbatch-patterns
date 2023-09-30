@@ -17,22 +17,21 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		JDBCPartitionJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, JDBCPartitionJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=partition-job" })
 class JDBCPartitionJobTest {
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	void launch_PartitionJob_nominal_should_success() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-				.toJobParameters();
-		// When
-		final JobExecution jobExec = testUtils.launchJob(jobParameters);
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-	}
+    @Test
+    void launch_PartitionJob_nominal_should_success() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).toJobParameters();
+        // When
+        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    }
 
 }

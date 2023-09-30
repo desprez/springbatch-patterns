@@ -17,22 +17,21 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class,
-		MultiFilesLoadJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, MultiFilesLoadJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=multi-load-job" })
 class MultiFilesLoadJobTest {
 
-	@Autowired
-	private JobLauncherTestUtils testUtils;
+    @Autowired
+    private JobLauncherTestUtils testUtils;
 
-	@Test
-	public void launch_MultiFilesLoadJob_nominal_should_success() throws Exception {
-		// Given
-		final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-				.addString("input-path", "csv/big/customer*.csv") //
-				.toJobParameters();
-		// When
-		final JobExecution jobExec = testUtils.launchJob(jobParameters);
-		// Then
-		assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-	}
+    @Test
+    void launch_MultiFilesLoadJob_nominal_should_success() throws Exception {
+        // Given
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("input-path", "csv/big/customer*.csv") //
+                .toJobParameters();
+        // When
+        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        // Then
+        assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    }
 }
