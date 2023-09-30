@@ -21,7 +21,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.daily.DailyJobConfig;
-import fr.training.springbatch.tools.incrementer.DailyJobTimestamper;
+import fr.training.springbatch.tools.incrementer.TodayJobParameterProvider;
 
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = BusinessDaysJobConfig.BUSINESSDAYS_JOB)
@@ -34,7 +34,7 @@ public class BusinessDaysJobConfig extends AbstractJobConfiguration {
     @Bean
     Job dailyjob(final Step dailyStep, final JobRepository jobRepository) {
         return new JobBuilder(BUSINESSDAYS_JOB, jobRepository) //
-                .incrementer(new DailyJobTimestamper("processDate")) //
+                .incrementer(new TodayJobParameterProvider("processDate")) //
                 .validator(new DefaultJobParametersValidator(new String[] { "processDate" }, new String[] {})) //
                 .start(dailyStep) //
                 .build();

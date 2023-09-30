@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.incrementer.TodayJobParameterProvider;
 import fr.training.springbatch.tools.listener.ElapsedTimeJobListener;
 
 /**
@@ -33,8 +35,8 @@ public class DailyJobConfig extends AbstractJobConfiguration {
     @Bean
     Job dailyjob(final Step dailyStep, final JobRepository jobRepository) {
         return new JobBuilder(DAILY_JOB, jobRepository) //
-                // .incrementer(new DailyJobTimestamper("processDate")) //
-                // .validator(new DefaultJobParametersValidator(new String[] { "processDate" }, new String[] {})) //
+                .incrementer(new TodayJobParameterProvider("processDate")) //
+                .validator(new DefaultJobParametersValidator(new String[] { "processDate" }, new String[] {})) //
                 .start(dailyStep) //
                 .listener(new ElapsedTimeJobListener()) //
                 .build();
