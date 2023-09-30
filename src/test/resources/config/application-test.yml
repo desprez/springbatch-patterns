@@ -24,11 +24,11 @@ logging:
     org.springframework.jdbc.core.JdbcTemplate: info
     org.springframework.batch.item.database.JdbcCursorItemReader: trace
     fr.training.springbatch: info
-    org.springframework.batch: TRACE
+    org.springframework.batch: INFO
     org.springframework.jdbc: info
 #    org.springframework.jdbc.datasource: debug
-    jdbc: TRACE
+    jdbc: off
 #    jdbc.connection: off
-    jdbc.sqlonly: DEBUG
-    jdbc.resultset: DEBUG
-    jdbc.resultsettable: DEBUG
+#    jdbc.sqlonly: DEBUG
+#    jdbc.resultset: DEBUG
+    jdbc.resultsettable: off
