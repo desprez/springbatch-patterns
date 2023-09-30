@@ -19,7 +19,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, SQLJoinSynchroJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, SQLJoinSynchroJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=sqljoinsynchro-job" })
 class SQLJoinSynchroJobTest {
 
     private static final String OUTPUT_FILE = "target/output/outputfile.csv";

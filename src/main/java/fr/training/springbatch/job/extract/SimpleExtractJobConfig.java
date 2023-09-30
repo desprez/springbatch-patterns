@@ -10,7 +10,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
@@ -18,10 +21,13 @@ import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.WritableResource;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
 
 import fr.training.springbatch.app.dto.Transaction;
@@ -36,9 +42,13 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
  *
  * @author desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = SimpleExtractJobConfig.SIMPLE_EXTRACT_JOB)
 public class SimpleExtractJobConfig extends AbstractJobConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleExtractJobConfig.class);
+
+    protected static final String SIMPLE_EXTRACT_JOB = "simple-extract-job";
 
     private static final String FILENAME = "simple-extract.csv";
 
@@ -49,9 +59,9 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
     public DataSource dataSource;
 
     @Bean
-    Job simpleExtractJob(final Step extractStep) {
-        return jobBuilderFactory.get("simple-extract-job") //
-                .validator(new DefaultJobParametersValidator(new String[]{"output-dir"}, new String[]{})).incrementer(new RunIdIncrementer()) //
+    Job simpleExtractJob(final Step extractStep, final JobRepository jobRepository) {
+        return new JobBuilder(SIMPLE_EXTRACT_JOB, jobRepository) //
+                .validator(new DefaultJobParametersValidator(new String[] { "output-dir" }, new String[] {})).incrementer(new RunIdIncrementer()) //
                 .flow(extractStep) //
                 .end() //
                 .listener(reportListener()) //
@@ -59,9 +69,10 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step extractStep(final FlatFileItemWriter<Transaction> extractWriter) {
-        return stepBuilderFactory.get("simple-extract-step") //
-                .<Transaction, Transaction>chunk(chunkSize) //
+    Step extractStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final FlatFileItemWriter<Transaction> extractWriter) {
+        return new StepBuilder("simple-extract-step", jobRepository) //
+                .<Transaction, Transaction> chunk(chunkSize, transactionManager) //
                 .reader(simpleExtractReader()) //
                 .processor(simpleExtractProcessor()) //
                 .writer(extractWriter) //
@@ -103,7 +114,7 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
      *            spring injected resource
      */
     @Bean
-    FlatFileItemWriter<Transaction> simpleExtractWriter(final Resource incrementalFilename) {
+    FlatFileItemWriter<Transaction> simpleExtractWriter(final WritableResource incrementalFilename) {
 
         return new FlatFileItemWriterBuilder<Transaction>() //
                 .name("simpleExtractWriter") //
@@ -128,8 +139,8 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
      */
     @StepScope // Mandatory for using jobParameters
     @Bean
-    Resource incrementalFilename(@Value("#{jobParameters['output-dir']}") final String outputdir,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @Value("#{jobParameters['run.id']}") final Long runId) {
+    WritableResource incrementalFilename(@Value("#{jobParameters['output-dir']}") final String outputdir,
+            @Value("#{jobParameters['run.id']}") final Long runId) {
 
         final String baseFilename = StringUtils.stripFilenameExtension(FILENAME);
         final String extension = StringUtils.getFilenameExtension(FILENAME);

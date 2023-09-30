@@ -17,7 +17,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, MultiFilesLoadJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, MultiFilesLoadJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=multi-load-job" })
 class MultiFilesLoadJobTest {
 
     @Autowired

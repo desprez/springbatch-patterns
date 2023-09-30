@@ -11,7 +11,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
@@ -23,8 +26,11 @@ import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
@@ -43,7 +49,11 @@ import fr.training.springbatch.tools.synchro.ItemAccumulator;
  *
  * @author Desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = Table2FileSynchroJobConfig.TABLE2FILE_SYNCHRO_JOB)
 public class Table2FileSynchroJobConfig extends AbstractSynchroJob {
+
+    protected static final String TABLE2FILE_SYNCHRO_JOB = "table2filesynchro-job";
 
     private static final Logger logger = LoggerFactory.getLogger(Table2FileSynchroJobConfig.class);
 
@@ -59,10 +69,10 @@ public class Table2FileSynchroJobConfig extends AbstractSynchroJob {
      * @return the job bean
      */
     @Bean
-    Job table2FileSynchroJob(final Step table2FileSynchroStep /* injected by Spring */) {
-        return jobBuilderFactory.get("table2filesynchro-job") //
+    Job table2FileSynchroJob(final Step table2FileSynchroStep, final JobRepository jobRepository) {
+        return new JobBuilder(TABLE2FILE_SYNCHRO_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[]{"transaction-file", "output-file"}, new String[]{})) //
+                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
                 .start(table2FileSynchroStep) //
                 .listener(reportListener()) //
                 .build();
@@ -76,11 +86,10 @@ public class Table2FileSynchroJobConfig extends AbstractSynchroJob {
      * @return a Step bean
      */
     @Bean
-    Step table2FileSynchroStep(final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
-                                                                                                                                                                                                                                                                                       final ItemWriter<Customer> customerWriter /* injected by Spring */) {
-
-        return stepBuilderFactory.get("table2filesynchro-step") //
-                .<Customer, Customer>chunk(chunkSize) //
+    Step table2FileSynchroStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader, final ItemWriter<Customer> customerWriter) {
+        return new StepBuilder("table2filesynchro-step", jobRepository) //
+                .<Customer, Customer> chunk(chunkSize, transactionManager) //
                 .reader(masterDetailReader) //
                 .processor(processor()) //
                 .writer(customerWriter) //
@@ -142,7 +151,7 @@ public class Table2FileSynchroJobConfig extends AbstractSynchroJob {
      */
     private ItemProcessor<Customer, Customer> processor() {
         return customer -> {
-            final double sum = customer.getTransactions().stream().mapToDouble(x -> x.getAmount()).sum();
+            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::getAmount).sum();
             customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
             logger.debug(customer.toString());
             return customer;

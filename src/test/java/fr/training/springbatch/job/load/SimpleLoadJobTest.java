@@ -24,7 +24,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, SimpleLoadJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, SimpleLoadJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=simple-load-job" })
 class SimpleLoadJobTest {
 
     private static final String REJECT_FILE_PATH = "target/output/reject.csv";

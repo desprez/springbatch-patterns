@@ -8,34 +8,51 @@ import java.util.stream.Collectors;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.job.flow.support.SimpleFlow;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = DynamicParallelJobConfig.DYNAMIC_PARALLEL_JOB)
 public class DynamicParallelJobConfig extends AbstractJobConfiguration {
+
+    protected static final String DYNAMIC_PARALLEL_JOB = "dynamicParallelJob";
 
     @Value("${application.dynamic-steps.chunksize:10}")
     private int chunkSize;
 
+    @Autowired
+    private JobRepository jobRepository;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
     List<String> filenames = Arrays.asList("customer01.csv", "customer02.csv");
 
     @Bean
-    Job dynamicParallelJob() {
+    Job dynamicParallelJob(final JobRepository jobRepository) {
 
         final List<Step> steps = filenames.stream().map(this::createStep).collect(Collectors.toList());
 
-        return jobBuilderFactory.get("dynamicParallelJob") //
+        return new JobBuilder(DYNAMIC_PARALLEL_JOB, jobRepository) //
                 .start(createParallelFlow(steps)) //
                 .end() //
                 .listener(reportListener()) //
@@ -63,8 +80,9 @@ public class DynamicParallelJobConfig extends AbstractJobConfiguration {
     // helper method to create a step
     private Step createStep(final String filename) {
 
-        return stepBuilderFactory.get("step-for-" + filename) // !!! Stepname has to be unique
-                .<Customer, Customer> chunk(chunkSize).reader(fileReader(new FileSystemResource(new File("src/main/resources/csv/big/" + filename))))
+        return new StepBuilder("step-for-" + filename, jobRepository) // !!! Stepname has to be unique
+                .<Customer, Customer> chunk(chunkSize, transactionManager)
+                .reader(fileReader(new FileSystemResource(new File("src/main/resources/csv/big/" + filename))))
                 .writer(fileWriter(new FileSystemResource("target/output/big/" + filename))).build();
     }
 

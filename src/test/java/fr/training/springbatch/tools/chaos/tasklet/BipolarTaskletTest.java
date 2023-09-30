@@ -1,24 +1,20 @@
 package fr.training.springbatch.tools.chaos.tasklet;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.test.JobLauncherTestUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.test.MetaDataInstanceFactory;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import fr.training.springbatch.tools.chaos.BatchChaosException;
 
 /**
  * Test upon BipolarTasklet class
@@ -26,65 +22,41 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 class BipolarTaskletTest {
 
+    private static final long FIRST_LAUNCH = 1L;
+    private static final long SECOND_LAUNCH = 2L;
+
     @Test
-    void jobExecutionWithJavaConfig() throws Exception {
+    void execute_with_odd_job_instanceId_should_success() throws Exception {
         // Given
-        final ApplicationContext context = new AnnotationConfigApplicationContext(TestJobConfiguration.class);
+        final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecution("myJob", FIRST_LAUNCH, 1L);
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution(jobExecution, "MyStep", null);
+        final StepContribution contrib = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-        final JobLauncherTestUtils testUtils = context.getBean(JobLauncherTestUtils.class);
+        final BipolarTasklet bipolarTasklet = new BipolarTasklet();
 
-        // When launch job one time
-        JobExecution execution = testUtils.launchJob();
-
-        // then it fails
-        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
-
-        // When launch job an another time
-        execution = testUtils.launchJob();
-
-        // then it pass
-        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-
-        ((AnnotationConfigApplicationContext) context).close();
+        // Then
+        assertDoesNotThrow(() -> {
+            // When
+            bipolarTasklet.execute(contrib, context);
+        });
     }
 
-    @Configuration
-    @EnableBatchProcessing
-    public static class TestJobConfiguration {
+    @Test
+    void execute_with_even_job_instanceId_should_fails() throws Exception {
+        // Given
+        final JobExecution jobExecution = MetaDataInstanceFactory.createJobExecution("myJob", SECOND_LAUNCH, 1L);
+        final StepExecution stepExecution = MetaDataInstanceFactory.createStepExecution(jobExecution, "MyStep", null);
+        final StepContribution contrib = new StepContribution(stepExecution);
+        final ChunkContext context = new ChunkContext(new StepContext(stepExecution));
 
-        @Autowired
-        public JobBuilderFactory jobBuilderFactory;
+        final BipolarTasklet bipolarTasklet = new BipolarTasklet();
 
-        @Autowired
-        public StepBuilderFactory stepBuilderFactory;
-
-        @Bean
-        Step step() {
-            return stepBuilderFactory.get("step1") //
-                    .tasklet(bipolarTasklet()) //
-                    .build();
-        }
-
-        @Bean
-        Job job() {
-            return jobBuilderFactory.get("job") //
-                    .incrementer(new RunIdIncrementer()) //
-                    .flow(step()) //
-                    .end() //
-                    .build();
-        }
-
-        @Bean
-        BipolarTasklet bipolarTasklet() {
-            return new BipolarTasklet();
-        }
-
-        @Bean
-        JobLauncherTestUtils testUtils() {
-            final JobLauncherTestUtils jobLauncherTestUtils = new JobLauncherTestUtils();
-            jobLauncherTestUtils.setJob(job());
-            return jobLauncherTestUtils;
-        }
+        // Then
+        final Throwable exceptionThatWasThrown = assertThrows(BatchChaosException.class, () -> {
+            // When
+            bipolarTasklet.execute(contrib, context);
+        });
+        assertThat(exceptionThatWasThrown.getMessage()).isEqualTo("BipolarTasklet expected fail");
     }
-
 }

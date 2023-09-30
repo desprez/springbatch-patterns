@@ -8,7 +8,10 @@ import javax.sql.DataSource;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -21,22 +24,25 @@ import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.tasklet.JdbcTasklet;
 
-/**
- *
- * @author desprez
- */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ExtractProcessIndicatorJobConfig.EXTRACT_PROCESS_INDICATOR_JOB)
 public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
+
+    protected static final String EXTRACT_PROCESS_INDICATOR_JOB = "extract-process-indicator-job";
 
     private static final String DONE = "Y";
 
@@ -50,8 +56,8 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     private DataSource dataSource;
 
     @Bean
-    Job extractProcessIndicatorJob(final Step extractProcessIndicatorStep, final Step processedRemoverStep) {
-        return jobBuilderFactory.get("extract-process-indicator-job") //
+    Job extractProcessIndicatorJob(final Step extractProcessIndicatorStep, final Step processedRemoverStep, final JobRepository jobRepository) {
+        return new JobBuilder(EXTRACT_PROCESS_INDICATOR_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) //
                 .start(extractProcessIndicatorStep) //
                 .next(processedRemoverStep) //
@@ -60,10 +66,11 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step extractProcessIndicatorStep(final ItemReader<Transaction> unprocessedReader, final FlatFileItemWriter<Transaction> csvFileWriter) {
+    Step extractProcessIndicatorStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final ItemReader<Transaction> unprocessedReader, final FlatFileItemWriter<Transaction> csvFileWriter) {
 
-        return stepBuilderFactory.get("extract-process-indicator-step") //
-                .<Transaction, Transaction> chunk(chunkSize) //
+        return new StepBuilder("extract-process-indicator-step", jobRepository) //
+                .<Transaction, Transaction> chunk(chunkSize, transactionManager) //
                 .reader(unprocessedReader) //
                 .processor(processedMarker()) //
                 .writer(csvFileWriter) //
@@ -72,10 +79,10 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step processedRemoverStep() {
+    Step processedRemoverStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager) {
 
-        return stepBuilderFactory.get("processedRemover-step") //
-                .tasklet(processedItemsRemover()) //
+        return new StepBuilder("processedRemover-step", jobRepository) //
+                .tasklet(processedItemsRemover(), transactionManager) //
                 .build();
 
     }

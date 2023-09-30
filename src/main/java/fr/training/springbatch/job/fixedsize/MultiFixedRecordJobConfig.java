@@ -8,7 +8,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +17,11 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.listener.StepExecutionListenerSupport;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileFooterCallback;
@@ -35,8 +37,11 @@ import org.springframework.batch.item.file.transform.FixedLengthTokenizer;
 import org.springframework.batch.item.file.transform.LineTokenizer;
 import org.springframework.batch.item.file.transform.Range;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.fixedsize.model.AbstractLine;
@@ -49,7 +54,11 @@ import fr.training.springbatch.job.fixedsize.model.Header;
  *
  * It read a fixed lenght file and produce the same file for demonstration purpose.
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = MultiFixedRecordJobConfig.FIXED_JOB)
 public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
+
+    protected static final String FIXED_JOB = "fixed-job";
 
     private static final Logger logger = LoggerFactory.getLogger(MultiFixedRecordJobConfig.class);
 
@@ -66,9 +75,9 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     private int chunkSize;
 
     @Bean
-    Job fixedJob(final Step validationStep, final Step processStep) {
+    Job fixedJob(final Step validationStep, final Step processStep, final JobRepository jobRepository) {
 
-        return jobBuilderFactory.get("fixed-job") //
+        return new JobBuilder(FIXED_JOB, jobRepository) //
                 .validator(new DefaultJobParametersValidator(
                         new String[] { INPUTFILE_PARAMETER_NAME, OUTPUTFILE_PARAMETER_NAME, RECEIVER_CODE_PARAMETER, CREATED_DATE_PARAMETER }, new String[] {})) //
                 .incrementer(new RunIdIncrementer()) //
@@ -79,9 +88,10 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step validationStep(final FlatFileItemReader<AbstractLine> itemReader) throws Exception {
-        return stepBuilderFactory.get("validation-step") //
-                .<AbstractLine, AbstractLine> chunk(chunkSize) //
+    Step validationStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final FlatFileItemReader<AbstractLine> itemReader) throws Exception {
+        return new StepBuilder("validation-step", jobRepository) //
+                .<AbstractLine, AbstractLine> chunk(chunkSize, transactionManager) //
                 .reader(itemReader) //
                 .processor(validationProcessor()) //
                 .writer(items -> {
@@ -93,13 +103,15 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step processStep(final FlatFileItemReader<AbstractLine> itemReader, final ItemWriter<Detail> fixedItemWriter) throws Exception {
+    Step processStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final FlatFileItemReader<AbstractLine> itemReader,
+            final ItemWriter<Detail> fixedItemWriter) throws Exception {
 
-        return stepBuilderFactory.get("process-step") //
-                .<AbstractLine, Detail> chunk(chunkSize) //
+        return new StepBuilder("process-step", jobRepository) //
+                .<AbstractLine, Detail> chunk(chunkSize, transactionManager) //
                 .reader(itemReader) //
                 // return only detail items
-                .processor((Function<AbstractLine, Detail>) item -> item instanceof Detail ? (Detail) item : null).writer(fixedItemWriter) //
+                .processor(item -> item instanceof Detail ? (Detail) item : null) //
+                .writer(fixedItemWriter) //
                 .listener(reportListener()) //
                 .build();
     }

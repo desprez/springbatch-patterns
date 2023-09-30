@@ -22,7 +22,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, ComputeDeltaJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, ComputeDeltaJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=compute-delta-job" })
 class ComputeDeltaJobTest {
 
     private static final String YESTERDAY_FILE = "src/test/resources/datas/stock/yesterday-stock.csv";

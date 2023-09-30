@@ -12,7 +12,7 @@ It use **postgreSQL** database and **H2** for tests.
 
 ![alt text](./images/simpleExtractJob.svg "Extract Job")
 
-[SimpleExportJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/SimpleExtractJobConfig.java)
+[SimpleExtractJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/SimpleExtractJobConfig.java)
 
 This is the simplest job configuration (no really inovation here).
 One step use the reader / processor / writer pattern to read a database table and write the content "as is" to a comma separated flat file.

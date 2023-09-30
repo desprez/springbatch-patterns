@@ -11,7 +11,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -26,10 +29,13 @@ import org.springframework.batch.item.file.transform.LineTokenizer;
 import org.springframework.batch.item.support.ClassifierCompositeItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.classify.Classifier;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.multilinesrecord.dto.CustomerRecord;
@@ -40,9 +46,13 @@ import fr.training.springbatch.job.multilinesrecord.dto.TransactionRecord;
  *
  * @author Desprez
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = MultiLinesLoadJobConfig.MULTILINES_LOAD_JOB)
 public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiLinesLoadJobConfig.class);
+
+    protected static final String MULTILINES_LOAD_JOB = "multilines-load-job";
 
     private static final String DELIMITER = ",";
 
@@ -53,8 +63,8 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     public DataSource dataSource;
 
     @Bean
-    Job multilinesLoadJob(final Step multilinesLoadStep) {
-        return jobBuilderFactory.get("multilines-load-job") //
+    Job multilinesLoadJob(final Step multilinesLoadStep, final JobRepository jobRepository) {
+        return new JobBuilder(MULTILINES_LOAD_JOB, jobRepository) //
                 .validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})).incrementer(new RunIdIncrementer()) //
                 .flow(multilinesLoadStep) //
                 .end() //
@@ -63,9 +73,11 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step multilinesLoadStep(final ClassifierCompositeItemWriter<Record> classifierRecordCompositeItemWriter, final ItemReader<Record> realFileReader) {
-        return stepBuilderFactory.get("multilines-load-step") //
-                .<Record, Record> chunk(chunkSize) //
+    Step multilinesLoadStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final ClassifierCompositeItemWriter<Record> classifierRecordCompositeItemWriter, final ItemReader<Record> realFileReader) {
+
+        return new StepBuilder("multilines-load-step", jobRepository) //
+                .<Record, Record> chunk(chunkSize, transactionManager) //
                 .reader(realFileReader) //
                 .processor(multilinesExtractProcessor()) //
                 .writer(classifierRecordCompositeItemWriter) //

@@ -2,7 +2,7 @@
 <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
     <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-        <listEntry value="/springbatch-patterns/src/main/java/fr/training/springbatch/boot/BatchApplication.java"/>
+        <listEntry value="/springbatch-patterns/src/main/java/fr/training/springbatch/BatchApplication.java"/>
     </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
         <listEntry value="1"/>
@@ -12,7 +12,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.m2e.launchconfig.classpathProvider"/>
-    <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="fr.training.springbatch.boot.BatchApplication"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="fr.training.springbatch.BatchApplication"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="springbatch-patterns"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="output-dir=target\output"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="springbatch-patterns"/>

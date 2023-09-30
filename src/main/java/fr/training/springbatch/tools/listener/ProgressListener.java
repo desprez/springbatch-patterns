@@ -4,16 +4,16 @@ import java.util.function.LongSupplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.listener.ChunkListenerSupport;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
 /**
  *
  */
-public class ProgressListener extends ChunkListenerSupport implements JobExecutionListener {
+public class ProgressListener implements JobExecutionListener, ChunkListener {
 
     private static final Logger log = LoggerFactory.getLogger(ProgressListener.class);
 

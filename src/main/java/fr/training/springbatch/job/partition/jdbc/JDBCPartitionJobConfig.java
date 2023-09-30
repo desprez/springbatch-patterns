@@ -8,6 +8,9 @@ import javax.sql.DataSource;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
@@ -16,9 +19,12 @@ import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilde
 import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -26,24 +32,28 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 /**
  *
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = JDBCPartitionJobConfig.PARTITION_JOB)
 public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
+
+    protected static final String PARTITION_JOB = "partition-job";
 
     @Autowired
     private DataSource dataSource;
 
     @Bean
-    Job partitionJob(final Step masterStep) {
+    Job partitionJob(final Step masterStep, final JobRepository jobRepository) {
 
-        return jobBuilderFactory.get("partition-job") //
+        return new JobBuilder(PARTITION_JOB, jobRepository) //
                 .start(masterStep)//
                 .build();
     }
 
     // Master
     @Bean
-    Step masterStep(final Step slaveStep) {
+    Step masterStep(final JobRepository jobRepository, final Step slaveStep) {
 
-        return stepBuilderFactory.get("master-step") //
+        return new StepBuilder("master-step", jobRepository) //
                 .partitioner(slaveStep.getName(), partitioner()) //
                 .step(slaveStep) //
                 .gridSize(4) //
@@ -53,10 +63,11 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
 
     // slave step
     @Bean
-    Step slaveStep(final ItemReader<Customer> pagingItemReader, final JdbcBatchItemWriter<Customer> customerItemWriter) {
+    Step slaveStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final ItemReader<Customer> pagingItemReader,
+            final JdbcBatchItemWriter<Customer> customerItemWriter) {
 
-        return stepBuilderFactory.get("slave-step") //
-                .<Customer, Customer>chunk(1000) //
+        return new StepBuilder("slave-step", jobRepository) //
+                .<Customer, Customer> chunk(1000, transactionManager) //
                 .reader(pagingItemReader) //
                 .writer(customerItemWriter) //
                 .build();
@@ -76,7 +87,7 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
     @Bean
     @DependsOnDatabaseInitialization
     JdbcPagingItemReader<Customer> pagingItemReader(@Value("#{stepExecutionContext['minValue']}") final Long minValue,
-                                                                                                                   @Value("#{stepExecutionContext['maxValue']}") final Long maxValue) {
+            @Value("#{stepExecutionContext['maxValue']}") final Long maxValue) {
         System.out.println("reading " + minValue + " to " + maxValue);
 
         final Map<String, Order> sortKeys = new HashMap<>();

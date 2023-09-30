@@ -6,7 +6,10 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -23,13 +26,16 @@ import org.springframework.batch.support.DatabaseType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.support.MetaDataAccessException;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -44,14 +50,18 @@ import fr.training.springbatch.tools.staging.StagingItemWriter;
  * parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml)
  * config.
  */
+@Configuration
+@ConditionalOnProperty(name = "spring.batch.job.names", havingValue = StagingJobConfig.STAGING_JOB)
 public class StagingJobConfig extends AbstractJobConfiguration {
+
+    protected static final String STAGING_JOB = "staging-job";
 
     @Autowired
     public DataSource dataSource;
 
     @Bean
-    Job stagingJob(final Step stagingStep, final Step loadingStep) {
-        return jobBuilderFactory.get("staging-job") //
+    Job stagingJob(final Step stagingStep, final Step loadingStep, final JobRepository jobRepository) {
+        return new JobBuilder(STAGING_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) //
                 .validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})) //
                 .start(stagingStep) //
@@ -61,11 +71,12 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step stagingStep(final ValidatingItemProcessor<Transaction> validatingProcessor, //
+    Step stagingStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final ValidatingItemProcessor<Transaction> validatingProcessor, //
             final ItemWriter<Transaction> stagingItemWriter, final ItemReader<Transaction> fileItemReader) {
 
-        return stepBuilderFactory.get("staging-step") //
-                .<Transaction, Transaction> chunk(2) //
+        return new StepBuilder("staging-step", jobRepository) //
+                .<Transaction, Transaction> chunk(2, transactionManager) //
                 .reader(fileItemReader) //
                 .processor(validatingProcessor)//
                 .writer(stagingItemWriter) //
@@ -74,10 +85,11 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     }
 
     @Bean
-    Step loadingStep(final ItemWriter<? super Transaction> transactionWriter) {
+    Step loadingStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
+            final ItemWriter<? super Transaction> transactionWriter) {
 
-        return stepBuilderFactory.get("loading-step") //
-                .<ProcessIndicatorItemWrapper<Transaction>, Transaction> chunk(2) //
+        return new StepBuilder("loading-step", jobRepository) //
+                .<ProcessIndicatorItemWrapper<Transaction>, Transaction> chunk(2, transactionManager) //
                 .reader(stagingReader()) //
                 .processor(stagingProcessor())//
                 .writer(transactionWriter) //

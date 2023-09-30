@@ -43,6 +43,7 @@ public class BreakKeyCompletionPolicy<T> extends CompletionPolicySupport {
             super(context);
         }
 
+        @SuppressWarnings("unchecked")
         public boolean isComplete() {
             final Object next;
             try {

@@ -19,7 +19,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, MultiLinesLoadJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, MultiLinesLoadJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=multilines-load-job" })
 class MultiLinesLoadJobTest {
 
     private static final String INPUT_FILE = "src/main/resources/csv/multilines.csv";

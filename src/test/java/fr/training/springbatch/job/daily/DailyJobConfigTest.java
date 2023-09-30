@@ -3,8 +3,9 @@ package fr.training.springbatch.job.daily;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import java.util.Date;
+import java.time.LocalDate;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
@@ -21,7 +22,8 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 
 @ActiveProfiles("test")
 @SpringBatchTest
-@SpringBootTest(classes = { BatchTestConfiguration.class, DailyJobConfig.class }, properties = "spring.batch.job.enabled=false")
+@SpringBootTest(classes = { BatchTestConfiguration.class, DailyJobConfig.class }, properties = { "spring.batch.job.enabled=false",
+        "spring.batch.job.names=daily-job" })
 class DailyJobConfigTest {
 
     @Autowired
@@ -29,8 +31,9 @@ class DailyJobConfigTest {
 
     @Test
     void launch_DailyJob_nominal_should_success() throws Exception {
+        Assertions.setMaxStackTraceElementsDisplayed(800);
         // Given
-        final JobParameters jobParameters = new JobParametersBuilder().addDate("processDate", new Date()).toJobParameters();
+        final JobParameters jobParameters = new JobParametersBuilder().addLocalDate("processDate", LocalDate.now()).toJobParameters();
         // When
         final JobExecution jobExec = testUtils.launchJob(jobParameters);
 
