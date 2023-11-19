@@ -67,4 +67,26 @@ CREATE TABLE yesterday_stock
      PRIMARY KEY (number)
   );
 
+  
+DROP TABLE IF EXISTS subscription;
+
+CREATE TABLE subscription
+  (
+     number VARCHAR(15) NOT NULL PRIMARY KEY ,
+     status VARCHAR(08), 
+     distributor_number VARCHAR(3) NOT NULL,
+     creation_date TIMESTAMP (6) DEFAULT CURRENT_TIMESTAMP, 
+     update_date TIMESTAMP (6), 
+     title VARCHAR(03), 
+     last_name VARCHAR(30) NOT NULL,
+     first_name VARCHAR(30) NOT NULL,
+     phone_number VARCHAR(10) NOT NULL,
+     email_address VARCHAR(50) NOT NULL,
+     loan_overdraft NUMERIC(13,2), 
+     loan_term NUMERIC(3,0), 
+     loan_tnc NUMERIC(4,2), 
+     loan_teg NUMERIC(4,2), 
+     loan_taeg NUMERIC(4,2), 
+     loan_month_pay NUMERIC(13,2)
+  );
 

@@ -1,5 +1,8 @@
 package fr.training.springbatch.job.fixedsize;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 import static org.springframework.util.Assert.isTrue;
 import static org.springframework.util.Assert.notNull;
 
@@ -15,11 +18,10 @@ import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.listener.StepExecutionListenerSupport;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
@@ -41,6 +43,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.lang.NonNull;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
@@ -48,6 +51,8 @@ import fr.training.springbatch.job.fixedsize.model.AbstractLine;
 import fr.training.springbatch.job.fixedsize.model.Detail;
 import fr.training.springbatch.job.fixedsize.model.Footer;
 import fr.training.springbatch.job.fixedsize.model.Header;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
  * This job use a {@link PatternMatchingCompositeLineMapper} to map line with a record Type (ie: 00 for header, 01 for details and 99 for footer).
@@ -66,11 +71,6 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     private static final String DETAIL_RECORD_TYPE = "01*";
     private static final String HEADER_RECORD_TYPE = "00*";
 
-    private static final String INPUTFILE_PARAMETER_NAME = "inputfile";
-    private static final String OUTPUTFILE_PARAMETER_NAME = "outputfile";
-    private static final String RECEIVER_CODE_PARAMETER = "receivercode";
-    private static final String CREATED_DATE_PARAMETER = "created-date";
-
     @Value("${application.fixedjob.chunksize:10}")
     private int chunkSize;
 
@@ -78,12 +78,16 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     Job fixedJob(final Step validationStep, final Step processStep, final JobRepository jobRepository) {
 
         return new JobBuilder(FIXED_JOB, jobRepository) //
-                .validator(new DefaultJobParametersValidator(
-                        new String[] { INPUTFILE_PARAMETER_NAME, OUTPUTFILE_PARAMETER_NAME, RECEIVER_CODE_PARAMETER, CREATED_DATE_PARAMETER }, new String[] {})) //
-                .incrementer(new RunIdIncrementer()) //
-                .start(validationStep) //
-                .next(processStep) //
-                .listener(reportListener()) //
+                .validator(new AdditiveJobParametersValidatorBuilder()
+                        .addValidator(new JobParameterRequirementValidator("inputfile", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("outputfile", required().and(fileWritable())))
+                        .addValidator(new JobParameterRequirementValidator("receivercode", required()))
+                        .addValidator(new JobParameterRequirementValidator("created-date", required()))
+                        .build())
+                .incrementer(new RunIdIncrementer())
+                .start(validationStep)
+                .next(processStep)
+                .listener(reportListener())
                 .build();
     }
 
@@ -93,12 +97,12 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
         return new StepBuilder("validation-step", jobRepository) //
                 .<AbstractLine, AbstractLine> chunk(chunkSize, transactionManager) //
                 .reader(itemReader) //
-                .processor(validationProcessor()) //
+                .processor(validationProcessor())
                 .writer(items -> {
                     // do nothing
                 }) //
-                .listener(validationProcessor()) //
-                .listener(reportListener()) //
+                .listener(validationProcessor())
+                .listener(reportListener())
                 .build();
     }
 
@@ -106,13 +110,13 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     Step processStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final FlatFileItemReader<AbstractLine> itemReader,
             final ItemWriter<Detail> fixedItemWriter) throws Exception {
 
-        return new StepBuilder("process-step", jobRepository) //
-                .<AbstractLine, Detail> chunk(chunkSize, transactionManager) //
-                .reader(itemReader) //
+        return new StepBuilder("process-step", jobRepository)
+                .<AbstractLine, Detail> chunk(chunkSize, transactionManager)
+                .reader(itemReader)
                 // return only detail items
-                .processor(item -> item instanceof Detail ? (Detail) item : null) //
-                .writer(fixedItemWriter) //
-                .listener(reportListener()) //
+                .processor(item -> item instanceof Detail ? (Detail) item : null)
+                .writer(fixedItemWriter)
+                .listener(reportListener())
                 .build();
     }
 
@@ -265,11 +269,11 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     FlatFileItemWriter<Detail> fixedItemWriter(@Value("#{jobParameters['outputfile']}") final String fileName, final FlatFileFooterCallback footerProvider,
             final FlatFileHeaderCallback headerProvider) throws Exception {
 
-        return new FlatFileItemWriterBuilder<Detail>() //
-                .name("fixedItemWriter") //
-                .resource(new FileSystemResource(fileName)) //
-                .headerCallback(headerProvider) //
-                .footerCallback(footerProvider) //
+        return new FlatFileItemWriterBuilder<Detail>()
+                .name("fixedItemWriter")
+                .resource(new FileSystemResource(fileName))
+                .headerCallback(headerProvider)
+                .footerCallback(footerProvider)
                 .formatted() //
                 // –> "-" is a flag indicating the output of each field should be left justified
                 // –> 2, 17, 3 ... is width of the field
@@ -288,7 +292,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
         return writer -> {
             final Header header = new Header(createdDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), transmitterCode, receiverCode, "00001");
 
-            writer.write(String.format("%2s%10s%-10s%-10s%5s", //
+            writer.write(String.format("%2s%10s%-10s%-10s%5s",
                     header.getRecordType(), header.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), header.getTransmitterCode(), //
                     header.getReceiverCode(), //
                     header.getSequenceNumber()));
@@ -312,7 +316,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     /**
      *
      */
-    static class IntegrityFileValidator extends StepExecutionListenerSupport implements ItemProcessor<AbstractLine, AbstractLine> {
+    static class IntegrityFileValidator implements StepExecutionListener, ItemProcessor<AbstractLine, AbstractLine> {
 
         private boolean headerFound;
         private boolean footerFound;
@@ -320,19 +324,16 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
         private Integer detailCount = 0;
 
         @Override
-        public AbstractLine process(final AbstractLine item) throws Exception {
-            if (item instanceof Header) {
-                final Header header = (Header) item;
+        public AbstractLine process(final @NonNull AbstractLine item) throws Exception {
+            if (item instanceof final Header header) {
                 logger.debug("header:{}", header);
                 headerFound = true;
             }
-            if (item instanceof Detail) {
-                final Detail detail = (Detail) item;
+            if (item instanceof final Detail detail) {
                 logger.debug("detail:{}", detail);
                 detailCount++;
             }
-            if (item instanceof Footer) {
-                final Footer footer = (Footer) item;
+            if (item instanceof final Footer footer) {
                 footerFound = true;
                 expectedCount = footer.getDetailRecordCount();
             }

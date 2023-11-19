@@ -7,6 +7,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -44,7 +45,7 @@ public class StagingItemProcessor<T> implements ItemProcessor<ProcessIndicatorIt
      */
     @Nullable
     @Override
-    public T process(final ProcessIndicatorItemWrapper<T> wrapper) throws Exception {
+    public T process(final @NonNull ProcessIndicatorItemWrapper<T> wrapper) throws Exception {
 
         final int count = jdbcTemplate.update("UPDATE BATCH_STAGING SET PROCESSED=? WHERE ID=? AND PROCESSED=?", StagingItemWriter.DONE, wrapper.getId(),
                 StagingItemWriter.NEW);

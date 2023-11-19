@@ -29,7 +29,8 @@ class MultiLinesExtractJobTest {
     @Test
     void launch_MultilinesExtractJob_nominal_should_success() throws Exception {
         // Given
-        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("output-file", OUTPUT_FILE) //
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
+                .addString("output-file", OUTPUT_FILE) //
                 .toJobParameters();
         // When
         final JobExecution jobExec = testUtils.launchJob(jobParameters);

@@ -4,6 +4,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersIncrementer;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
+import org.springframework.lang.Nullable;
 
 /**
  * In case of new {@code JobInstance}, this implementation provides an extra job parameter by using a database sequence. The main advantage of this
@@ -23,7 +24,7 @@ public class JobParametersSequenceIncrementer implements JobParametersIncremente
     private DataFieldMaxValueIncrementer sequence;
 
     @Override
-    public JobParameters getNext(final JobParameters jobParameters) {
+    public JobParameters getNext(final @Nullable JobParameters jobParameters) {
         final JobParametersBuilder builder = new JobParametersBuilder(jobParameters);
 
         builder.addLong(INCREMENTER_PARAMETER_NAME, sequence.nextLongValue());

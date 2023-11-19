@@ -1,11 +1,12 @@
 package fr.training.springbatch.job.load;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -26,6 +27,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
  * This Job load Transaction csv files present in a directory sequentialy insert each read line in a Transaction Table.
@@ -46,9 +48,9 @@ public class MultiFilesLoadJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job multiLoadJob(final Step multiLoadStep, final JobRepository jobRepository) {
-        return new JobBuilder(MULTI_LOAD_JOB, jobRepository) //
-                .validator(new DefaultJobParametersValidator(new String[] { "input-path" }, new String[] {})) //
-                .start(multiLoadStep) //
+        return new JobBuilder(MULTI_LOAD_JOB, jobRepository)
+                .validator(new JobParameterRequirementValidator("input-path", required()))
+                .start(multiLoadStep)
                 .build();
     }
 
@@ -56,10 +58,10 @@ public class MultiFilesLoadJobConfig extends AbstractJobConfiguration {
     Step multiLoadStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final MultiResourceItemReader<Customer> multiResourceItemReader, final JdbcBatchItemWriter<Customer> writer) {
 
-        return new StepBuilder("multi-load-step", jobRepository) //
-                .<Customer, Customer> chunk(chunkSize, transactionManager) //
-                .reader(multiResourceItemReader) //
-                .writer(writer) //
+        return new StepBuilder("multi-load-step", jobRepository)
+                .<Customer, Customer> chunk(chunkSize, transactionManager)
+                .reader(multiResourceItemReader)
+                .writer(writer)
                 .build();
     }
 
@@ -75,10 +77,10 @@ public class MultiFilesLoadJobConfig extends AbstractJobConfiguration {
 
     @Bean
     FlatFileItemReader<Customer> reader() {
-        return new FlatFileItemReaderBuilder<Customer>() //
-                .name("itemReader") //
-                .delimited() //
-                .delimiter(";") //
+        return new FlatFileItemReaderBuilder<Customer>()
+                .name("itemReader")
+                .delimited()
+                .delimiter(";")
                 .names("number", "firstName", "lastName", "address", "city", "state", "postCode", "birtDate") //
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {
                     {
@@ -91,7 +93,7 @@ public class MultiFilesLoadJobConfig extends AbstractJobConfiguration {
     @Bean
     @DependsOnDatabaseInitialization
     JdbcBatchItemWriter<Customer> writer() {
-        return new JdbcBatchItemWriterBuilder<Customer>() //
+        return new JdbcBatchItemWriterBuilder<Customer>()
                 .dataSource(dataSource)
                 .sql("INSERT INTO Customer(number, first_name, last_name, address, city, state, post_code, birth_date) "
                         + "VALUES (:number, :firstName, :lastName, :address, :city, :state, :postCode, :birthDate)")

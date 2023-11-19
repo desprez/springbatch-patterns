@@ -27,7 +27,8 @@ class MultiFilesLoadJobTest {
     @Test
     void launch_MultiFilesLoadJob_nominal_should_success() throws Exception {
         // Given
-        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("input-path", "csv/big/customer*.csv") //
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
+                .addString("input-path", "csv/big/customer*.csv") //
                 .toJobParameters();
         // When
         final JobExecution jobExec = testUtils.launchJob(jobParameters);

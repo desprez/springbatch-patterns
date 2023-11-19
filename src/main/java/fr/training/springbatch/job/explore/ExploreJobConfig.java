@@ -75,10 +75,10 @@ public class ExploreJobConfig extends AbstractJobConfiguration {
 
             for (final JobInstance instance : instances) {
                 final List<JobExecution> jobExecutions = explorer.getJobExecutions(instance);
-                logger.info("Instance {} had {} executions", instance.getInstanceId(), jobExecutions.size());
+                logger.info("Instance {} had {} executions : parameters {}", instance.getInstanceId(), jobExecutions.size());
 
                 for (final JobExecution jobExecution : jobExecutions) {
-                    logger.info("\tExecution {} resulted in ExitStatus {}", jobExecution.getId(), jobExecution.getExitStatus());
+                    logger.info("\tExecution {} ", jobExecution);
                 }
             }
 

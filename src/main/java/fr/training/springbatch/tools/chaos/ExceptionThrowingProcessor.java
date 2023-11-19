@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.UnexpectedJobExecutionException;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.lang.NonNull;
 
 public class ExceptionThrowingProcessor<T> implements ItemProcessor<T, T> {
 
@@ -14,12 +15,12 @@ public class ExceptionThrowingProcessor<T> implements ItemProcessor<T, T> {
     private int throwExceptionOnNumber = Integer.MAX_VALUE;
 
     @Override
-    public T process(final T item) throws Exception {
+    public T process(final @NonNull T item) throws Exception {
         counter++;
         if (counter == throwExceptionOnNumber) {
             throw new UnexpectedJobExecutionException("Planned failure on count=" + counter);
         }
-        log.debug("Process count " + counter);
+        log.debug("Process count {}", counter);
         return item;
     }
 

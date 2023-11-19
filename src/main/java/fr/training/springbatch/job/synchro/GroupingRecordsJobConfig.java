@@ -1,5 +1,9 @@
 package fr.training.springbatch.job.synchro;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -9,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -34,6 +37,8 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.synchro.component.GroupReader;
 import fr.training.springbatch.job.synchro.component.TransactionAccumulator;
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
  * This job groups all transactions by customer number and exports result to csv file using {@link ItemAccumulator} & {@link GroupReader}
@@ -60,7 +65,10 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
     Job groupingRecordJob(final Step groupingRecordStep, final JobRepository jobRepository) {
         return new JobBuilder(GROUPINGRECORD_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
+                .validator(new AdditiveJobParametersValidatorBuilder()
+                        .addValidator(new JobParameterRequirementValidator("transaction-file", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
+                        .build())
                 .start(groupingRecordStep) //
                 .listener(reportListener()) //
                 .build();

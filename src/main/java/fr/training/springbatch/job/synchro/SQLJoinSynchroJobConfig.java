@@ -1,11 +1,13 @@
 package fr.training.springbatch.job.synchro;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -25,6 +27,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
  * Synchronize 2 tables with full SQL implementation and produce a csv result file.
@@ -42,41 +45,37 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
     @Autowired
     private DataSource dataSource;
 
-    /**
-     * @param sqlJoinSynchroStep
-     *            the injected Step bean
-     * @return the job bean
-     */
     @Bean
     Job sqlJoinSynchroJob(final Step sqlJoinSynchroStep, final JobRepository jobRepository) {
 
-        return new JobBuilder(SQL_JOIN_SYNCHRO_JOB, jobRepository) //
+        return new JobBuilder(SQL_JOIN_SYNCHRO_JOB, jobRepository)
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "output-file" }, new String[] {})) //
-                .start(sqlJoinSynchroStep) //
-                .listener(reportListener()) //
+                .validator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
+                .start(sqlJoinSynchroStep)
+                .listener(reportListener())
                 .build();
     }
 
     @Bean
     Step sqlJoinSynchroStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
-            final JdbcCursorItemReader<Customer> jdbcCustomerReader, final ItemWriter<Customer> customerWriter /* injected by Spring */) {
+            final JdbcCursorItemReader<Customer> jdbcCustomerReader,
+            final ItemWriter<Customer> customerWriter /* injected by Spring */) {
 
-        return new StepBuilder("sqljoinsynchro-step", jobRepository) //
-                .<Customer, Customer> chunk(10, transactionManager) //
-                .reader(jdbcCustomerReader) //
-                .writer(customerWriter) //
-                .listener(reportListener()) //
+        return new StepBuilder("sqljoinsynchro-step", jobRepository)
+                .<Customer, Customer> chunk(10, transactionManager)
+                .reader(jdbcCustomerReader)
+                .writer(customerWriter)
+                .listener(reportListener())
                 .build();
     }
 
     @Bean
     JdbcCursorItemReader<Customer> jdbcCustomerReader() {
-        return new JdbcCursorItemReaderBuilder<Customer>() //
-                .dataSource(dataSource) //
-                .name("customerReader") //
+        return new JdbcCursorItemReaderBuilder<Customer>()
+                .dataSource(dataSource)
+                .name("customerReader")
                 .sql("SELECT c.NUMBER, c.ADDRESS, c.CITY, c.FIRST_NAME, c.LAST_NAME, c.POST_CODE, c.STATE, ROUND(SUM(t.AMOUNT),2) as BALANCE FROM CUSTOMER c "
-                        + "LEFT JOIN TRANSACTION t ON c.NUMBER = t.CUSTOMER_NUMBER " //
+                        + "LEFT JOIN TRANSACTION t ON c.NUMBER = t.CUSTOMER_NUMBER "
                         + "GROUP BY c.NUMBER")
                 .rowMapper((rs, rowNum) -> {
                     final Customer customer = new Customer();
@@ -101,9 +100,11 @@ public class SQLJoinSynchroJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemWriter<Customer> customerWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
-        return new FlatFileItemWriterBuilder<Customer>().name("customerWriter").resource(new FileSystemResource(outputFile)) //
-                .delimited() //
-                .delimiter(";") //
+        return new FlatFileItemWriterBuilder<Customer>()
+                .name("customerWriter")
+                .resource(new FileSystemResource(outputFile))
+                .delimited()
+                .delimiter(";")
                 .names("number", "firstName", "lastName", "address", "city", "state", "postCode", "balance") //
                 .build();
 

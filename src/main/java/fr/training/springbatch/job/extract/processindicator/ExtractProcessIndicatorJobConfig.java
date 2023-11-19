@@ -58,10 +58,10 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     @Bean
     Job extractProcessIndicatorJob(final Step extractProcessIndicatorStep, final Step processedRemoverStep, final JobRepository jobRepository) {
         return new JobBuilder(EXTRACT_PROCESS_INDICATOR_JOB, jobRepository) //
-                .incrementer(new RunIdIncrementer()) //
-                .start(extractProcessIndicatorStep) //
-                .next(processedRemoverStep) //
-                .listener(reportListener()) //
+                .incrementer(new RunIdIncrementer())
+                .start(extractProcessIndicatorStep)
+                .next(processedRemoverStep)
+                .listener(reportListener())
                 .build();
     }
 
@@ -71,18 +71,18 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
 
         return new StepBuilder("extract-process-indicator-step", jobRepository) //
                 .<Transaction, Transaction> chunk(chunkSize, transactionManager) //
-                .reader(unprocessedReader) //
-                .processor(processedMarker()) //
-                .writer(csvFileWriter) //
-                .listener(reportListener()) //
+                .reader(unprocessedReader)
+                .processor(processedMarker())
+                .writer(csvFileWriter)
+                .listener(reportListener())
                 .build();
     }
 
     @Bean
     Step processedRemoverStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager) {
 
-        return new StepBuilder("processedRemover-step", jobRepository) //
-                .tasklet(processedItemsRemover(), transactionManager) //
+        return new StepBuilder("processedRemover-step", jobRepository)
+                .tasklet(processedItemsRemover(), transactionManager)
                 .build();
 
     }
@@ -94,12 +94,12 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     @DependsOnDatabaseInitialization
     JdbcPagingItemReader<Transaction> unprocessedReader(final DataSource dataSource, final PagingQueryProvider queryProvider) {
 
-        return new JdbcPagingItemReaderBuilder<Transaction>() //
-                .name("unprocessedReader") //
-                .dataSource(dataSource) //
-                .pageSize(chunkSize) //
-                .queryProvider(queryProvider)//
-                .rowMapper(new BeanPropertyRowMapper<>(Transaction.class)) //
+        return new JdbcPagingItemReaderBuilder<Transaction>()
+                .name("unprocessedReader")
+                .dataSource(dataSource)
+                .pageSize(chunkSize)
+                .queryProvider(queryProvider)
+                .rowMapper(new BeanPropertyRowMapper<>(Transaction.class))
                 .build();
 
     }
@@ -156,13 +156,13 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemWriter<Transaction> csvFileWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
-        return new FlatFileItemWriterBuilder<Transaction>() //
-                .name("csvFileWriter") //
-                .resource(new FileSystemResource(outputFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "number", "transactionDate", "amount") //
-                .headerCallback(writer -> writer.write("customerNumber;number;transactionDate;amount")) //
+        return new FlatFileItemWriterBuilder<Transaction>()
+                .name("csvFileWriter")
+                .resource(new FileSystemResource(outputFile))
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "number", "transactionDate", "amount")
+                .headerCallback(writer -> writer.write("customerNumber;number;transactionDate;amount"))
                 .build();
     }
 

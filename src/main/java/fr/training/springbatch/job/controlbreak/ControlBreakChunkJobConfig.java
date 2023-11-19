@@ -1,12 +1,15 @@
 package fr.training.springbatch.job.controlbreak;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -27,6 +30,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import fr.training.springbatch.tools.writer.ConsoleItemWriter;
 
 /**
@@ -49,11 +54,14 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job controlBreakChunkJob(final Step controlBreakStep, final JobRepository jobRepository) {
-        return new JobBuilder(CONTROLBREAK_CHUNK_JOB, jobRepository) //
+        return new JobBuilder(CONTROLBREAK_CHUNK_JOB, jobRepository)
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
-                .start(controlBreakStep) //
-                .listener(reportListener()) //
+                .validator(new AdditiveJobParametersValidatorBuilder()
+                        .addValidator(new JobParameterRequirementValidator("transaction-file", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
+                        .build())
+                .start(controlBreakStep)
+                .listener(reportListener())
                 .build();
     }
 
@@ -69,12 +77,12 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
     Step controlBreakChunkStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy, final ItemWriter<Transaction> transactionWriter) {
 
-        return new StepBuilder("controlbreak-step", jobRepository) //
-                .<Transaction, Transaction> chunk(breakKeyCompletionPolicy, transactionManager) //
-                .reader(breakKeyCompletionPolicy) //
-                .writer(transactionWriter) //
-                .listener(reportListener()) //
-                .listener(chunklistener()) //
+        return new StepBuilder("controlbreak-step", jobRepository)
+                .<Transaction, Transaction> chunk(breakKeyCompletionPolicy, transactionManager)
+                .reader(breakKeyCompletionPolicy)
+                .writer(transactionWriter)
+                .listener(reportListener())
+                .listener(chunklistener())
                 .build();
     }
 
@@ -122,12 +130,12 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemReader<Transaction> transactionReader(@Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
-        return new FlatFileItemReaderBuilder<Transaction>() //
-                .name("transactionReader") //
-                .resource(new FileSystemResource(transactionFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "number", "transactionDate", "amount") //
+        return new FlatFileItemReaderBuilder<Transaction>()
+                .name("transactionReader")
+                .resource(new FileSystemResource(transactionFile))
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "number", "transactionDate", "amount")
                 .linesToSkip(1) //
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
                     {

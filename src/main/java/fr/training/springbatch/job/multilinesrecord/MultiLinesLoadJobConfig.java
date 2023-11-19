@@ -1,5 +1,8 @@
 package fr.training.springbatch.job.multilinesrecord;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -41,6 +43,7 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.multilinesrecord.dto.CustomerRecord;
 import fr.training.springbatch.job.multilinesrecord.dto.Record;
 import fr.training.springbatch.job.multilinesrecord.dto.TransactionRecord;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
  *
@@ -64,11 +67,12 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job multilinesLoadJob(final Step multilinesLoadStep, final JobRepository jobRepository) {
-        return new JobBuilder(MULTILINES_LOAD_JOB, jobRepository) //
-                .validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})).incrementer(new RunIdIncrementer()) //
-                .flow(multilinesLoadStep) //
-                .end() //
-                .listener(reportListener()) //
+        return new JobBuilder(MULTILINES_LOAD_JOB, jobRepository)
+                .validator(new JobParameterRequirementValidator("input-file", required().and(fileExist())))
+                .incrementer(new RunIdIncrementer())
+                .flow(multilinesLoadStep)
+                .end()
+                .listener(reportListener())
                 .build();
     }
 
@@ -76,12 +80,12 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     Step multilinesLoadStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final ClassifierCompositeItemWriter<Record> classifierRecordCompositeItemWriter, final ItemReader<Record> realFileReader) {
 
-        return new StepBuilder("multilines-load-step", jobRepository) //
-                .<Record, Record> chunk(chunkSize, transactionManager) //
-                .reader(realFileReader) //
-                .processor(multilinesExtractProcessor()) //
-                .writer(classifierRecordCompositeItemWriter) //
-                .listener(progressListener()) //
+        return new StepBuilder("multilines-load-step", jobRepository)
+                .<Record, Record> chunk(chunkSize, transactionManager)
+                .reader(realFileReader)
+                .processor(multilinesExtractProcessor())
+                .writer(classifierRecordCompositeItemWriter)
+                .listener(progressListener())
                 .build();
     }
 
@@ -162,7 +166,7 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     @Bean
     @DependsOnDatabaseInitialization
     JdbcBatchItemWriter<CustomerRecord> customerWriter() {
-        return new JdbcBatchItemWriterBuilder<CustomerRecord>() //
+        return new JdbcBatchItemWriterBuilder<CustomerRecord>()
                 .dataSource(dataSource)
                 .sql("INSERT INTO Customer(number, first_name, last_name, address, city, state, post_code, birth_date) "
                         + "VALUES (:number, :firstName, :lastName, :address, :city, :state, :postCode, :birthDate)")
@@ -172,11 +176,11 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
 
     @Bean
     ItemWriter<TransactionRecord> transactionWriter() {
-        return new JdbcBatchItemWriterBuilder<TransactionRecord>() //
+        return new JdbcBatchItemWriterBuilder<TransactionRecord>()
                 .dataSource(dataSource)
                 .sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
                         + "VALUES (:customerNumber, :number, :transactionDate, :amount )")
-                .beanMapped() //
+                .beanMapped()
                 .build();
     }
 }

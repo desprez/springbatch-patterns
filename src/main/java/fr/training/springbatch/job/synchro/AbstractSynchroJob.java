@@ -13,7 +13,6 @@ import fr.training.springbatch.tools.synchro.CompositeAggregateReader;
 public abstract class AbstractSynchroJob extends AbstractJobConfiguration {
 
     public AbstractSynchroJob() {
-        super();
     }
 
     /**
@@ -25,20 +24,9 @@ public abstract class AbstractSynchroJob extends AbstractJobConfiguration {
      *            the injected Transaction {@link ItemReader} bean
      * @return a {@link MasterDetailReader} bean
      */
-    // @Bean(destroyMethod = "")
-    // public MasterDetailReader masterDetailReader(final ItemReader<Customer> customerReader,
-    // final ItemReader<Transaction> transactionReader) {
-    //
-    // final MasterDetailReader masterDetailReader = new MasterDetailReader();
-    // masterDetailReader.setMasterAccumulator(new CustomerAccumulator(customerReader));
-    // masterDetailReader.setDetailAccumulator(new TransactionAccumulator(transactionReader));
-    //
-    // return masterDetailReader;
-    // }
-
     @Bean(destroyMethod = "")
     CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader(final AbstractItemStreamItemReader<Customer> customerReader,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 final AbstractItemStreamItemReader<Transaction> transactionReader) {
+            final AbstractItemStreamItemReader<Transaction> transactionReader) {
 
         final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader = new CompositeAggregateReader<>();
         masterDetailReader.setMasterItemReader(customerReader);

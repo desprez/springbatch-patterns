@@ -11,6 +11,7 @@ import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.lang.NonNull;
 
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
@@ -20,7 +21,7 @@ public class MultiLineCustomerItemWriter implements ItemWriter<Customer>, ItemSt
     private FlatFileItemWriter<String> delegate;
 
     @Override
-    public void write(final Chunk<? extends Customer> items) throws Exception {
+    public void write(@NonNull final Chunk<? extends Customer> items) throws Exception {
         final List<String> lines = new ArrayList<>();
 
         for (final Customer c : items) {
@@ -30,7 +31,7 @@ public class MultiLineCustomerItemWriter implements ItemWriter<Customer>, ItemSt
                 lines.add(joinString(c.getNumber().toString(), "T", t.getNumber(), t.getTransactionDate().toString(), t.getAmount().toString()));
             }
         }
-        delegate.write(new Chunk<String>(lines));
+        delegate.write(new Chunk<>(lines));
     }
 
     private String joinString(final String... tokens) {

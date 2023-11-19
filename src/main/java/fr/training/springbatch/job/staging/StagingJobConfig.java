@@ -1,11 +1,13 @@
 package fr.training.springbatch.job.staging;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -44,6 +46,7 @@ import fr.training.springbatch.tools.staging.ProcessIndicatorItemWrapper;
 import fr.training.springbatch.tools.staging.StagingItemProcessor;
 import fr.training.springbatch.tools.staging.StagingItemReader;
 import fr.training.springbatch.tools.staging.StagingItemWriter;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
  * This pattern is a java configuration adaptation of the [Spring-batch
@@ -61,26 +64,26 @@ public class StagingJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job stagingJob(final Step stagingStep, final Step loadingStep, final JobRepository jobRepository) {
-        return new JobBuilder(STAGING_JOB, jobRepository) //
-                .incrementer(new RunIdIncrementer()) //
-                .validator(new DefaultJobParametersValidator(new String[] { "input-file" }, new String[] {})) //
-                .start(stagingStep) //
-                .next(loadingStep) //
-                .listener(reportListener()) //
+        return new JobBuilder(STAGING_JOB, jobRepository)
+                .incrementer(new RunIdIncrementer())
+                .validator(new JobParameterRequirementValidator("input-file", required().and(fileExist())))
+                .start(stagingStep)
+                .next(loadingStep)
+                .listener(reportListener())
                 .build();
     }
 
     @Bean
     Step stagingStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
-            final ValidatingItemProcessor<Transaction> validatingProcessor, //
+            final ValidatingItemProcessor<Transaction> validatingProcessor,
             final ItemWriter<Transaction> stagingItemWriter, final ItemReader<Transaction> fileItemReader) {
 
-        return new StepBuilder("staging-step", jobRepository) //
-                .<Transaction, Transaction> chunk(2, transactionManager) //
-                .reader(fileItemReader) //
-                .processor(validatingProcessor)//
-                .writer(stagingItemWriter) //
-                .listener(progressListener()) //
+        return new StepBuilder("staging-step", jobRepository)
+                .<Transaction, Transaction> chunk(2, transactionManager)
+                .reader(fileItemReader)
+                .processor(validatingProcessor)
+                .writer(stagingItemWriter)
+                .listener(progressListener())
                 .build();
     }
 
@@ -88,13 +91,13 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     Step loadingStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final ItemWriter<? super Transaction> transactionWriter) {
 
-        return new StepBuilder("loading-step", jobRepository) //
-                .<ProcessIndicatorItemWrapper<Transaction>, Transaction> chunk(2, transactionManager) //
-                .reader(stagingReader()) //
-                .processor(stagingProcessor())//
-                .writer(transactionWriter) //
-                .taskExecutor(taskExecutor()) //
-                .listener(progressListener()) //
+        return new StepBuilder("loading-step", jobRepository)
+                .<ProcessIndicatorItemWrapper<Transaction>, Transaction> chunk(2, transactionManager)
+                .reader(stagingReader())
+                .processor(stagingProcessor())
+                .writer(transactionWriter)
+                .taskExecutor(taskExecutor())
+                .listener(progressListener())
                 .build();
     }
 
@@ -121,13 +124,13 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemReader<Transaction> fileItemReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
 
-        return new FlatFileItemReaderBuilder<Transaction>() //
-                .name("simpleImportReader") //
-                .resource(new FileSystemResource(inputFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "number", "transactionDate", "amount") //
-                .linesToSkip(1) //
+        return new FlatFileItemReaderBuilder<Transaction>()
+                .name("simpleImportReader")
+                .resource(new FileSystemResource(inputFile))
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "number", "transactionDate", "amount")
+                .linesToSkip(1)
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
                     {
                         setTargetType(Transaction.class);

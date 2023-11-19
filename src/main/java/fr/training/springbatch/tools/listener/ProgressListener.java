@@ -28,12 +28,12 @@ public class ProgressListener implements JobExecutionListener, ChunkListener {
     }
 
     public Long getProgress(final JobExecution jobExecution) {
-        final double jobComplete = (Double) jobExecution.getExecutionContext().get("jobComplete");
-        double reads = 0;
+        final long jobComplete = jobExecution.getExecutionContext().getLong("jobComplete");
+        long reads = 0;
         for (final StepExecution step : jobExecution.getStepExecutions()) {
             reads = reads + step.getReadCount();
         }
-        return Math.round(reads / jobComplete * 100);
+        return (long)(reads / jobComplete * 100);
     }
 
     @Override
@@ -41,9 +41,4 @@ public class ProgressListener implements JobExecutionListener, ChunkListener {
         log.info("Progress : {} %", getProgress(context.getStepContext().getStepExecution().getJobExecution()));
     }
 
-    @Override
-    public void afterJob(final JobExecution jobExecution) {
-        // TODO Auto-generated method stub
-
-    }
 }

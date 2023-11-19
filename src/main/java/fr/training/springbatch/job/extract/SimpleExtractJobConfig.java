@@ -1,5 +1,8 @@
 package fr.training.springbatch.job.extract;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.directoryExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.io.File;
 
 import javax.sql.DataSource;
@@ -9,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -32,6 +34,7 @@ import org.springframework.util.StringUtils;
 
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
  * This is the simplest job configuration (no really innovation here). One step use the reader / processor / writer pattern to read a database table and write
@@ -60,23 +63,24 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job simpleExtractJob(final Step extractStep, final JobRepository jobRepository) {
-        return new JobBuilder(SIMPLE_EXTRACT_JOB, jobRepository) //
-                .validator(new DefaultJobParametersValidator(new String[] { "output-dir" }, new String[] {})).incrementer(new RunIdIncrementer()) //
-                .flow(extractStep) //
-                .end() //
-                .listener(reportListener()) //
+        return new JobBuilder(SIMPLE_EXTRACT_JOB, jobRepository)
+                .validator(new JobParameterRequirementValidator("output-dir", required().and(directoryExist())))
+                .incrementer(new RunIdIncrementer())
+                .flow(extractStep)
+                .end()
+                .listener(reportListener())
                 .build();
     }
 
     @Bean
     Step extractStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final FlatFileItemWriter<Transaction> extractWriter) {
-        return new StepBuilder("simple-extract-step", jobRepository) //
-                .<Transaction, Transaction> chunk(chunkSize, transactionManager) //
-                .reader(simpleExtractReader()) //
-                .processor(simpleExtractProcessor()) //
-                .writer(extractWriter) //
-                .listener(progressListener()) //
+        return new StepBuilder("simple-extract-step", jobRepository)
+                .<Transaction, Transaction> chunk(chunkSize, transactionManager)
+                .reader(simpleExtractReader())
+                .processor(simpleExtractProcessor())
+                .writer(extractWriter)
+                .listener(progressListener())
                 .build();
     }
 
@@ -86,9 +90,9 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
     @Bean
     JdbcCursorItemReader<Transaction> simpleExtractReader() {
 
-        return new JdbcCursorItemReaderBuilder<Transaction>() //
-                .name("simpleExtractReader") //
-                .dataSource(dataSource) //
+        return new JdbcCursorItemReaderBuilder<Transaction>()
+                .name("simpleExtractReader")
+                .dataSource(dataSource)
                 .sql("SELECT customer_number, number, amount, transaction_date FROM Transaction ORDER BY customer_number, number ASC") //
                 .rowMapper(new BeanPropertyRowMapper<>(Transaction.class)) //
                 .build();
@@ -116,13 +120,13 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemWriter<Transaction> simpleExtractWriter(final WritableResource incrementalFilename) {
 
-        return new FlatFileItemWriterBuilder<Transaction>() //
-                .name("simpleExtractWriter") //
-                .resource(incrementalFilename) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "number", "transactionDate", "amount") //
-                .headerCallback(writer -> writer.write("customerNumber;number;transactionDate;amount")) //
+        return new FlatFileItemWriterBuilder<Transaction>()
+                .name("simpleExtractWriter")
+                .resource(incrementalFilename)
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "number", "transactionDate", "amount")
+                .headerCallback(writer -> writer.write("customerNumber;number;transactionDate;amount"))
                 .build();
     }
 

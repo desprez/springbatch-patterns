@@ -12,6 +12,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -58,7 +59,7 @@ public class StagingItemWriter<T> extends JdbcDaoSupport implements StepExecutio
      * @see ItemWriter#write(java.util.List)
      */
     @Override
-    public void write(final Chunk<? extends T> items) throws Exception {
+    public void write(final @NonNull Chunk<? extends T> items) throws Exception {
         final ListIterator<? extends T> itemIterator = items.getItems().listIterator();
 
         getJdbcTemplate().batchUpdate("INSERT into BATCH_STAGING (ID, JOB_ID, VALUE_, PROCESSED) values (?,?,?,?)", new BatchPreparedStatementSetter() {

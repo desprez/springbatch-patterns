@@ -1,5 +1,9 @@
 package fr.training.springbatch.job.controlbreak;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -9,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -32,6 +35,8 @@ import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.dto.TransactionSum;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
  * This job groups all transactions by customer number and exports result to csv file.
@@ -53,11 +58,14 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job controlBreakJob(final Step controlBreakStep, final JobRepository jobRepository) {
-        return new JobBuilder(CONTROLBREAK_JOB, jobRepository) //
+        return new JobBuilder(CONTROLBREAK_JOB, jobRepository)
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
-                .start(controlBreakStep) //
-                .listener(reportListener()) //
+                .validator(new AdditiveJobParametersValidatorBuilder()
+                        .addValidator(new JobParameterRequirementValidator("transaction-file", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
+                        .build())
+                .start(controlBreakStep)
+                .listener(reportListener())
                 .build();
     }
 
@@ -72,12 +80,12 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
     Step controlBreakStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final ItemListPeekableItemReader<Transaction> controlBreakReader, final ItemWriter<TransactionSum> transactionSumWriter /* injected by Spring */) {
 
-        return new StepBuilder("controlbreak-step", jobRepository) //
-                .<List<Transaction>, TransactionSum> chunk(chunkSize, transactionManager) //
-                .reader(controlBreakReader) //
-                .processor(processor()) //
-                .writer(transactionSumWriter) //
-                .listener(reportListener()) //
+        return new StepBuilder("controlbreak-step", jobRepository)
+                .<List<Transaction>, TransactionSum> chunk(chunkSize, transactionManager)
+                .reader(controlBreakReader)
+                .processor(processor())
+                .writer(transactionSumWriter)
+                .listener(reportListener())
                 .build();
     }
 
@@ -94,13 +102,13 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemReader<Transaction> transactionReader(@Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
-        return new FlatFileItemReaderBuilder<Transaction>() //
-                .name("transactionReader") //
-                .resource(new FileSystemResource(transactionFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "number", "transactionDate", "amount") //
-                .linesToSkip(1) //
+        return new FlatFileItemReaderBuilder<Transaction>()
+                .name("transactionReader")
+                .resource(new FileSystemResource(transactionFile))
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "number", "transactionDate", "amount")
+                .linesToSkip(1)
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
                     {
                         setTargetType(Transaction.class);
@@ -135,11 +143,10 @@ public class ControlBreakJobConfig extends AbstractJobConfiguration {
     FlatFileItemWriter<TransactionSum> transactionSumWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
         return new FlatFileItemWriterBuilder<TransactionSum>().name("transactionSumWriter").resource(new FileSystemResource(outputFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "balance") //
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "balance")
                 .build();
-
     }
 
 }
