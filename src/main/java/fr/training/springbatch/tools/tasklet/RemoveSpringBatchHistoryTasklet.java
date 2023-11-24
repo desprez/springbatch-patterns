@@ -25,7 +25,7 @@ import org.springframework.util.StringUtils;
  * </p>
  *
  * @see https://jira.springsource.org/browse/BATCH-1747
- * @author arey, desprez (using LocalDateTime instead java.util.date).
+ * @author arey, desprez (using LocalDateTime instead java.util.date, text-bloc, Springbatch 5.x update).
  *
  */
 public class RemoveSpringBatchHistoryTasklet implements Tasklet, InitializingBean {
@@ -35,12 +35,41 @@ public class RemoveSpringBatchHistoryTasklet implements Tasklet, InitializingBea
     /**
      * SQL statements removing step and job executions compared to a given date.
      */
-    private static final String SQL_DELETE_BATCH_STEP_EXECUTION_CONTEXT = "DELETE FROM %PREFIX%STEP_EXECUTION_CONTEXT WHERE STEP_EXECUTION_ID IN (SELECT STEP_EXECUTION_ID FROM %PREFIX%STEP_EXECUTION WHERE JOB_EXECUTION_ID IN (SELECT JOB_EXECUTION_ID FROM  %PREFIX%JOB_EXECUTION where CREATE_TIME < ?))";
-    private static final String SQL_DELETE_BATCH_STEP_EXECUTION = "DELETE FROM %PREFIX%STEP_EXECUTION WHERE JOB_EXECUTION_ID IN (SELECT JOB_EXECUTION_ID FROM %PREFIX%JOB_EXECUTION where CREATE_TIME < ?)";
-    private static final String SQL_DELETE_BATCH_JOB_EXECUTION_CONTEXT = "DELETE FROM %PREFIX%JOB_EXECUTION_CONTEXT WHERE JOB_EXECUTION_ID IN (SELECT JOB_EXECUTION_ID FROM  %PREFIX%JOB_EXECUTION where CREATE_TIME < ?)";
-    private static final String SQL_DELETE_BATCH_JOB_EXECUTION_PARAMS = "DELETE FROM %PREFIX%JOB_EXECUTION_PARAMS WHERE JOB_EXECUTION_ID IN (SELECT JOB_EXECUTION_ID FROM %PREFIX%JOB_EXECUTION where CREATE_TIME < ?)";
-    private static final String SQL_DELETE_BATCH_JOB_EXECUTION = "DELETE FROM %PREFIX%JOB_EXECUTION where CREATE_TIME < ?";
-    private static final String SQL_DELETE_BATCH_JOB_INSTANCE = "DELETE FROM %PREFIX%JOB_INSTANCE WHERE JOB_INSTANCE_ID NOT IN (SELECT JOB_INSTANCE_ID FROM %PREFIX%JOB_EXECUTION)";
+    private static final String SQL_DELETE_BATCH_STEP_EXECUTION_CONTEXT = """
+            DELETE FROM %PREFIX%STEP_EXECUTION_CONTEXT
+            WHERE STEP_EXECUTION_ID IN (SELECT STEP_EXECUTION_ID
+                                        FROM %PREFIX%STEP_EXECUTION
+                                        WHERE JOB_EXECUTION_ID IN (SELECT JOB_EXECUTION_ID
+                                                                   FROM  %PREFIX%JOB_EXECUTION
+                                                                   WHERE CREATE_TIME < ?))
+            """;
+    private static final String SQL_DELETE_BATCH_STEP_EXECUTION = """
+            DELETE FROM %PREFIX%STEP_EXECUTION
+            WHERE JOB_EXECUTION_ID IN (SELECT JOB_EXECUTION_ID
+                                       FROM %PREFIX%JOB_EXECUTION
+                                       WHERE CREATE_TIME < ?)
+            """;
+    private static final String SQL_DELETE_BATCH_JOB_EXECUTION_CONTEXT = """
+            DELETE FROM %PREFIX%JOB_EXECUTION_CONTEXT
+            WHERE JOB_EXECUTION_ID IN (SELECT JOB_EXECUTION_ID
+                                       FROM  %PREFIX%JOB_EXECUTION
+                                       WHERE CREATE_TIME < ?)
+            """;
+    private static final String SQL_DELETE_BATCH_JOB_EXECUTION_PARAMS = """
+            DELETE FROM %PREFIX%JOB_EXECUTION_PARAMS
+            WHERE JOB_EXECUTION_ID IN (SELECT JOB_EXECUTION_ID
+                                       FROM %PREFIX%JOB_EXECUTION
+                                       WHERE CREATE_TIME < ?)
+            """;
+    private static final String SQL_DELETE_BATCH_JOB_EXECUTION = """
+            DELETE FROM %PREFIX%JOB_EXECUTION
+            WHERE CREATE_TIME < ?
+            """;
+    private static final String SQL_DELETE_BATCH_JOB_INSTANCE = """
+            DELETE FROM %PREFIX%JOB_INSTANCE
+            WHERE JOB_INSTANCE_ID NOT IN (SELECT JOB_INSTANCE_ID
+                                          FROM %PREFIX%JOB_EXECUTION)
+            """;
 
     /**
      * Default value for the table prefix property.

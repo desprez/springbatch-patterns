@@ -28,8 +28,8 @@ import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 
 /**
- * This job use a custom {@link org.springframework.classify.Classifier} to distinguish customers and {@link ClassifierCompositeItemWriter} to route items to
- * the accoring itemWriter.
+ * <b>Pattern #17</b> This job use a custom {@link org.springframework.classify.Classifier} to distinguish customers and {@link ClassifierCompositeItemWriter}
+ * to route items to the according itemWriter.
  */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = MultiDestinationJobConfig.MULTI_DESTINATION_JOB)
@@ -42,8 +42,8 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job multiDestinationJob(final Step multiDestinationStep, final JobRepository jobRepository) {
-        return new JobBuilder(MULTI_DESTINATION_JOB, jobRepository) //
-                .start(multiDestinationStep) //
+        return new JobBuilder(MULTI_DESTINATION_JOB, jobRepository)
+                .start(multiDestinationStep)
                 .build();
     }
 
@@ -52,28 +52,28 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
             final ItemWriter<Customer> classifierCustomerCompositeItemWriter, final FlatFileItemWriter<Customer> after50Writer,
             final FlatFileItemWriter<Customer> before50Writer) throws Exception {
 
-        return new StepBuilder("multi-destination-step", jobRepository) //
-                .<Customer, Customer> chunk(10, transactionManager) //
-                .reader(customerJDBCReader()) //
+        return new StepBuilder("multi-destination-step", jobRepository)
+                .<Customer, Customer> chunk(10, transactionManager)
+                .reader(customerJDBCReader())
                 .processor(new FunctionItemProcessor<>(c -> {
                     // just compute age of the customer
                     c.computeAge();
                     return c;
                 })) //
-                .writer(classifierCustomerCompositeItemWriter) //
-                .stream(after50Writer) //
-                .stream(before50Writer) //
+                .writer(classifierCustomerCompositeItemWriter)
+                .stream(after50Writer)
+                .stream(before50Writer)
                 .build();
     }
 
     @Bean
     JdbcCursorItemReader<Customer> customerJDBCReader() {
 
-        return new JdbcCursorItemReaderBuilder<Customer>() //
-                .name("customerJDBCReader") //
-                .dataSource(dataSource) //
+        return new JdbcCursorItemReaderBuilder<Customer>()
+                .name("customerJDBCReader")
+                .dataSource(dataSource)
                 .sql("SELECT number, first_name, last_name, address, city, state, post_code, birth_date FROM Customer ORDER BY number ASC") //
-                .rowMapper(new BeanPropertyRowMapper<>(Customer.class)) //
+                .rowMapper(new BeanPropertyRowMapper<>(Customer.class))
                 .build();
     }
 
@@ -90,24 +90,24 @@ public class MultiDestinationJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemWriter<Customer> after50Writer(@Value("#{jobParameters['outputFile1']}") final String outputFile1) {
 
-        return new FlatFileItemWriterBuilder<Customer>() //
-                .name("itemWriter") //
-                .resource(new FileSystemResource(outputFile1)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("number", "firstName", "lastName", "address", "city", "postCode", "state", "age") //
+        return new FlatFileItemWriterBuilder<Customer>()
+                .name("itemWriter")
+                .resource(new FileSystemResource(outputFile1))
+                .delimited()
+                .delimiter(";")
+                .names("number", "firstName", "lastName", "address", "city", "postCode", "state", "age")
                 .build();
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
     FlatFileItemWriter<Customer> before50Writer(@Value("#{jobParameters['outputFile2']}") final String outputFile2) {
-        return new FlatFileItemWriterBuilder<Customer>() //
-                .name("itemWriter") //
-                .resource(new FileSystemResource(outputFile2)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("number", "firstName", "lastName", "address", "city", "postCode", "state", "age") //
+        return new FlatFileItemWriterBuilder<Customer>()
+                .name("itemWriter")
+                .resource(new FileSystemResource(outputFile2))
+                .delimited()
+                .delimiter(";")
+                .names("number", "firstName", "lastName", "address", "city", "postCode", "state", "age")
                 .build();
     }
 

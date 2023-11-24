@@ -36,7 +36,8 @@ class MultiLinesLoadJobTest {
         // Given
         JdbcTestUtils.deleteFromTables(jdbcTemplate, "CUSTOMER", "TRANSACTION");
 
-        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("input-file", INPUT_FILE) //
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
+                .addString("input-file", INPUT_FILE) //
                 .toJobParameters();
         // When
         final JobExecution jobExec = testUtils.launchJob(jobParameters);

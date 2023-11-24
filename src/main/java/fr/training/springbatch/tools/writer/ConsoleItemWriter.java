@@ -2,6 +2,7 @@ package fr.training.springbatch.tools.writer;
 
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.lang.NonNull;
 
 public class ConsoleItemWriter<T> implements ItemWriter<T> {
 
@@ -16,7 +17,7 @@ public class ConsoleItemWriter<T> implements ItemWriter<T> {
     }
 
     @Override
-    public void write(final Chunk<? extends T> items) throws Exception {
+    public void write(final @NonNull Chunk<? extends T> items) throws Exception {
         for (final T item : items) {
             System.out.println(String.format("%s%s", message, item.toString()));
         }

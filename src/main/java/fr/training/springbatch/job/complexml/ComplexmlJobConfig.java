@@ -1,5 +1,8 @@
 package fr.training.springbatch.job.complexml;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -37,6 +39,7 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.complexml.model.OperationOrph;
 import fr.training.springbatch.job.complexml.model.Record;
 import fr.training.springbatch.job.complexml.model.RemiseBancaire;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import fr.training.springbatch.tools.writer.NoOpWriter;
 
 @Configuration
@@ -52,11 +55,11 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job complexmlJob(final Step fixXmlFileStep, final Step complexmlStep, final JobRepository jobRepository) {
-        return new JobBuilder(COMPLEX_JOB, jobRepository) //
+        return new JobBuilder(COMPLEX_JOB, jobRepository)
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "xml-file" }, new String[] {})) //
-                .start(fixXmlFileStep) //
-                .next(complexmlStep).listener(reportListener()) //
+                .validator(new JobParameterRequirementValidator("xml-file", required().and(fileExist())))
+                .start(fixXmlFileStep)
+                .next(complexmlStep).listener(reportListener())
                 .build();
     }
 
@@ -64,7 +67,7 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
     @Bean
     Step fixXmlFileStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             @Value("#{jobParameters['xml-file']}") final String xmlFile /* injected by Spring */) {
-        return new StepBuilder("fixXmlFile-step", jobRepository) //
+        return new StepBuilder("fixXmlFile-step", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
 
                     final FileInputStream fis = new FileInputStream(xmlFile);
@@ -82,7 +85,7 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
                     logger.info("work file path is {}", workFile.getAbsoluteFile());
 
                     return RepeatStatus.FINISHED;
-                }, transactionManager).listener(reportListener()) //
+                }, transactionManager).listener(reportListener())
                 .build();
     }
 
@@ -96,21 +99,21 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
 
         return new StepBuilder("complexml-step", jobRepository) //
                 .<Record, Record> chunk(chunkSize, transactionManager) //
-                .reader(complexmlReader) //
-                .processor(processor()) //
-                .writer(complexmlWriter()) //
-                .listener(reportListener()) //
+                .reader(complexmlReader)
+                .processor(processor())
+                .writer(complexmlWriter())
+                .listener(reportListener())
                 .build();
     }
 
     @JobScope // Mandatory for using jobParameters
     @Bean
     StaxEventItemReader<Record> complexmlReader(@Value("#{jobExecutionContext['workfile']}") final String workFile /* injected by Spring */) {
-        return new StaxEventItemReaderBuilder<Record>() //
-                .name("itemReader") //
-                .resource(new FileSystemResource(workFile)) //
-                .addFragmentRootElements("RemiseBancaire", "OperationOrph") //
-                .unmarshaller(jaxbMarshaller()) //
+        return new StaxEventItemReaderBuilder<Record>()
+                .name("itemReader")
+                .resource(new FileSystemResource(workFile))
+                .addFragmentRootElements("RemiseBancaire", "OperationOrph")
+                .unmarshaller(jaxbMarshaller())
                 .build();
 
     }

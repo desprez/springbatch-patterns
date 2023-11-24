@@ -27,7 +27,8 @@ class FilePartitionJobTest {
     @Test
     void launch_PartitionJob_nominal_should_success() throws Exception {
         // Given
-        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("input-path", "csv/big/customer*.csv") //
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
+                .addString("input-path", "csv/big/customer*.csv") //
                 .addString("output-path", "target/output/files/") //
                 .toJobParameters();
         // When

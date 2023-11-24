@@ -28,7 +28,8 @@ class SimpleExtractJobTest {
     void launch_SimpleExtractJob_nominal_should_success() throws Exception {
         // Given
 
-        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()).addString("output-dir", "target/output") //
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
+                .addString("output-dir", "target/output") //
                 .toJobParameters();
         // When
         final JobExecution jobExec = testUtils.launchJob(jobParameters);

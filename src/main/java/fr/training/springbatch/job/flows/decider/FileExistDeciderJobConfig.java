@@ -1,5 +1,8 @@
 package fr.training.springbatch.job.flows.decider;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,12 +38,14 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+
 /**
- * This SpringBatch job configuration ilustrate the JobDecider usage :
+ * This SpringBatch job configuration illustrate the JobDecider usage :
  *
  * Try with emptyItemReader the file will not produced and the job ends.
  *
- * Try with filledItemReader the file will produced and the sendAndArchiveFlow wil be executed.
+ * Try with filledItemReader the file will produced and the sendAndArchiveFlow will be executed.
  *
  */
 @Configuration
@@ -53,7 +58,8 @@ public class FileExistDeciderJobConfig {
 
     @Bean
     Step producerStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final ItemWriter<String> itemWriter) {
-        return new StepBuilder("producer-Step", jobRepository).<String, String> chunk(3, transactionManager) //
+        return new StepBuilder("producer-Step", jobRepository)
+                .<String, String> chunk(3, transactionManager) //
                 .reader(emptyItemReader()) //
                 .writer(itemWriter) //
                 .build();
@@ -93,10 +99,15 @@ public class FileExistDeciderJobConfig {
 
     @Bean
     Flow sendAndArchiveFlow(final JobRepository jobRepository, final PlatformTransactionManager transactionManager) {
-        // @formatter:off
-        return new FlowBuilder<Flow>("send-archive-flow").start(new StepBuilder("send-step", jobRepository).tasklet(sendTasklet(), transactionManager).build())
-                .next(new StepBuilder("archive-step", jobRepository).tasklet(archiveTasklet(), transactionManager).build()).build();
-        // @formatter:on
+
+        return new FlowBuilder<Flow>("send-archive-flow")
+                .start(new StepBuilder("send-step", jobRepository)
+                        .tasklet(sendTasklet(), transactionManager)
+                        .build())
+                .next(new StepBuilder("archive-step", jobRepository)
+                        .tasklet(archiveTasklet(), transactionManager)
+                        .build())
+                .build();
     }
 
     @Bean
@@ -117,17 +128,25 @@ public class FileExistDeciderJobConfig {
 
     @Bean
     Flow mainFlow(final Step producerStep, final Step sendAndArchiveFlow) {
-        // @formatter:off
-        return new FlowBuilder<Flow>("main-flow").start(producerStep).on("*").to(fileExistDecider()).from(fileExistDecider()).on("CONTINUE")
-                .to(sendAndArchiveFlow).from(fileExistDecider()).on("COMPLETED").end().build();
-        // @formatter:on
+
+        return new FlowBuilder<Flow>("main-flow")
+                .start(producerStep).on("*").to(fileExistDecider())
+                .from(fileExistDecider()).on("CONTINUE")
+                .to(sendAndArchiveFlow).from(fileExistDecider()).on("COMPLETED")
+                .end()
+                .build();
+
     }
 
     @Bean
     Job job(final Flow mainFlow, final JobRepository jobRepository) {
-        // @formatter:off
-        return new JobBuilder(EXAMPLE_JOB, jobRepository).start(mainFlow).end().build();
-        // @formatter:on
+
+        return new JobBuilder(EXAMPLE_JOB, jobRepository)
+                .validator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
+                .start(mainFlow)
+                .end()
+                .build();
+
     }
 
     public static void main(final String[] args) throws Exception {
@@ -135,7 +154,9 @@ public class FileExistDeciderJobConfig {
         final JobLauncher jobLauncher = context.getBean(JobLauncher.class);
         final Job job = context.getBean(Job.class);
 
-        final JobParameters jobParameters = new JobParametersBuilder().addString("output-file", "target/output/test.txt").toJobParameters();
+        final JobParameters jobParameters = new JobParametersBuilder()
+                .addString("output-file", "target/output/test.txt")
+                .toJobParameters();
 
         jobLauncher.run(job, jobParameters);
 

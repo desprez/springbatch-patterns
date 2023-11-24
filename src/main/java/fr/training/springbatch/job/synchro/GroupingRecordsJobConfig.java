@@ -1,5 +1,9 @@
 package fr.training.springbatch.job.synchro;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -9,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -20,7 +23,7 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -34,9 +37,11 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.synchro.component.GroupReader;
 import fr.training.springbatch.job.synchro.component.TransactionAccumulator;
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * This job groups all transactions by customer number and exports result to csv file using {@link ItemAccumulator} & {@link GroupReader}
+ * <b>Pattern #6</b> This job groups all transactions by customer number and exports result to csv file using {@link ItemAccumulator} & {@link GroupReader}
  *
  * @author Desprez
  */
@@ -60,7 +65,10 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
     Job groupingRecordJob(final Step groupingRecordStep, final JobRepository jobRepository) {
         return new JobBuilder(GROUPINGRECORD_JOB, jobRepository) //
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "transaction-file", "output-file" }, new String[] {})) //
+                .validator(new AdditiveJobParametersValidatorBuilder()
+                        .addValidator(new JobParameterRequirementValidator("transaction-file", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
+                        .build())
                 .start(groupingRecordStep) //
                 .listener(reportListener()) //
                 .build();
@@ -111,19 +119,15 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemReader<Transaction> transactionReader(@Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
-        return new FlatFileItemReaderBuilder<Transaction>() //
-                .name("transactionReader") //
-                .resource(new FileSystemResource(transactionFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "number", "transactionDate", "amount") //
-                .linesToSkip(1) //
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-                    {
-                        setTargetType(Transaction.class);
-                        setConversionService(localDateConverter());
-                    }
-                }).build();
+        return new FlatFileItemReaderBuilder<Transaction>()
+                .name("transactionReader")
+                .resource(new FileSystemResource(transactionFile))
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "number", "transactionDate", "amount")
+                .linesToSkip(1)
+                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .build();
     }
 
     /**
@@ -133,10 +137,11 @@ public class GroupingRecordsJobConfig extends AbstractJobConfiguration {
      */
     private ItemProcessor<List<Transaction>, TransactionSum> processor() {
         return items -> {
-            final TransactionSum transactionSum = new TransactionSum();
-            final double sum = items.stream().mapToDouble(Transaction::getAmount).sum();
-            transactionSum.setCustomerNumber(items.get(0).getCustomerNumber());
-            transactionSum.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
+            final double sum = items.stream().mapToDouble(Transaction::amount).sum();
+
+            final TransactionSum transactionSum = new TransactionSum(items.get(0).customerNumber(),
+                    new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
+
             logger.debug(transactionSum.toString());
             return transactionSum;
         };

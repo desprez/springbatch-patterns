@@ -104,12 +104,11 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>com.integralblue</groupId>
-			<artifactId>log4jdbc-spring-boot-starter</artifactId>
-			<version>2.0.0</version>
-			<scope>provided</scope>
-		</dependency>
+<dependency>
+    <groupId>com.github.gavlyukovskiy</groupId>
+    <artifactId>p6spy-spring-boot-starter</artifactId>
+    <version>1.9.0</version>
+</dependency>
 
         <!-- add jaxb impl for jdk17 compatibility -->
 		<dependency>

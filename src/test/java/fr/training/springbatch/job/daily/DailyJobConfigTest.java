@@ -33,7 +33,9 @@ class DailyJobConfigTest {
     void launch_DailyJob_nominal_should_success() throws Exception {
         Assertions.setMaxStackTraceElementsDisplayed(800);
         // Given
-        final JobParameters jobParameters = new JobParametersBuilder().addLocalDate("processDate", LocalDate.now()).toJobParameters();
+        final JobParameters jobParameters = new JobParametersBuilder()
+                .addLocalDate("processDate", LocalDate.now())
+                .toJobParameters();
         // When
         final JobExecution jobExec = testUtils.launchJob(jobParameters);
 

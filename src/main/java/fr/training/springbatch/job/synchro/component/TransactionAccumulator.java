@@ -13,7 +13,7 @@ public class TransactionAccumulator extends ItemAccumulator<Transaction, Long> {
 
     @Override
     public Long getKey(final Transaction item) {
-        return item.getCustomerNumber();
+        return item.customerNumber();
     }
 
 }

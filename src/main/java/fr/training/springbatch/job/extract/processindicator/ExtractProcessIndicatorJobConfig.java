@@ -29,7 +29,7 @@ import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitializat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -38,6 +38,9 @@ import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.tasklet.JdbcTasklet;
 
+/**
+ * <b>Pattern #13</b> This pattern use a process indicator to flag processed records (unlike the staging job Processed Column is present in the table)
+ */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ExtractProcessIndicatorJobConfig.EXTRACT_PROCESS_INDICATOR_JOB)
 public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
@@ -58,10 +61,10 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     @Bean
     Job extractProcessIndicatorJob(final Step extractProcessIndicatorStep, final Step processedRemoverStep, final JobRepository jobRepository) {
         return new JobBuilder(EXTRACT_PROCESS_INDICATOR_JOB, jobRepository) //
-                .incrementer(new RunIdIncrementer()) //
-                .start(extractProcessIndicatorStep) //
-                .next(processedRemoverStep) //
-                .listener(reportListener()) //
+                .incrementer(new RunIdIncrementer())
+                .start(extractProcessIndicatorStep)
+                .next(processedRemoverStep)
+                .listener(reportListener())
                 .build();
     }
 
@@ -71,18 +74,18 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
 
         return new StepBuilder("extract-process-indicator-step", jobRepository) //
                 .<Transaction, Transaction> chunk(chunkSize, transactionManager) //
-                .reader(unprocessedReader) //
-                .processor(processedMarker()) //
-                .writer(csvFileWriter) //
-                .listener(reportListener()) //
+                .reader(unprocessedReader)
+                .processor(processedMarker())
+                .writer(csvFileWriter)
+                .listener(reportListener())
                 .build();
     }
 
     @Bean
     Step processedRemoverStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager) {
 
-        return new StepBuilder("processedRemover-step", jobRepository) //
-                .tasklet(processedItemsRemover(), transactionManager) //
+        return new StepBuilder("processedRemover-step", jobRepository)
+                .tasklet(processedItemsRemover(), transactionManager)
                 .build();
 
     }
@@ -94,12 +97,12 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     @DependsOnDatabaseInitialization
     JdbcPagingItemReader<Transaction> unprocessedReader(final DataSource dataSource, final PagingQueryProvider queryProvider) {
 
-        return new JdbcPagingItemReaderBuilder<Transaction>() //
-                .name("unprocessedReader") //
-                .dataSource(dataSource) //
-                .pageSize(chunkSize) //
-                .queryProvider(queryProvider)//
-                .rowMapper(new BeanPropertyRowMapper<>(Transaction.class)) //
+        return new JdbcPagingItemReaderBuilder<Transaction>()
+                .name("unprocessedReader")
+                .dataSource(dataSource)
+                .pageSize(chunkSize)
+                .queryProvider(queryProvider)
+                .rowMapper(new DataClassRowMapper<>(Transaction.class))
                 .build();
 
     }
@@ -144,8 +147,8 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     private void markAsProcessed(final Transaction item) {
         jdbcTemplate.update("UPDATE Transaction SET processed=? WHERE customer_number=? AND number=?", (PreparedStatementSetter) ps -> {
             ps.setString(1, DONE);
-            ps.setLong(2, item.getCustomerNumber());
-            ps.setString(3, item.getNumber());
+            ps.setLong(2, item.customerNumber());
+            ps.setString(3, item.number());
         });
     }
 
@@ -156,13 +159,13 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemWriter<Transaction> csvFileWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
-        return new FlatFileItemWriterBuilder<Transaction>() //
-                .name("csvFileWriter") //
-                .resource(new FileSystemResource(outputFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "number", "transactionDate", "amount") //
-                .headerCallback(writer -> writer.write("customerNumber;number;transactionDate;amount")) //
+        return new FlatFileItemWriterBuilder<Transaction>()
+                .name("csvFileWriter")
+                .resource(new FileSystemResource(outputFile))
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "number", "transactionDate", "amount")
+                .headerCallback(writer -> writer.write("customerNumber;number;transactionDate;amount"))
                 .build();
     }
 

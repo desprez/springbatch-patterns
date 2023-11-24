@@ -1,5 +1,8 @@
 package fr.training.springbatch.job.update;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -10,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -37,9 +39,13 @@ import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.listener.ItemCountListener;
 import fr.training.springbatch.tools.listener.RejectFileSkipListener;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
+ * <b>Pattern #22</b> The purpose of this Job is to update table from file data. It involve a {@link RejectFileSkipListener} to put rejected datas to a file.
  *
+ * @author Desprez
  */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = SimpleUpdateJobConfig.SIMPLE_UPDATE_JOB)
@@ -57,11 +63,14 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job simpleImportJob(final Step updateStep, final JobRepository jobRepository) {
-        return new JobBuilder(SIMPLE_UPDATE_JOB, jobRepository) //
-                .incrementer(new RunIdIncrementer()) //
-                .validator(new DefaultJobParametersValidator(new String[] { "input-file", "rejectfile" }, new String[] {})) //
-                .start(updateStep) //
-                .listener(reportListener()) //
+        return new JobBuilder(SIMPLE_UPDATE_JOB, jobRepository)
+                .incrementer(new RunIdIncrementer())
+                .validator(new AdditiveJobParametersValidatorBuilder()
+                        .addValidator(new JobParameterRequirementValidator("input-file", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("rejectfile", required()))
+                        .build())
+                .start(updateStep)
+                .listener(reportListener())
                 .build();
     }
 
@@ -69,16 +78,16 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
     Step updateStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final ItemReader<Customer> updateReader, //
             final ItemWriter<Customer> updateWriter, final RejectFileSkipListener<Customer, Customer> rejectListener) {
 
-        return new StepBuilder("simple-update-step", jobRepository) //
-                .<Customer, Customer> chunk(chunkSize, transactionManager) //
-                .reader(updateReader) //
-                .processor(updateProcessor()) //
-                .writer(updateWriter) //
-                .faultTolerant() //
+        return new StepBuilder("simple-update-step", jobRepository)
+                .<Customer, Customer> chunk(chunkSize, transactionManager)
+                .reader(updateReader)
+                .processor(updateProcessor())
+                .writer(updateWriter)
+                .faultTolerant()
                 // .skipPolicy(new AlwaysSkipItemSkipPolicy())
-                .skipLimit(100) //
-                .skip(RuntimeException.class).listener(progressListener()) //
-                .listener(rejectListener) //
+                .skipLimit(100)
+                .skip(RuntimeException.class).listener(progressListener())
+                .listener(rejectListener)
                 .build();
     }
 
@@ -110,12 +119,12 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
     @Bean
     FlatFileItemReader<Customer> updateReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
 
-        return new FlatFileItemReaderBuilder<Customer>() //
-                .name("simpleUpdateReader") //
-                .resource(new FileSystemResource(inputFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("number", "birthDate") //
+        return new FlatFileItemReaderBuilder<Customer>()
+                .name("simpleUpdateReader")
+                .resource(new FileSystemResource(inputFile))
+                .delimited()
+                .delimiter(";")
+                .names("number", "birthDate")
                 .linesToSkip(1) //
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {
                     {
@@ -129,16 +138,16 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
     @DependsOnDatabaseInitialization
     JdbcBatchItemWriter<Customer> updateWriter() {
 
-        return new JdbcBatchItemWriterBuilder<Customer>() //
-                .dataSource(dataSource).sql("UPDATE Customer SET birth_date = :birthDate WHERE number = :number")
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>()) //
+        return new JdbcBatchItemWriterBuilder<Customer>()
+                .dataSource(dataSource)
+                .sql("UPDATE Customer SET birth_date = :birthDate WHERE number = :number")
+                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
                 .build();
     }
 
     @StepScope // Mandatory for using jobParameters
     @Bean
     RejectFileSkipListener<Customer, Customer> rejectListener(@Value("#{jobParameters['rejectfile']}") final String rejectfile) throws IOException {
-
         return new RejectFileSkipListener<>(new File(rejectfile));
     }
 

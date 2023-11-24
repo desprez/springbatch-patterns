@@ -38,16 +38,16 @@ public class ExploreJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job dailyjob(final Step exploreStep, final JobRepository jobRepository) {
-        return new JobBuilder(EXPLORE_JOB, jobRepository) //
-                .incrementer(new RunIdIncrementer()) //
-                .start(exploreStep) //
+        return new JobBuilder(EXPLORE_JOB, jobRepository)
+                .incrementer(new RunIdIncrementer())
+                .start(exploreStep)
                 .build();
     }
 
     @Bean
     Step exploreStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final Tasklet explorerTasklet) {
-        return new StepBuilder("explore-step", jobRepository) //
-                .tasklet(explorerTasklet, transactionManager) //
+        return new StepBuilder("explore-step", jobRepository)
+                .tasklet(explorerTasklet, transactionManager)
                 .build();
     }
 
@@ -75,10 +75,10 @@ public class ExploreJobConfig extends AbstractJobConfiguration {
 
             for (final JobInstance instance : instances) {
                 final List<JobExecution> jobExecutions = explorer.getJobExecutions(instance);
-                logger.info("Instance {} had {} executions", instance.getInstanceId(), jobExecutions.size());
+                logger.info("Instance {} had {} executions : parameters {}", instance.getInstanceId(), jobExecutions.size());
 
                 for (final JobExecution jobExecution : jobExecutions) {
-                    logger.info("\tExecution {} resulted in ExitStatus {}", jobExecution.getId(), jobExecution.getExitStatus());
+                    logger.info("\tExecution {} ", jobExecution);
                 }
             }
 

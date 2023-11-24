@@ -45,8 +45,8 @@ class SimpleLoadJobTest {
     void launch_SimpleLoadJob_nominal_should_success() throws Exception {
         // Given
         final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-                .addString("input-file", "src/main/resources/csv/transaction.csv") //
-                .addString("rejectfile", REJECT_FILE_PATH) //
+                .addString("input-file", "src/main/resources/csv/transaction.csv")
+                .addString("rejectfile", REJECT_FILE_PATH)
                 .toJobParameters();
         // When
         final JobExecution jobExec = testUtils.launchJob(jobParameters);

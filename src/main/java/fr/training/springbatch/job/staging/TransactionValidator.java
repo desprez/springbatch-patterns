@@ -17,10 +17,10 @@ public class TransactionValidator implements Validator {
     @Override
     public void validate(final Object target, final Errors errors) {
         final Transaction transaction = (Transaction) target;
-        if (transaction.getNumber().length() != 8) {
+        if (transaction.number().length() != 8) {
             errors.rejectValue("number", "number_length");
         }
-        if (transaction.getTransactionDate().isAfter(LocalDate.now())) {
+        if (transaction.transactionDate().isAfter(LocalDate.now())) {
             errors.rejectValue("transactionDate", "transactionDate_future");
         }
     }

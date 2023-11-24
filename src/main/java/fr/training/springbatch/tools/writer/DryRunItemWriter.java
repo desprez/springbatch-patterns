@@ -4,6 +4,7 @@ import static org.springframework.util.Assert.notNull;
 
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.lang.NonNull;
 
 /**
  * Generic {@link ItemWriter} that write conditionaly by delegating to a real ItemWriter if a dryrun flag is set.
@@ -27,7 +28,7 @@ public class DryRunItemWriter<T> implements ItemWriter<T> {
     private ItemWriter<T> delegate;
 
     @Override
-    public void write(final Chunk<? extends T> items) throws Exception {
+    public void write(final @NonNull Chunk<? extends T> items) throws Exception {
         notNull(delegate, "delegate is required");
         if (!dryrun) {
             delegate.write(items);

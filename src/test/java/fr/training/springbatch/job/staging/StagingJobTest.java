@@ -40,7 +40,8 @@ class StagingJobTest {
         final int before = JdbcTestUtils.countRowsInTable(jdbcTemplate, "BATCH_STAGING");
 
         final JobParameters jobParameters = new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString("input-file", "src/main/resources/csv/transaction.csv").toJobParameters();
+                .addString("input-file", "src/main/resources/csv/transaction.csv")
+                .toJobParameters();
 
         final JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters);
 

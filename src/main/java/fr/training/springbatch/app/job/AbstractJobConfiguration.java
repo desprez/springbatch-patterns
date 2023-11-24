@@ -4,11 +4,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.batch.core.converter.JobParametersConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 
+import fr.training.springbatch.converter.AugmentedJobParametersConverter;
 import fr.training.springbatch.tools.listener.ItemCountListener;
 import fr.training.springbatch.tools.listener.JobReportListener;
 
@@ -55,5 +57,10 @@ public abstract class AbstractJobConfiguration {
             }
         });
         return dcs;
+    }
+    
+    @Bean
+    protected JobParametersConverter augmentedJobParametersConverter() {
+        return new AugmentedJobParametersConverter();
     }
 }

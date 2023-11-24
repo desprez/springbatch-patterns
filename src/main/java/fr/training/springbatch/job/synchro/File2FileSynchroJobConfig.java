@@ -1,5 +1,9 @@
 package fr.training.springbatch.job.synchro;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -8,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -19,7 +22,7 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -32,9 +35,11 @@ import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.job.synchro.component.MasterDetailReader;
 import fr.training.springbatch.tools.synchro.CompositeAggregateReader;
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 2 flat files that share the same "customer number" key.
+ * <b>Pattern #3</b> Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 2 flat files that share the same "customer number" key.
  * <ul>
  * <li>one master file : customer csv file</li>
  * <li>one detail file : transaction csv file</li>
@@ -62,11 +67,15 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      */
     @Bean
     Job file2FileSynchroJob(final Step file2FileSynchroStep, final JobRepository jobRepository) {
-        return new JobBuilder(FILE2FILE_SYNCHRO_JOB, jobRepository) //
+        return new JobBuilder(FILE2FILE_SYNCHRO_JOB, jobRepository)
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "customer-file", "transaction-file", "output-file" }, new String[] {})) //
-                .start(file2FileSynchroStep) //
-                .listener(reportListener()) //
+                .validator(new AdditiveJobParametersValidatorBuilder()
+                        .addValidator(new JobParameterRequirementValidator("customer-file", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("transaction-file", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
+                        .build())
+                .start(file2FileSynchroStep)
+                .listener(reportListener())
                 .build();
     }
 
@@ -81,12 +90,12 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
     Step file2FileSynchroStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader, final ItemWriter<Customer> customerWriter) {
 
-        return new StepBuilder("file2filesynchro-step", jobRepository) //
-                .<Customer, Customer> chunk(chunkSize, transactionManager) //
-                .reader(masterDetailReader) //
-                .processor(processor()) //
-                .writer(customerWriter) //
-                .listener(reportListener()) //
+        return new StepBuilder("file2filesynchro-step", jobRepository)
+                .<Customer, Customer> chunk(chunkSize, transactionManager)
+                .reader(masterDetailReader)
+                .processor(processor())
+                .writer(customerWriter)
+                .listener(reportListener())
                 .build();
     }
 
@@ -99,14 +108,14 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
     @Bean
     FlatFileItemReader<Customer> customerReader(@Value("#{jobParameters['customer-file']}") final String customerFile) {
 
-        return new FlatFileItemReaderBuilder<Customer>() //
-                .name("customerReader") //
-                .resource(new FileSystemResource(customerFile)) //
-                .delimited() //
-                .delimiter(";") //
+        return new FlatFileItemReaderBuilder<Customer>()
+                .name("customerReader")
+                .resource(new FileSystemResource(customerFile))
+                .delimited()
+                .delimiter(";")
                 .names("number", "firstName", "lastName", "address", "city", "state", "postCode") //
-                .linesToSkip(1) //
-                .targetType(Customer.class) //
+                .linesToSkip(1)
+                .targetType(Customer.class)
                 .build();
     }
 
@@ -114,19 +123,15 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
     @Bean
     FlatFileItemReader<Transaction> transactionReader(@Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
-        return new FlatFileItemReaderBuilder<Transaction>() //
-                .name("transactionReader") //
-                .resource(new FileSystemResource(transactionFile)) //
-                .delimited() //
-                .delimiter(";") //
-                .names("customerNumber", "number", "transactionDate", "amount") //
-                .linesToSkip(1) //
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-                    {
-                        setTargetType(Transaction.class);
-                        setConversionService(localDateConverter());
-                    }
-                }).build();
+        return new FlatFileItemReaderBuilder<Transaction>()
+                .name("transactionReader")
+                .resource(new FileSystemResource(transactionFile))
+                .delimited()
+                .delimiter(";")
+                .names("customerNumber", "number", "transactionDate", "amount")
+                .linesToSkip(1)
+                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .build();
     }
 
     /**
@@ -136,9 +141,9 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      */
     private ItemProcessor<Customer, Customer> processor() {
         return customer -> {
-            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::getAmount).sum();
-            customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
-            logger.debug(customer.toString());
+            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::amount).sum();
+            customer.setBalance(BigDecimal.valueOf(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
+            logger.debug("Customer {}", customer);
             return customer;
         };
     }
@@ -152,12 +157,13 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
     @Bean
     FlatFileItemWriter<Customer> customerWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
 
-        return new FlatFileItemWriterBuilder<Customer>().name("customerWriter").resource(new FileSystemResource(outputFile)) //
-                .delimited() //
-                .delimiter(";") //
+        return new FlatFileItemWriterBuilder<Customer>()
+                .name("customerWriter")
+                .resource(new FileSystemResource(outputFile))
+                .delimited()
+                .delimiter(";")
                 .names("number", "firstName", "lastName", "address", "city", "state", "postCode", "balance") //
                 .build();
-
     }
 
 }

@@ -1,5 +1,9 @@
 package fr.training.springbatch.job.synchro;
 
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -10,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -37,9 +40,11 @@ import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.job.synchro.component.MasterDetailReader;
 import fr.training.springbatch.tools.synchro.CompositeAggregateReader;
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 1 File and 1 table who share the same "customer number" key.
+ * <b>Pattern #4</b> Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 1 File and 1 table who share the same "customer number" key.
  * <ul>
  * <li>one master file : customer csv file</li>
  * <li>one detail table : transaction</li>
@@ -70,11 +75,14 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      */
     @Bean
     Job file2TableSynchroJob(final Step file2TableSynchroStep, final JobRepository jobRepository) {
-        return new JobBuilder(FILE2TABLE_SYNCHRO_JOB, jobRepository) //
+        return new JobBuilder(FILE2TABLE_SYNCHRO_JOB, jobRepository)
                 .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
-                .validator(new DefaultJobParametersValidator(new String[] { "customer-file", "output-file" }, new String[] {})) //
-                .start(file2TableSynchroStep) //
-                .listener(reportListener()) //
+                .validator(new AdditiveJobParametersValidatorBuilder()
+                        .addValidator(new JobParameterRequirementValidator("customer-file", required().and(fileExist())))
+                        .addValidator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
+                        .build())
+                .start(file2TableSynchroStep)
+                .listener(reportListener())
                 .build();
     }
 
@@ -90,12 +98,12 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
             final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader,
             final ItemWriter<? super Customer> customerWriter /* injected by Spring */) {
 
-        return new StepBuilder("file2tablesynchro-step", jobRepository) //
-                .<Customer, Customer> chunk(chunkSize, transactionManager) //
-                .reader(masterDetailReader) //
-                .processor(processor()) //
-                .writer(customerWriter) //
-                .listener(reportListener()) //
+        return new StepBuilder("file2tablesynchro-step", jobRepository)
+                .<Customer, Customer> chunk(chunkSize, transactionManager)
+                .reader(masterDetailReader)
+                .processor(processor())
+                .writer(customerWriter)
+                .listener(reportListener())
                 .build();
     }
 
@@ -133,11 +141,11 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
                 .name("transactionReader") //
                 .sql("SELECT * FROM TRANSACTION ORDER BY CUSTOMER_NUMBER") //
                 .rowMapper((rs, rowNum) -> {
-                    final Transaction transaction = new Transaction();
-                    transaction.setCustomerNumber(rs.getLong("CUSTOMER_NUMBER"));
-                    transaction.setNumber(rs.getString("NUMBER"));
-                    transaction.setTransactionDate(rs.getDate("TRANSACTION_DATE").toLocalDate());
-                    transaction.setAmount(rs.getDouble("AMOUNT"));
+                    final Transaction transaction = new Transaction(rs.getLong("CUSTOMER_NUMBER"),
+                            rs.getString("NUMBER"),
+                            rs.getDate("TRANSACTION_DATE").toLocalDate(),
+                            rs.getDouble("AMOUNT"));
+
                     return transaction;
                 }).build();
     }
@@ -181,7 +189,7 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      */
     private ItemProcessor<Customer, Customer> processor() {
         return customer -> {
-            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::getAmount).sum();
+            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::amount).sum();
             customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
             logger.debug(customer.toString());
             return customer;
