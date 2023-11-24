@@ -175,7 +175,7 @@ It use a **PatternMatchingCompositeLineMapper** to map each line with a record T
 
 [PruneHistoryJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/history/PruneHistoryJobConfig.java)
 
-This job use the revisited Spring-Batch 5.x RemoveSpringBatchHistoryTasklet to remove the old entries in the Spring-batch metadatas tables.
+This job use the revisited Spring-Batch 5.x **RemoveSpringBatchHistoryTasklet** to remove the old entries in the Spring-batch metadatas tables.
 
 ## Pattern 21
 
@@ -190,6 +190,10 @@ The purpose of this Job is to update table from file data. It involve a **Reject
 
 ## Pattern 23
 [UpsertJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/update/UpsertJobConfig.java)
+
+This job illustrates usage of the SQL **Upsert** command in a batch.
+ 
+**Note:** this command is not present in all database engines. For example, it is present in PostgreSQL but not in H2 or the syntax differs !!!.
 
 
 ## Some usefull tools can be used in patterns
