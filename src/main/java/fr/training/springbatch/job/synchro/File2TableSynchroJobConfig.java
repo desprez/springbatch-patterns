@@ -44,7 +44,7 @@ import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBui
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 1 File and 1 table who share the same "customer number" key.
+ * <b>Pattern #4</b> Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 1 File and 1 table who share the same "customer number" key.
  * <ul>
  * <li>one master file : customer csv file</li>
  * <li>one detail table : transaction</li>
@@ -141,11 +141,11 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
                 .name("transactionReader") //
                 .sql("SELECT * FROM TRANSACTION ORDER BY CUSTOMER_NUMBER") //
                 .rowMapper((rs, rowNum) -> {
-                    final Transaction transaction = new Transaction();
-                    transaction.setCustomerNumber(rs.getLong("CUSTOMER_NUMBER"));
-                    transaction.setNumber(rs.getString("NUMBER"));
-                    transaction.setTransactionDate(rs.getDate("TRANSACTION_DATE").toLocalDate());
-                    transaction.setAmount(rs.getDouble("AMOUNT"));
+                    final Transaction transaction = new Transaction(rs.getLong("CUSTOMER_NUMBER"),
+                            rs.getString("NUMBER"),
+                            rs.getDate("TRANSACTION_DATE").toLocalDate(),
+                            rs.getDouble("AMOUNT"));
+
                     return transaction;
                 }).build();
     }
@@ -189,7 +189,7 @@ public class File2TableSynchroJobConfig extends AbstractSynchroJob {
      */
     private ItemProcessor<Customer, Customer> processor() {
         return customer -> {
-            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::getAmount).sum();
+            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::amount).sum();
             customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
             logger.debug(customer.toString());
             return customer;

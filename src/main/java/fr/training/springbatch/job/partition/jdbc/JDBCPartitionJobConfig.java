@@ -30,7 +30,9 @@ import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 
 /**
+ * <b>Pattern #15</b>
  *
+ * @author Desprez
  */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = JDBCPartitionJobConfig.PARTITION_JOB)
@@ -53,11 +55,11 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
     @Bean
     Step masterStep(final JobRepository jobRepository, final Step slaveStep) {
 
-        return new StepBuilder("master-step", jobRepository) //
-                .partitioner(slaveStep.getName(), partitioner()) //
-                .step(slaveStep) //
-                .gridSize(4) //
-                .taskExecutor(new SimpleAsyncTaskExecutor()) //
+        return new StepBuilder("master-step", jobRepository)
+                .partitioner(slaveStep.getName(), partitioner())
+                .step(slaveStep)
+                .gridSize(4)
+                .taskExecutor(new SimpleAsyncTaskExecutor())
                 .build();
     }
 
@@ -66,10 +68,10 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
     Step slaveStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager, final ItemReader<Customer> pagingItemReader,
             final JdbcBatchItemWriter<Customer> customerItemWriter) {
 
-        return new StepBuilder("slave-step", jobRepository) //
-                .<Customer, Customer> chunk(1000, transactionManager) //
-                .reader(pagingItemReader) //
-                .writer(customerItemWriter) //
+        return new StepBuilder("slave-step", jobRepository)
+                .<Customer, Customer> chunk(1000, transactionManager)
+                .reader(pagingItemReader)
+                .writer(customerItemWriter)
                 .build();
     }
 
@@ -121,12 +123,12 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
     @Bean
     @DependsOnDatabaseInitialization
     JdbcBatchItemWriter<Customer> customerItemWriter() {
-        return new JdbcBatchItemWriterBuilder<Customer>() //
+
+        return new JdbcBatchItemWriterBuilder<Customer>()
                 .dataSource(dataSource)
                 .sql("INSERT INTO new_customer( first_name, last_name, address, city, post_code, state, number) VALUES (:firstName, :lastName, :address, :city, :postCode, :state, :number)")
-                .beanMapped() //
+                .beanMapped()
                 .build();
-
     }
 
 }

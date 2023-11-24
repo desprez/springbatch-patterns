@@ -26,7 +26,9 @@ import fr.training.springbatch.tools.listener.ElapsedTimeJobListener;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * This job is configured to run once per day and prevent to not be launch twice.
+ * <b>Pattern #11</b> This job is configured to run once per day and prevent to not be launch twice.
+ *
+ * @author Desprez
  */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = DailyJobConfig.DAILY_JOB)

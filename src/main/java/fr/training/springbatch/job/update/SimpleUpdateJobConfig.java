@@ -43,7 +43,9 @@ import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBui
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
+ * <b>Pattern #22</b> The purpose of this Job is to update table from file data. It involve a {@link RejectFileSkipListener} to put rejected datas to a file.
  *
+ * @author Desprez
  */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = SimpleUpdateJobConfig.SIMPLE_UPDATE_JOB)

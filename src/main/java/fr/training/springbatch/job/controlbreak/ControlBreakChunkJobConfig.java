@@ -19,7 +19,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.batch.item.support.SingleItemPeekableItemReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -113,7 +113,7 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
     ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy(final SingleItemPeekableItemReader<Transaction> controlBreakReader) {
         final ItemPeekingCompletionPolicyReader<Transaction> policy = new ItemPeekingCompletionPolicyReader<>();
         policy.setDelegate(controlBreakReader);
-        policy.setBreakKeyStrategy((item1, item2) -> !item1.getCustomerNumber().equals(item1.getCustomerNumber()));
+        policy.setBreakKeyStrategy((item1, item2) -> !item1.customerNumber().equals(item1.customerNumber()));
         return policy;
     }
 
@@ -136,13 +136,9 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
                 .delimited()
                 .delimiter(";")
                 .names("customerNumber", "number", "transactionDate", "amount")
-                .linesToSkip(1) //
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-                    {
-                        setTargetType(Transaction.class);
-                        setConversionService(localDateConverter());
-                    }
-                }).build();
+                .linesToSkip(1)
+                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .build();
     }
 
     /**

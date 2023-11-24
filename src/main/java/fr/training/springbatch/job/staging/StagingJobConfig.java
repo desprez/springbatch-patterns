@@ -21,7 +21,7 @@ import org.springframework.batch.item.database.support.DataFieldMaxValueIncremen
 import org.springframework.batch.item.database.support.DefaultDataFieldMaxValueIncrementerFactory;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.batch.item.validator.SpringValidator;
 import org.springframework.batch.item.validator.ValidatingItemProcessor;
 import org.springframework.batch.support.DatabaseType;
@@ -49,7 +49,7 @@ import fr.training.springbatch.tools.staging.StagingItemWriter;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * This pattern is a java configuration adaptation of the [Spring-batch
+ * <b>Pattern #10</b> This pattern is a java configuration adaptation of the [Spring-batch
  * parallelJob.xml](https://github.com/spring-projects/spring-batch/blob/c4b001b732c8a4127e6a2a99e2fd00fff510f629/spring-batch-samples/src/main/resources/jobs/parallelJob.xml)
  * config.
  */
@@ -131,12 +131,8 @@ public class StagingJobConfig extends AbstractJobConfiguration {
                 .delimiter(";")
                 .names("customerNumber", "number", "transactionDate", "amount")
                 .linesToSkip(1)
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-                    {
-                        setTargetType(Transaction.class);
-                        setConversionService(localDateConverter());
-                    }
-                }).build();
+                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .build();
     }
 
     @Bean("fixedValidator")

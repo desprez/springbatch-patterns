@@ -22,7 +22,7 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -39,7 +39,7 @@ import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBui
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 2 flat files that share the same "customer number" key.
+ * <b>Pattern #3</b> Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 2 flat files that share the same "customer number" key.
  * <ul>
  * <li>one master file : customer csv file</li>
  * <li>one detail file : transaction csv file</li>
@@ -124,18 +124,14 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
     FlatFileItemReader<Transaction> transactionReader(@Value("#{jobParameters['transaction-file']}") final String transactionFile /* injected by Spring */) {
 
         return new FlatFileItemReaderBuilder<Transaction>()
-                .name("transactionReader") //
+                .name("transactionReader")
                 .resource(new FileSystemResource(transactionFile))
                 .delimited()
                 .delimiter(";")
                 .names("customerNumber", "number", "transactionDate", "amount")
                 .linesToSkip(1)
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-                    {
-                        setTargetType(Transaction.class);
-                        setConversionService(localDateConverter());
-                    }
-                }).build();
+                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .build();
     }
 
     /**
@@ -145,7 +141,7 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
      */
     private ItemProcessor<Customer, Customer> processor() {
         return customer -> {
-            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::getAmount).sum();
+            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::amount).sum();
             customer.setBalance(BigDecimal.valueOf(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
             logger.debug("Customer {}", customer);
             return customer;
@@ -168,7 +164,6 @@ public class File2FileSynchroJobConfig extends AbstractSynchroJob {
                 .delimiter(";")
                 .names("number", "firstName", "lastName", "address", "city", "state", "postCode", "balance") //
                 .build();
-
     }
 
 }

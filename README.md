@@ -8,18 +8,18 @@ It use **postgreSQL** database and **H2** for tests.
 
 ## Introduction
 
-## Pattern 1 : Export Job
+## Pattern 1 : Extract Job
 
 ![alt text](./images/simpleExtractJob.svg "Extract Job")
 
 [SimpleExtractJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/extract/SimpleExtractJobConfig.java)
 
-This is the simplest job configuration (no really inovation here).
+This is the simplest job configuration (no really innovation here).
 One step use the reader / processor / writer pattern to read a database table and write the content "as is" to a comma separated flat file.
 
 **Specificity :** the **incrementalFilename** method get an unique filename resource according to a file name and a job unique run identifier (Must be used in conjunction with RunIdIncrementer).
 
-## Pattern 2 : Import Job
+## Pattern 2 : Load Job
 
 ![alt text](./images/simpleLoadJob.svg "Load Job")
 
@@ -37,9 +37,9 @@ The 1st Step (deleteStep) erase table records before the "load" Step. It use a *
 
 This configuration may not be very usual but it can be interesting when you want to aggregate 2 files that share the same key. Typically with a master file and a detail file (ie Orders and OrderLines).
 
-This job configuation use a **MasterDetailReader** Class to drive a master accumulator (CustomerAccumulator) and a Detail accumulator (TransactionAccumulator). These classes inherit from **ItemAccumulator**, a generic class used to define the shared key between master and detail objects.
+This job configuration use a **MasterDetailReader** Class to drive a master accumulator (CustomerAccumulator) and a Detail accumulator (TransactionAccumulator). These classes inherit from **ItemAccumulator**, a generic class used to define the shared key between master and detail objects.
 
-In this way, complete object should be filled entierely by the reader.
+In this way, complete object should be filled entirely by the reader.
 
 **MasterDetailReader** uses the delegator pattern to delegate the reading to a specialized reader (flatfile, jdbc, ...or whatever)
 
@@ -75,7 +75,7 @@ This pattern reads items packets that share the same key and returns lists that 
 
 [SQLJoinSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/synchro/SQLJoinSynchroJobConfig.java)
 
-With this pattern, a grouping SQL query sumarize the transactions to compute the customer balance.
+With this pattern, a grouping SQL query summarize the transactions to compute the customer balance.
 
 No processor usage.
 
@@ -93,7 +93,7 @@ Another way to return Transactions list from the reader (similar to groupingReco
 
 [MultiFixedRecordJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/fixedsize/MultiFixedRecordJobConfig.java)
 
-This pattern show the way to read and write a multirecords fixed lenght file (like COBOL files). This job use a **PatternMatchingCompositeLineMapper** to map line with a record Type (ie: 00 for header, 01 for details and 99 for footer).
+This pattern show the way to read and write a multirecords fixed length file (like COBOL files). This job use a **PatternMatchingCompositeLineMapper** to map line with a record Type (ie: 00 for header, 01 for details and 99 for footer).
 
 
 ## Pattern 10 : Staging Job
@@ -122,7 +122,7 @@ This pattern show how to configure a job that run once per day and prevent to no
 
 [MultiFilesLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/load/MultiFilesLoadJobConfig.java)
 
-This Job load Transaction csv files present in a directory sequentialy insert each read line in a Transaction Table. It use **MultiResourceItemReader** class to loop over all files found and delegate the file loading the to a reader.
+This Job load Transaction csv files present in a directory sequentially insert each read line in a Transaction Table. It use **MultiResourceItemReader** class to loop over all files found and delegate the file loading the to a reader.
 
 ## Pattern 13 : Extract with Process Indicator Job
 
@@ -148,7 +148,48 @@ This pattern use **MultiResourcePartitioner** to create partitions upon files pr
 
 Imagine that you receive a different file every day from your partner with all the data.
 
-And that you have to update your system with the added or deleted data, this is exactly what this job does, it compute the delta between the file recevied at day N-1 with the file received at day N (usually used in companies that use files to transmit data).
+And that you have to update your system with the added or deleted data, this is exactly what this job does, it compute the delta between the file received at day N-1 with the file received at day N (usually used in companies that use files to transmit data).
+
+## Pattern 17
+
+[MultiDestinationJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/multidestinationjob/MultiDestinationJobConfig.java)
+
+This job use a custom **Classifier** to distinguish customers and a **ClassifierCompositeItemWriter** to route items to the according itemWriter.
+ 
+## Pattern 18
+
+[MultiLinesExtractJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/multilinesrecord/MultiLinesExtractJobConfig.java)
+
+This job allows you to write records of different types from 2 tables to a file. The records from the master table are read by the
+***JdbcCursorItemReader*** and the ***ItemProcessor*** complete with the records from the detail table. A Custom ***ItemWriter*** is responsible for writing the aggregated data.
+
+## Pattern 19
+
+[MultiLinesLoadJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/multilinesrecord/MultiLinesLoadJobConfig.java)
+
+This job allows to load records of different types from the same file and load them into their respective tables.
+
+It use a **PatternMatchingCompositeLineMapper** to map each line with a record Type and a **ClassifierCompositeItemWriter** to choose what table to insert with.
+
+## Pattern 20
+
+[PruneHistoryJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/history/PruneHistoryJobConfig.java)
+
+This job use the revisited Spring-Batch 5.x RemoveSpringBatchHistoryTasklet to remove the old entries in the Spring-batch metadatas tables.
+
+## Pattern 21
+
+[RemoveOneJobHistoryJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/history/RemoveOneJobHistoryJobConfig.java)
+
+This job is a variation of the previous one. It use the **RemoveOneJobHistoryTasklet** to remove the all metadatas tables entries  according to **a given job name**.
+ 
+## Pattern 22
+[SimpleUpdateJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/update/SimpleUpdateJobConfig.java)
+
+The purpose of this Job is to update table from file data. It involve a **RejectFileSkipListener** to put rejected datas to a file.
+
+## Pattern 23
+[UpsertJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/update/UpsertJobConfig.java)
 
 
 ## Some usefull tools can be used in patterns
@@ -156,7 +197,7 @@ And that you have to update your system with the added or deleted data, this is 
 ### Tasklets
 All the classes below _have a JUnit test_ that shows how they work.
 
-- [RemoveSpringBatchHistoryTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/RemoveSpringBatchHistoryTasklet.java) updated version of the [Antoine Rey's original](https://github.com/arey/spring-batch-toolkit/blob/master/src/main/java/com/javaetmoi/core/batch/tasklet/RemoveSpringBatchHistoryTasklet.java)
+- [RemoveSpringBatchHistoryTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/RemoveSpringBatchHistoryTasklet.java) revisited Spring-Batch 5.x version of the [Antoine Rey's original](https://github.com/arey/spring-batch-toolkit/blob/master/src/main/java/com/javaetmoi/core/batch/tasklet/RemoveSpringBatchHistoryTasklet.java)
 
 
 - [AnalyzePGTasklet.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/tasklet/AnalyzePGTasklet.java) to force **PostgreSQL** to _Analyse_ the given tables after heavy loading.

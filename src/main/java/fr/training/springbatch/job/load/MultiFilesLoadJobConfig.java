@@ -30,7 +30,7 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * This Job load Transaction csv files present in a directory sequentialy insert each read line in a Transaction Table.
+ * <b>Pattern #12</b> This Job load Transaction csv files present in a directory sequentially insert each read line in a Transaction Table.
  *
  * @author desprez
  */

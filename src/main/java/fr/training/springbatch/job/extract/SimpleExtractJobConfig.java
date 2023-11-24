@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.WritableResource;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
 
@@ -37,10 +37,9 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * This is the simplest job configuration (no really innovation here). One step use the reader / processor / writer pattern to read a database table and write
- * the content "as is" to a comma separated flat file.
- *
- * Specificity : the incrementalFilename method get an unique filename resource according to a file name and a job unique run identifier (Must be used in
+ * <b>Pattern #1</b> This is the simplest job configuration (no really innovation here). One step use the reader / processor / writer pattern to read a database
+ * table and write the content "as is" to a comma separated flat file. <br>
+ * <b>Specificity</b> : the incrementalFilename method get an unique filename resource according to a file name and a job unique run identifier (Must be used in
  * conjunction with RunIdIncrementer).
  *
  * @author desprez
@@ -75,6 +74,7 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
     @Bean
     Step extractStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final FlatFileItemWriter<Transaction> extractWriter) {
+
         return new StepBuilder("simple-extract-step", jobRepository)
                 .<Transaction, Transaction> chunk(chunkSize, transactionManager)
                 .reader(simpleExtractReader())
@@ -94,7 +94,7 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
                 .name("simpleExtractReader")
                 .dataSource(dataSource)
                 .sql("SELECT customer_number, number, amount, transaction_date FROM Transaction ORDER BY customer_number, number ASC") //
-                .rowMapper(new BeanPropertyRowMapper<>(Transaction.class)) //
+                .rowMapper(new DataClassRowMapper<>(Transaction.class)) //
                 .build();
     }
 

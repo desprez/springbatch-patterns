@@ -14,7 +14,7 @@
     <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.m2e.launchconfig.classpathProvider"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="fr.training.springbatch.BatchApplication"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="springbatch-patterns"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="customer-file=src\main\resources\csv\customer.csv transaction-file=src\main\resources\csv\transaction.csv output-file=target\output\export-result.csv"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="customer-file=src\main\resources\csv\customer.csv,java.lang.String,true &#13;&#10;transaction-file=src\main\resources\csv\transaction.csv,java.lang.String,true &#13;&#10;output-file=target\output\export-result.csv,java.lang.String,true"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="springbatch-patterns"/>
     <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dspring.batch.job.names=file2filesynchro-job"/>

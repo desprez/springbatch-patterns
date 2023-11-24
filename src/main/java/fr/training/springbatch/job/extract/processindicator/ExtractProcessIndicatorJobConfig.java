@@ -29,7 +29,7 @@ import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitializat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -38,6 +38,9 @@ import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.tasklet.JdbcTasklet;
 
+/**
+ * <b>Pattern #13</b> This pattern use a process indicator to flag processed records (unlike the staging job Processed Column is present in the table)
+ */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ExtractProcessIndicatorJobConfig.EXTRACT_PROCESS_INDICATOR_JOB)
 public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
@@ -99,7 +102,7 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
                 .dataSource(dataSource)
                 .pageSize(chunkSize)
                 .queryProvider(queryProvider)
-                .rowMapper(new BeanPropertyRowMapper<>(Transaction.class))
+                .rowMapper(new DataClassRowMapper<>(Transaction.class))
                 .build();
 
     }
@@ -144,8 +147,8 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
     private void markAsProcessed(final Transaction item) {
         jdbcTemplate.update("UPDATE Transaction SET processed=? WHERE customer_number=? AND number=?", (PreparedStatementSetter) ps -> {
             ps.setString(1, DONE);
-            ps.setLong(2, item.getCustomerNumber());
-            ps.setString(3, item.getNumber());
+            ps.setLong(2, item.customerNumber());
+            ps.setString(3, item.number());
         });
     }
 

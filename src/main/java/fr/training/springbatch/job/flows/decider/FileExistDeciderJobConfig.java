@@ -41,11 +41,11 @@ import org.springframework.transaction.PlatformTransactionManager;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * This SpringBatch job configuration ilustrate the JobDecider usage :
+ * This SpringBatch job configuration illustrate the JobDecider usage :
  *
  * Try with emptyItemReader the file will not produced and the job ends.
  *
- * Try with filledItemReader the file will produced and the sendAndArchiveFlow wil be executed.
+ * Try with filledItemReader the file will produced and the sendAndArchiveFlow will be executed.
  *
  */
 @Configuration

@@ -32,7 +32,7 @@ public abstract class AbstractSynchroJob extends AbstractJobConfiguration {
         masterDetailReader.setMasterItemReader(customerReader);
         masterDetailReader.setMasterKeyExtractor(Customer::getNumber);
         masterDetailReader.setSlaveItemReader(transactionReader);
-        masterDetailReader.setSlaveKeyExtractor(Transaction::getCustomerNumber);
+        masterDetailReader.setSlaveKeyExtractor(Transaction::customerNumber);
         masterDetailReader.setMasterAggregator(Customer::addTransaction);
 
         return masterDetailReader;

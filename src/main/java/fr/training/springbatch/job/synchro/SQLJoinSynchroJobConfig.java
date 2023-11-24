@@ -30,9 +30,8 @@ import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * Synchronize 2 tables with full SQL implementation and produce a csv result file.
- *
- * Note : No usage of ItemAccumulator
+ * <b>Pattern #7</b> Synchronize 2 tables with full SQL implementation and produce a csv result file. <br>
+ * <b>Note :</b> No usage of ItemAccumulator
  *
  * @author Desprez
  */

@@ -46,6 +46,10 @@ import fr.training.springbatch.job.multilinesrecord.dto.TransactionRecord;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
+ * <b>Pattern #19</b> This job allows to load records of different types from the same file and load them into their respective tables.
+ *
+ * It use a {@link PatternMatchingCompositeLineMapper} to map each line with a record Type and a {@link ClassifierCompositeItemWriter} to choose what table to
+ * insert with.
  *
  * @author Desprez
  */
@@ -179,7 +183,7 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
         return new JdbcBatchItemWriterBuilder<TransactionRecord>()
                 .dataSource(dataSource)
                 .sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
-                        + "VALUES (:customerNumber, :number, :transactionDate, :amount )")
+                        + "VALUES (:customerNumber, :number, :transactionDate, :amount)")
                 .beanMapped()
                 .build();
     }

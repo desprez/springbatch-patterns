@@ -34,7 +34,7 @@ import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitializat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -45,6 +45,14 @@ import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import fr.training.springbatch.tools.writer.ConsoleItemWriter;
 import fr.training.springbatch.tools.writer.NoOpWriter;
 
+/**
+ * <b>Pattern #16</b> Imagine that you receive a different file every day from your partner with all the data.
+ *
+ * And that you have to update your system with the added or deleted data, this is exactly what this job does, it compute the delta between the file received at
+ * day N-1 with the file received at day N (usually used in companies that use files to transmit data).
+ *
+ * @author Desprez
+ */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ComputeDeltaJobConfig.COMPUTE_DELTA_JOB)
 public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
@@ -177,7 +185,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
                 .dataSource(dataSource)
                 .pageSize(100)
                 .queryProvider(addedItemsQueryProvider)
-                .rowMapper(new BeanPropertyRowMapper<>(Stock.class))
+                .rowMapper(new DataClassRowMapper<>(Stock.class))
                 .build();
     }
 
@@ -205,7 +213,7 @@ public class ComputeDeltaJobConfig extends AbstractJobConfiguration {
                 .dataSource(dataSource)
                 .pageSize(100)
                 .queryProvider(removedItemsQueryProvider)
-                .rowMapper(new BeanPropertyRowMapper<>(Stock.class))
+                .rowMapper(new DataClassRowMapper<>(Stock.class))
                 .build();
     }
 

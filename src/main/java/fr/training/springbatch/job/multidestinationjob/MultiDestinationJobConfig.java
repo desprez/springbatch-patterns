@@ -28,8 +28,8 @@ import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 
 /**
- * This job use a custom {@link org.springframework.classify.Classifier} to distinguish customers and {@link ClassifierCompositeItemWriter} to route items to
- * the accoring itemWriter.
+ * <b>Pattern #17</b> This job use a custom {@link org.springframework.classify.Classifier} to distinguish customers and {@link ClassifierCompositeItemWriter}
+ * to route items to the according itemWriter.
  */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = MultiDestinationJobConfig.MULTI_DESTINATION_JOB)

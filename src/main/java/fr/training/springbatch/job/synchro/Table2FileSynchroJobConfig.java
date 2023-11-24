@@ -26,7 +26,7 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -44,7 +44,8 @@ import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBui
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 1 table and 1 flat file who share the same "customer number" key.
+ * <b>Pattern #5</b> Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 1 table and 1 flat file who share the same "customer number"
+ * key.
  * <ul>
  * <li>one master table : customer</li>
  * <li>one detail file : transaction csv file</li>
@@ -144,12 +145,8 @@ public class Table2FileSynchroJobConfig extends AbstractSynchroJob {
                 .delimiter(";")
                 .names("customerNumber", "number", "transactionDate", "amount")
                 .linesToSkip(1)
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-                    {
-                        setTargetType(Transaction.class);
-                        setConversionService(localDateConverter());
-                    }
-                }).build();
+                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .build();
     }
 
     /**
@@ -159,7 +156,7 @@ public class Table2FileSynchroJobConfig extends AbstractSynchroJob {
      */
     private ItemProcessor<Customer, Customer> processor() {
         return customer -> {
-            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::getAmount).sum();
+            final double sum = customer.getTransactions().stream().mapToDouble(Transaction::amount).sum();
             customer.setBalance(new BigDecimal(sum).setScale(2, RoundingMode.HALF_UP).doubleValue());
             logger.debug(customer.toString());
             return customer;

@@ -28,7 +28,7 @@ public class MultiLineCustomerItemWriter implements ItemWriter<Customer>, ItemSt
             lines.add(joinString(c.getNumber().toString(), "C", c.getFirstName(), c.getLastName(), c.getAddress(), c.getCity(), c.getPostCode(), c.getState()));
 
             for (final Transaction t : c.getTransactions()) {
-                lines.add(joinString(c.getNumber().toString(), "T", t.getNumber(), t.getTransactionDate().toString(), t.getAmount().toString()));
+                lines.add(joinString(c.getNumber().toString(), "T", t.number(), t.transactionDate().toString(), t.amount().toString()));
             }
         }
         delegate.write(new Chunk<>(lines));

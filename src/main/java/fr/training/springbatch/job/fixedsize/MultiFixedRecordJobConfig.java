@@ -55,8 +55,8 @@ import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBui
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * This job use a {@link PatternMatchingCompositeLineMapper} to map line with a record Type (ie: 00 for header, 01 for details and 99 for footer).
- *
+ * <b>Pattern #9</b> This job use a {@link PatternMatchingCompositeLineMapper} to map line with a record Type (ie: 00 for header, 01 for details and 99 for
+ * footer). <br>
  * It read a fixed lenght file and produce the same file for demonstration purpose.
  */
 @Configuration

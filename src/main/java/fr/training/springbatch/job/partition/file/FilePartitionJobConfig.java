@@ -38,6 +38,11 @@ import fr.training.springbatch.tools.listener.OutputFileListener;
 import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
+/**
+ * <b>Pattern #14</b>
+ *
+ * @author Desprez
+ */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = FilePartitionJobConfig.PARTITION_JOB)
 public class FilePartitionJobConfig extends AbstractJobConfiguration {

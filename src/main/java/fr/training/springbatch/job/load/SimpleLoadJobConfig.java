@@ -25,7 +25,7 @@ import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -44,9 +44,8 @@ import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBui
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
 /**
- * This Job load one Transaction csv file at once and insert each read line in a Transaction Table.
- *
- * Nota : the deleteStep is for testing purpose to remove existing Transaction records before inserting new lines.
+ * <b>Pattern #2</b> This Job load one Transaction csv file at once and insert each read line in a Transaction Table. <br>
+ * <b>Nota :</b> the deleteStep is for testing purpose to remove existing Transaction records before inserting new lines.
  *
  * @author desprez
  */
@@ -150,12 +149,8 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
                 .delimiter(";")
                 .names("customerNumber", "number", "transactionDate", "amount")
                 .linesToSkip(1)
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {
-                    {
-                        setTargetType(Transaction.class);
-                        setConversionService(localDateConverter());
-                    }
-                }).build();
+                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .build();
     }
 
     @Bean
@@ -166,7 +161,7 @@ public class SimpleLoadJobConfig extends AbstractJobConfiguration {
                 .dataSource(dataSource)
                 .sql("INSERT INTO Transaction(customer_number, number, transaction_date, amount) "
                         + "VALUES (:customerNumber, :number, :transactionDate, :amount )")
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>()) //
+                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
                 .build();
     }
 

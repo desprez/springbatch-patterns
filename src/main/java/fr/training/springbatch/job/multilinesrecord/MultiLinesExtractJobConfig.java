@@ -15,6 +15,7 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
 import org.springframework.batch.item.file.FlatFileItemWriter;
@@ -35,6 +36,13 @@ import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 
+/**
+ * <b>Pattern #18</b> This job allows you to write records of different types from 2 tables to a file. The records from the master table are read by the
+ * {@link JdbcCursorItemReader} and the {@link ItemProcessor} complete with the records from the detail table. A Custom {@link ItemWriter} is responsible for
+ * writing the aggregated data.
+ *
+ * @author Desprez
+ */
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = MultiLinesExtractJobConfig.MULTILINES_EXTRACT_JOB)
 public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
@@ -52,6 +60,7 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
 
     @Bean
     Job multilinesExtractJob(final Step multilinesExtractStep, final JobRepository jobRepository) {
+
         return new JobBuilder(MULTILINES_EXTRACT_JOB, jobRepository)
                 .validator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
                 .incrementer(new RunIdIncrementer())
@@ -64,6 +73,7 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
     @Bean
     Step multilinesExtractStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final MultiLineCustomerItemWriter multilinesExtractWriter) {
+
         return new StepBuilder("multilines-extract-step", jobRepository)
                 .<Customer, Customer> chunk(chunkSize, transactionManager)
                 .reader(customerJDBCReader())
@@ -92,7 +102,7 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
     }
 
     private List<Transaction> getTransactionForCustomer(final Long number) {
-        return jdbcTemplate.query("SELECT customer_number, number, amount, transaction_date" + " FROM Transaction WHERE customer_number = ?",
+        return jdbcTemplate.query("SELECT customer_number, number, amount, transaction_date FROM Transaction WHERE customer_number = ?",
                 (rs, row) -> new Transaction(
                         rs.getLong("customer_number"),
                         rs.getString("number"),
