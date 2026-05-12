@@ -1,11 +1,10 @@
 package fr.training.springbatch.job.staging;
 
-import java.time.LocalDate;
-
+import fr.training.springbatch.app.dto.Transaction;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
-import fr.training.springbatch.app.dto.Transaction;
+import java.time.LocalDate;
 
 public class TransactionValidator implements Validator {
 

@@ -1,9 +1,9 @@
 package fr.training.springbatch.job.fixedsize.model;
 
-import java.time.LocalDate;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+
+import java.time.LocalDate;
 
 public class Header extends AbstractLine {
 
