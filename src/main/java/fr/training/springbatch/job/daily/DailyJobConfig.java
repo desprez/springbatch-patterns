@@ -1,29 +1,28 @@
 package fr.training.springbatch.job.daily;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.identifying;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import java.time.LocalDate;
-
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.incrementer.TodayJobParameterProvider;
+import fr.training.springbatch.tools.listener.ElapsedTimeJobListener;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.incrementer.TodayJobParameterProvider;
-import fr.training.springbatch.tools.listener.ElapsedTimeJobListener;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import java.time.LocalDate;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.identifying;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
  * <b>Pattern #11</b> This job is configured to run once per day and prevent to not be launch twice.

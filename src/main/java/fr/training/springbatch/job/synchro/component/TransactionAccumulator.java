@@ -1,9 +1,8 @@
 package fr.training.springbatch.job.synchro.component;
 
-import org.springframework.batch.item.ItemReader;
-
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
+import org.springframework.batch.infrastructure.item.ItemReader;
 
 public class TransactionAccumulator extends ItemAccumulator<Transaction, Long> {
 

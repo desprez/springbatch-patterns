@@ -1,15 +1,15 @@
 package fr.training.springbatch.tools.staging;
 
-import javax.sql.DataSource;
-
-import org.springframework.batch.item.ItemProcessor;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import javax.sql.DataSource;
 
 /**
  * Marks the input row as 'processed'. (This change will rollback if there is problem later)

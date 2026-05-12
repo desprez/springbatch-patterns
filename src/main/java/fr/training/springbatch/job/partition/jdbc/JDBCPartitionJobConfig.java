@@ -1,22 +1,19 @@
 package fr.training.springbatch.job.partition.jdbc;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import fr.training.springbatch.app.dto.Customer;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.JdbcPagingItemReader;
-import org.springframework.batch.item.database.Order;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.infrastructure.item.database.JdbcPagingItemReader;
+import org.springframework.batch.infrastructure.item.database.Order;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.database.support.MySqlPagingQueryProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,8 +23,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Customer;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <b>Pattern #15</b>
@@ -101,8 +99,7 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
         queryProvider.setWhereClause("where number >= " + minValue + " and number < " + maxValue);
         queryProvider.setSortKeys(sortKeys);
 
-        final JdbcPagingItemReader<Customer> reader = new JdbcPagingItemReader<>();
-        reader.setDataSource(dataSource);
+        final JdbcPagingItemReader<Customer> reader = new JdbcPagingItemReader<>(dataSource, queryProvider);
         reader.setFetchSize(1000);
         reader.setRowMapper((rs, rowNum) -> {
             final Customer customer = new Customer();
@@ -115,7 +112,6 @@ public class JDBCPartitionJobConfig extends AbstractJobConfiguration {
             customer.setState(rs.getString("STATE"));
             return customer;
         });
-        reader.setQueryProvider(queryProvider);
 
         return reader;
     }

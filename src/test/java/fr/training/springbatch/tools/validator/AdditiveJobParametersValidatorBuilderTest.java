@@ -1,26 +1,20 @@
 package fr.training.springbatch.tools.validator;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.expectedValue;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.gt;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.identifying;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.lt;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.positiveNumber;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.valueIn;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.job.parameters.InvalidJobParametersException;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.job.parameters.JobParametersValidator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.JobParametersInvalidException;
-import org.springframework.batch.core.JobParametersValidator;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AdditiveJobParametersValidatorBuilderTest {
 
@@ -29,7 +23,7 @@ class AdditiveJobParametersValidatorBuilderTest {
     private static final LocalDate DAY_AFTER = TODAY.plusDays(1L);
 
     @Test
-    void validation_with_multiple_jobparameters_met_requirements_should_pass() throws JobParametersInvalidException {
+    void validation_with_multiple_jobparameters_met_requirements_should_pass() {
         // Given
         final JobParameters jobParameters = new JobParametersBuilder()
                 .addString("StringParam", "one")
@@ -61,7 +55,7 @@ class AdditiveJobParametersValidatorBuilderTest {
     }
 
     @Test
-    void validation_with_multiple_jobparameters_not_met_requirements_should_fails() throws JobParametersInvalidException {
+    void validation_with_multiple_jobparameters_not_met_requirements_should_fails() {
         // Given
         final JobParameters jobParameters = new JobParametersBuilder()
                 .addString("StringParam", "four")
@@ -86,16 +80,17 @@ class AdditiveJobParametersValidatorBuilderTest {
                 .build();
 
         // Then
-        final Throwable exceptionThatWasThrown = assertThrows(JobParametersInvalidException.class, () -> {
+        final Throwable exceptionThatWasThrown = assertThrows(InvalidJobParametersException.class, () -> {
             // When
             validator.validate(jobParameters);
         });
         assertThat(exceptionThatWasThrown.getMessage())
-                .isEqualTo("JobParameter 'StringParam' must have value in 'one, two, three' (current value is : 'four'),\n"
-                        + "JobParameter 'DateParam' must be identifying,\n"
-                        + "JobParameter 'LongParam' must be a positive number,\n"
-                        + "JobParameter 'DoubleParam' has value '1.1' but required value is less than '1',\n"
-                        + "JobParameter 'BooleanParam' must have expected 'true' value.");
+                .isEqualTo("""
+                        JobParameter 'StringParam' must have value in 'one, two, three' (current value is : 'four'),
+                        JobParameter 'DateParam' must be identifying,
+                        JobParameter 'LongParam' must be a positive number,
+                        JobParameter 'DoubleParam' has value '1.1' but required value is less than '1',
+                        JobParameter 'BooleanParam' must have expected 'true' value.""");
     }
 
 }

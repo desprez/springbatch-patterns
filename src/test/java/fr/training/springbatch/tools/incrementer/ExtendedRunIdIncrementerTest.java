@@ -1,10 +1,10 @@
 package fr.training.springbatch.tools.incrementer;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ExtendedRunIdIncrementerTest {
 
@@ -45,7 +45,7 @@ class ExtendedRunIdIncrementerTest {
         final JobParameters parameters = incrementer.getNext(lastJobParameters);
 
         // Then
-        assertThat(parameters.getParameters()).hasSize(1);
+        assertThat(parameters.parameters()).hasSize(1);
         assertThat(parameters.getLong(ExtendedRunIdIncrementer.RUN_ID_KEY)).isEqualTo(3);
     }
 

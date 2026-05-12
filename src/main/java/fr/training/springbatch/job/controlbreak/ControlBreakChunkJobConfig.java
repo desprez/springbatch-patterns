@@ -1,26 +1,27 @@
 package fr.training.springbatch.job.controlbreak;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
+import fr.training.springbatch.app.dto.Transaction;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import fr.training.springbatch.tools.writer.ConsoleItemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.ChunkListener;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.job.parameters.RunIdIncrementer;
+import org.springframework.batch.core.listener.ChunkListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
-import org.springframework.batch.item.support.SingleItemPeekableItemReader;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.mapping.RecordFieldSetMapper;
+import org.springframework.batch.infrastructure.item.support.SingleItemPeekableItemReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -28,11 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Transaction;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
-import fr.training.springbatch.tools.writer.ConsoleItemWriter;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.*;
 
 /**
  * Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the ItemListPeekableItemReader that use a Strategy pattern
@@ -66,16 +63,17 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
     }
 
     /**
-     * @param controlBreakReader
+     * @param breakKeyCompletionPolicy
      *            the injected Transaction {@link SingleItemPeekableItemReader} bean.
      * @param transactionWriter
      *            the injected Transaction {@link ItemWriter}.
-     * @param completionPolicy
      * @return a Step Bean
      */
     @Bean
-    Step controlBreakChunkStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
-            final ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy, final ItemWriter<Transaction> transactionWriter) {
+    Step controlBreakChunkStep(final JobRepository jobRepository,
+                               final PlatformTransactionManager transactionManager,
+                               final ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy,
+                               final ItemWriter<Transaction> transactionWriter) {
 
         return new StepBuilder("controlbreak-step", jobRepository)
                 .<Transaction, Transaction> chunk(breakKeyCompletionPolicy, transactionManager)
@@ -113,17 +111,19 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
     ItemPeekingCompletionPolicyReader<Transaction> breakKeyCompletionPolicy(final SingleItemPeekableItemReader<Transaction> controlBreakReader) {
         final ItemPeekingCompletionPolicyReader<Transaction> policy = new ItemPeekingCompletionPolicyReader<>();
         policy.setDelegate(controlBreakReader);
-        policy.setBreakKeyStrategy((item1, item2) -> !item1.customerNumber().equals(item1.customerNumber()));
+        BreakKeyStrategy<Transaction> strategy = (item1, item2) -> {
+            if (item1 ==null || item2 == null) {
+                return false;
+            }
+            return !item1.customerNumber().equals(item2.customerNumber());
+        } ;
+        policy.setBreakKeyStrategy(strategy);
         return policy;
     }
 
     @Bean(destroyMethod = "")
     SingleItemPeekableItemReader<Transaction> controlBreakReader(final FlatFileItemReader<Transaction> transactionReader) {
-
-        final SingleItemPeekableItemReader<Transaction> groupReader = new SingleItemPeekableItemReader<>();
-        groupReader.setDelegate(transactionReader);
-
-        return groupReader;
+        return new SingleItemPeekableItemReader<>(transactionReader);
     }
 
     @StepScope // Mandatory for using jobParameters
@@ -137,7 +137,7 @@ public class ControlBreakChunkJobConfig extends AbstractJobConfiguration {
                 .delimiter(";")
                 .names("customerNumber", "number", "transactionDate", "amount")
                 .linesToSkip(1)
-                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .fieldSetMapper(new RecordFieldSetMapper<>(Transaction.class, localDateConverter()))
                 .build();
     }
 

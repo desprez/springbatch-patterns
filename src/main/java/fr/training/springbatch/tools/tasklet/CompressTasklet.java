@@ -1,21 +1,20 @@
 package fr.training.springbatch.tools.tasklet;
 
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.StepContribution;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
 
 /**
  * A {link Tasklet} that compress files from a given directory to a archive filename.
@@ -75,6 +74,6 @@ public class CompressTasklet implements Tasklet {
     }
 
     public void setBaseDirectoryToCompress(final String baseDirectoryToCompress) {
-        this.baseDirectoryToCompress = Paths.get(baseDirectoryToCompress);
+        this.baseDirectoryToCompress = Path.of(baseDirectoryToCompress);
     }
 }

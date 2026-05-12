@@ -1,16 +1,17 @@
 package fr.training.springbatch.tools.chaos.tasklet;
 
-import static org.springframework.util.Assert.notNull;
-
-import java.time.Duration;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.tasklet.StoppableTasklet;
-import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.time.Duration;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static org.springframework.util.Assert.notNull;
 
 /**
  * Tasklet used to mimimic slow PosgreSQL queries.
@@ -52,7 +53,7 @@ public class SlowPGQueryTasklet implements StoppableTasklet {
 
         logger.info(waitingMessage + mode, queryCount, seconds);
 
-        jdbcTemplate.execute(String.format(SLOW_PG_QUERY_COMMAND, seconds));
+        jdbcTemplate.execute(SLOW_PG_QUERY_COMMAND.formatted(seconds));
 
         if (queryCount < maxQueries) {
             return RepeatStatus.continueIf(!stopped);
@@ -79,7 +80,7 @@ public class SlowPGQueryTasklet implements StoppableTasklet {
     }
 
     private long randomizeSeconds(final long max) {
-        return 1 + (long) (Math.random() * (max - 1));
+        return 1 + (long) (ThreadLocalRandom.current().nextDouble() * (max - 1));
     }
 
     public void setDuration(final Duration seconds) {

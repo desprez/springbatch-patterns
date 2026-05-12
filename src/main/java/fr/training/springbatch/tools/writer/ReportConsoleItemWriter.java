@@ -1,10 +1,10 @@
 package fr.training.springbatch.tools.writer;
 
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.file.transform.LineAggregator;
-import org.springframework.batch.item.support.AbstractItemStreamItemWriter;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.file.transform.LineAggregator;
+import org.springframework.batch.infrastructure.item.support.AbstractItemStreamItemWriter;
 
 /**
  * Simple {@link ItemWriter} implementation that write items to the console with header capabilities,

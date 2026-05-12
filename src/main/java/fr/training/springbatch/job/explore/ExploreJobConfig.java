@@ -1,29 +1,27 @@
 package fr.training.springbatch.job.explore;
 
-import java.util.List;
-
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobInstance;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.JobInstance;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.Step;
+import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import java.util.List;
 
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ExploreJobConfig.EXPLORE_JOB)
@@ -34,7 +32,7 @@ public class ExploreJobConfig extends AbstractJobConfiguration {
     protected static final String EXPLORE_JOB = "explore-job";
 
     @Autowired
-    private JobExplorer jobExplorer;
+    private JobRepository jobExplorer;
 
     @Bean
     Job dailyjob(final Step exploreStep, final JobRepository jobRepository) {
@@ -58,9 +56,9 @@ public class ExploreJobConfig extends AbstractJobConfiguration {
 
     public static class ExploringTasklet implements Tasklet {
 
-        private final JobExplorer explorer;
+        private final JobRepository explorer;
 
-        public ExploringTasklet(final JobExplorer explorer) {
+        public ExploringTasklet(final JobRepository explorer) {
             this.explorer = explorer;
         }
 

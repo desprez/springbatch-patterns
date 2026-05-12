@@ -1,15 +1,13 @@
 package fr.training.springbatch.job.staging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import javax.sql.DataSource;
-
+import fr.training.springbatch.job.BatchTestConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.test.JobLauncherTestUtils;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.test.JobOperatorTestUtils;
 import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +15,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.jdbc.JdbcTestUtils;
 
-import fr.training.springbatch.job.BatchTestConfiguration;
+import javax.sql.DataSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
 @SpringBatchTest
@@ -26,9 +26,12 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 class StagingJobTest {
 
     @Autowired
-    private JobLauncherTestUtils jobLauncherTestUtils;
+    private JobOperatorTestUtils testUtils;
 
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private Job job;
 
     @Autowired
     public void setDataSource(final DataSource dataSource) {
@@ -37,17 +40,21 @@ class StagingJobTest {
 
     @Test
     void stagingjob_should_proccess_all_batch_staging_table_records() throws Exception {
+        // Given
         final int before = JdbcTestUtils.countRowsInTable(jdbcTemplate, "BATCH_STAGING");
 
-        final JobParameters jobParameters = new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
+        final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
                 .addString("input-file", "src/main/resources/csv/transaction.csv")
                 .toJobParameters();
+        testUtils.setJob(job);
 
-        final JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters);
+        // When
+        final JobExecution execution = testUtils.startJob(jobParameters);
 
+        // Then
         final int after = JdbcTestUtils.countRowsInTable(jdbcTemplate, "BATCH_STAGING");
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-        assertThat(execution.getStepExecutions().iterator().next().getReadCount()).isEqualTo(after - before);
+        assertThat((int) execution.getStepExecutions().iterator().next().getReadCount()).isEqualTo(after - before);
     }
 
 }

@@ -1,16 +1,15 @@
 package fr.training.springbatch.tools.tasklet;
 
-import static org.springframework.util.Assert.notNull;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.StepContribution;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
+import static org.springframework.util.Assert.notNull;
 
 /**
  * A {link Tasklet} that move file from a given source directory to a target directory.
@@ -27,12 +26,12 @@ public class MoveFileTasklet implements Tasklet {
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
         checkParameters();
 
-        final Path destinationPath = Paths.get(targetDirectory);
+        final Path destinationPath = Path.of(targetDirectory);
         if (!Files.isDirectory(destinationPath)) {
             Files.createDirectory(destinationPath);
         }
 
-        Files.move(Paths.get(sourceDirectory + filename), Paths.get(targetDirectory + filename), StandardCopyOption.REPLACE_EXISTING,
+        Files.move(Path.of(sourceDirectory + filename), Path.of(targetDirectory + filename), StandardCopyOption.REPLACE_EXISTING,
                 StandardCopyOption.ATOMIC_MOVE);
 
         contribution.incrementWriteCount(1);

@@ -1,21 +1,22 @@
 package fr.training.springbatch.tools.tasklet;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.jspecify.annotations.NonNull;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.StepContribution;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.util.ObjectUtils;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.zip.ZipInputStream;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.util.ObjectUtils;
 
 /**
  * A {link Tasklet} that decompress files from an archive filename to a given directory.
@@ -44,12 +45,8 @@ public class DecompressTasklet implements Tasklet {
     }
 
     @Override
-    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-        if (chunkContext != null) {
-            setParameters(chunkContext.getStepContext().getStepExecution().getJobParameters());
-        }
-
-        final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(inputResource.getInputStream()));
+    public RepeatStatus execute(final @NonNull StepContribution contribution, final @NonNull ChunkContext chunkContext) throws Exception {
+        setParameters(chunkContext.getStepContext().getStepExecution().getJobParameters());
 
         final File targetDirectoryAsFile = new File(targetDirectory);
         if (!targetDirectoryAsFile.exists()) {
@@ -58,18 +55,18 @@ public class DecompressTasklet implements Tasklet {
 
         final File target = new File(targetDirectory, targetFile);
 
-        BufferedOutputStream dest = null;
-        while (zis.getNextEntry() != null) {
-            if (!target.exists()) {
-                target.createNewFile();
+        try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(inputResource.getInputStream()))) {
+            while (zis.getNextEntry() != null) {
+                if (!target.exists()) {
+                    target.createNewFile();
+                }
+                try (FileOutputStream fos = new FileOutputStream(target);
+                     BufferedOutputStream dest = new BufferedOutputStream(fos)) {
+                    IOUtils.copy(zis, dest);
+                    dest.flush();
+                }
             }
-            final FileOutputStream fos = new FileOutputStream(target);
-            dest = new BufferedOutputStream(fos);
-            IOUtils.copy(zis, dest);
-            dest.flush();
-            dest.close();
         }
-        zis.close();
 
         if (!target.exists()) {
             throw new IllegalStateException("Could not decompress anything from the archive!");

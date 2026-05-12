@@ -1,19 +1,19 @@
 package fr.training.springbatch.tools.tasklet;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.core.step.StepContribution;
+import org.springframework.batch.core.step.StepExecution;
+import org.springframework.batch.test.MetaDataInstanceFactory;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.nio.charset.Charset;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.Test;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.scope.context.StepContext;
-import org.springframework.batch.test.MetaDataInstanceFactory;
-import org.springframework.core.io.ClassPathResource;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Test upon DecompressTasklet class

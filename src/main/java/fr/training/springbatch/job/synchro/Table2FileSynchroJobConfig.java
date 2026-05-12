@@ -1,32 +1,30 @@
 package fr.training.springbatch.job.synchro;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
-import javax.sql.DataSource;
-
+import fr.training.springbatch.app.dto.Customer;
+import fr.training.springbatch.app.dto.Transaction;
+import fr.training.springbatch.job.synchro.component.MasterDetailReader;
+import fr.training.springbatch.tools.synchro.CompositeAggregateReader;
+import fr.training.springbatch.tools.synchro.ItemAccumulator;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JdbcCursorItemReader;
-import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.database.JdbcCursorItemReader;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -35,13 +33,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Customer;
-import fr.training.springbatch.app.dto.Transaction;
-import fr.training.springbatch.job.synchro.component.MasterDetailReader;
-import fr.training.springbatch.tools.synchro.CompositeAggregateReader;
-import fr.training.springbatch.tools.synchro.ItemAccumulator;
-import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import javax.sql.DataSource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.*;
 
 /**
  * <b>Pattern #5</b> Using {@link ItemAccumulator} & {@link MasterDetailReader} to "synchronize" 1 table and 1 flat file who share the same "customer number"
@@ -98,7 +94,8 @@ public class Table2FileSynchroJobConfig extends AbstractSynchroJob {
     Step table2FileSynchroStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final CompositeAggregateReader<Customer, Transaction, Long> masterDetailReader, final ItemWriter<Customer> customerWriter) {
         return new StepBuilder("table2filesynchro-step", jobRepository)
-                .<Customer, Customer> chunk(chunkSize, transactionManager)
+                .<Customer, Customer> chunk(chunkSize)
+                .transactionManager(transactionManager)
                 .reader(masterDetailReader)
                 .processor(processor())
                 .writer(customerWriter)
@@ -145,7 +142,7 @@ public class Table2FileSynchroJobConfig extends AbstractSynchroJob {
                 .delimiter(";")
                 .names("customerNumber", "number", "transactionDate", "amount")
                 .linesToSkip(1)
-                .fieldSetMapper(new RecordFieldSetMapper<Transaction>(Transaction.class, localDateConverter()))
+                .fieldSetMapper(new RecordFieldSetMapper<>(Transaction.class, localDateConverter()))
                 .build();
     }
 

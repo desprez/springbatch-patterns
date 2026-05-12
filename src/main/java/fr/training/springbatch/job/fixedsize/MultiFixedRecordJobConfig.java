@@ -1,51 +1,5 @@
 package fr.training.springbatch.job.fixedsize;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-import static org.springframework.util.Assert.isTrue;
-import static org.springframework.util.Assert.notNull;
-
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.StepExecutionListener;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.file.FlatFileFooterCallback;
-import org.springframework.batch.item.file.FlatFileHeaderCallback;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.LineMapper;
-import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
-import org.springframework.batch.item.file.mapping.FieldSetMapper;
-import org.springframework.batch.item.file.mapping.PatternMatchingCompositeLineMapper;
-import org.springframework.batch.item.file.transform.FixedLengthTokenizer;
-import org.springframework.batch.item.file.transform.LineTokenizer;
-import org.springframework.batch.item.file.transform.Range;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.lang.NonNull;
-import org.springframework.transaction.PlatformTransactionManager;
-
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.fixedsize.model.AbstractLine;
 import fr.training.springbatch.job.fixedsize.model.Detail;
@@ -53,6 +7,45 @@ import fr.training.springbatch.job.fixedsize.model.Footer;
 import fr.training.springbatch.job.fixedsize.model.Header;
 import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
 import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.listener.StepExecutionListener;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
+import org.springframework.batch.core.step.StepExecution;
+import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.file.*;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.infrastructure.item.file.mapping.FieldSetMapper;
+import org.springframework.batch.infrastructure.item.file.mapping.PatternMatchingCompositeLineMapper;
+import org.springframework.batch.infrastructure.item.file.transform.FixedLengthTokenizer;
+import org.springframework.batch.infrastructure.item.file.transform.LineTokenizer;
+import org.springframework.batch.infrastructure.item.file.transform.Range;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
+import static org.springframework.util.Assert.isTrue;
+import static org.springframework.util.Assert.notNull;
 
 /**
  * <b>Pattern #9</b> This job use a {@link PatternMatchingCompositeLineMapper} to map line with a record Type (ie: 00 for header, 01 for details and 99 for
@@ -80,11 +73,10 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
         return new JobBuilder(FIXED_JOB, jobRepository) //
                 .validator(new AdditiveJobParametersValidatorBuilder()
                         .addValidator(new JobParameterRequirementValidator("inputfile", required().and(fileExist())))
-                        .addValidator(new JobParameterRequirementValidator("outputfile", required().and(fileWritable())))
+                        .addValidator(new JobParameterRequirementValidator("outputfile", required()))
                         .addValidator(new JobParameterRequirementValidator("receivercode", required()))
                         .addValidator(new JobParameterRequirementValidator("created-date", required()))
                         .build())
-                .incrementer(new RunIdIncrementer())
                 .start(validationStep)
                 .next(processStep)
                 .listener(reportListener())
@@ -95,7 +87,8 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     Step validationStep(final JobRepository jobRepository, final PlatformTransactionManager transactionManager,
             final FlatFileItemReader<AbstractLine> itemReader) throws Exception {
         return new StepBuilder("validation-step", jobRepository) //
-                .<AbstractLine, AbstractLine> chunk(chunkSize, transactionManager) //
+                .<AbstractLine, AbstractLine> chunk(chunkSize)
+                .transactionManager(transactionManager)
                 .reader(itemReader) //
                 .processor(validationProcessor())
                 .writer(items -> {
@@ -114,7 +107,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
                 .<AbstractLine, Detail> chunk(chunkSize, transactionManager)
                 .reader(itemReader)
                 // return only detail items
-                .processor(item -> item instanceof Detail ? (Detail) item : null)
+                .processor(item -> item instanceof Detail d ? d : null)
                 .writer(fixedItemWriter)
                 .listener(reportListener())
                 .build();
@@ -123,11 +116,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
     @StepScope // Mandatory for using jobParameters
     @Bean
     FlatFileItemReader<AbstractLine> itemReader(@Value("#{jobParameters['inputfile']}") final String inputFile) throws Exception {
-
-        final FlatFileItemReader<AbstractLine> reader = new FlatFileItemReader<>();
-        reader.setResource(new FileSystemResource(inputFile));
-        reader.setLineMapper(abstractLineMapper());
-        return reader;
+        return new FlatFileItemReader<>(new FileSystemResource(inputFile), abstractLineMapper());
     }
 
     /**
@@ -137,21 +126,17 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
      */
     @Bean
     PatternMatchingCompositeLineMapper<AbstractLine> abstractLineMapper() {
-        final PatternMatchingCompositeLineMapper<AbstractLine> lineMapper = new PatternMatchingCompositeLineMapper<>();
-
         final Map<String, LineTokenizer> tokenizers = new HashMap<>(3);
         tokenizers.put(HEADER_RECORD_TYPE, headerTokenizer());
         tokenizers.put(DETAIL_RECORD_TYPE, detailTokenizer());
         tokenizers.put(FOOTER_RECORD_TYPE, footerTokenizer());
-        lineMapper.setTokenizers(tokenizers);
 
         final Map<String, FieldSetMapper<AbstractLine>> mappers = new HashMap<>(3);
         mappers.put(HEADER_RECORD_TYPE, simpleFieldSetMapper(Header.class));
         mappers.put(DETAIL_RECORD_TYPE, simpleFieldSetMapper(Detail.class));
         mappers.put(FOOTER_RECORD_TYPE, simpleFieldSetMapper(Footer.class));
-        lineMapper.setFieldSetMappers(mappers);
 
-        return lineMapper;
+        return new PatternMatchingCompositeLineMapper<>(tokenizers, mappers);
     }
 
     /**
@@ -257,8 +242,8 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
             if (item instanceof Header) {
                 // final Header header = (Header) item;
             }
-            if (item instanceof Detail) {
-                return (Detail) item;
+            if (item instanceof Detail detail) {
+                return detail;
             }
             return null;
         };
@@ -292,7 +277,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
         return writer -> {
             final Header header = new Header(createdDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), transmitterCode, receiverCode, "00001");
 
-            writer.write(String.format("%2s%10s%-10s%-10s%5s",
+            writer.write("%2s%10s%-10s%-10s%5s".formatted(
                     header.getRecordType(), header.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), header.getTransmitterCode(), //
                     header.getReceiverCode(), //
                     header.getSequenceNumber()));
@@ -309,7 +294,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
 
         return writer -> {
             final Footer footer = new Footer(writeCount);
-            writer.write(String.format("%2s%010d", footer.getRecordType(), footer.getDetailRecordCount()));
+            writer.write("%2s%010d".formatted(footer.getRecordType(), footer.getDetailRecordCount()));
         };
     }
 
@@ -348,7 +333,7 @@ public class MultiFixedRecordJobConfig extends AbstractJobConfiguration {
 
             notNull(footerFound, "A footer is required");
 
-            isTrue(detailCount.equals(expectedCount), String.format("%d record count expected but was %d", expectedCount.intValue(), detailCount.intValue()));
+            isTrue(detailCount.equals(expectedCount), "%d record count expected but was %d".formatted(expectedCount.intValue(), detailCount.intValue()));
             return stepExecution.getExitStatus();
         }
     }

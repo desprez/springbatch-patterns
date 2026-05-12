@@ -1,15 +1,10 @@
 package fr.training.springbatch.job.synchro.component;
 
-import java.util.List;
-
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.NonTransientResourceException;
-import org.springframework.batch.item.ParseException;
-import org.springframework.batch.item.UnexpectedInputException;
-
 import fr.training.springbatch.tools.synchro.ItemAccumulator;
+import org.jspecify.annotations.NonNull;
+import org.springframework.batch.infrastructure.item.*;
+
+import java.util.List;
 
 /**
  * This ItemReader reads items packets that share the same key and returns lists of items. It's use the {@link ItemAccumulator}
@@ -26,7 +21,7 @@ public class GroupReader<T, K extends Comparable<K>> implements ItemStreamReader
     private ItemAccumulator<T, K> accumulator;
 
     @Override
-    public List<T> read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+    public List<T> read() throws Exception {
         final List<T> items = accumulator.readNextItems();
         if (items == null || items.isEmpty()) {
             return null;
@@ -35,12 +30,12 @@ public class GroupReader<T, K extends Comparable<K>> implements ItemStreamReader
     }
 
     @Override
-    public void open(final ExecutionContext executionContext) throws ItemStreamException {
+    public void open(@NonNull ExecutionContext executionContext) throws ItemStreamException {
         accumulator.open(executionContext);
     }
 
     @Override
-    public void update(final ExecutionContext executionContext) throws ItemStreamException {
+    public void update(@NonNull ExecutionContext executionContext) throws ItemStreamException {
         accumulator.update(executionContext);
     }
 

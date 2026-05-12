@@ -1,8 +1,8 @@
 package fr.training.springbatch.tools.chaos;
 
-import org.springframework.batch.core.UnexpectedJobExecutionException;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.springframework.batch.core.job.UnexpectedJobExecutionException;
+import org.springframework.batch.infrastructure.item.ItemReader;
 
 /**
  * Hacked {@link ItemReader} that throws exception on a given record number (useful for testing restart).

@@ -1,25 +1,24 @@
 package fr.training.springbatch.app.job;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
-import org.springframework.batch.core.JobExecutionListener;
+import fr.training.springbatch.converter.AugmentedJobParametersConverter;
+import fr.training.springbatch.tools.listener.ItemCountListener;
+import fr.training.springbatch.tools.listener.JobReportListener;
 import org.springframework.batch.core.converter.JobParametersConverter;
+import org.springframework.batch.core.listener.JobExecutionListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 
-import fr.training.springbatch.converter.AugmentedJobParametersConverter;
-import fr.training.springbatch.tools.listener.ItemCountListener;
-import fr.training.springbatch.tools.listener.JobReportListener;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Abstract JobConfiguration class to factorize factories declarations and others beans used in all jobs.
  */
 public abstract class AbstractJobConfiguration {
 
-    public AbstractJobConfiguration() {
+    protected AbstractJobConfiguration() {
     }
 
     /**

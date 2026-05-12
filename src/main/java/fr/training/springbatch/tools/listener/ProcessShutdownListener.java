@@ -2,11 +2,11 @@ package fr.training.springbatch.tools.listener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
+import org.springframework.batch.core.listener.JobExecutionListener;
 
 /**
  * This class listens to events from the Operating System requesting the Batch to shutdown. For example when the user hits CTRL-C or the system is shutting

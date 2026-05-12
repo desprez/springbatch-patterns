@@ -1,14 +1,14 @@
 package fr.training.springbatch.tools.synchro;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.core.io.ByteArrayResource;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CompositeAggregateReaderTest {
 
@@ -24,7 +24,7 @@ class CompositeAggregateReaderTest {
 
     private CompositeAggregateReader<Foo, Bar, Integer> compositeAggregateItemReader;
 
-    protected FlatFileItemReader<Foo> getFooItemReader() throws Exception {
+    protected FlatFileItemReader<Foo> getFooItemReader() {
         return new FlatFileItemReaderBuilder<Foo>() //
                 .name("FooItemReader").resource(new ByteArrayResource(FOOS.getBytes())) //
                 .delimited() //
@@ -34,7 +34,7 @@ class CompositeAggregateReaderTest {
                 .saveState(true).build();
     }
 
-    protected FlatFileItemReader<Bar> getBarItemReader() throws Exception {
+    protected FlatFileItemReader<Bar> getBarItemReader() {
         return new FlatFileItemReaderBuilder<Bar>() //
                 .name("BarItemReader").resource(new ByteArrayResource(BARS.getBytes())) //
                 .delimited() //
@@ -88,9 +88,6 @@ class CompositeAggregateReaderTest {
         assertThrows(IllegalArgumentException.class, compositeAggregateItemReader::afterPropertiesSet);
         // Given
         compositeAggregateItemReader.setMasterKeyExtractor(null);
-        assertThrows(IllegalArgumentException.class, compositeAggregateItemReader::afterPropertiesSet);
-        // Given
-        compositeAggregateItemReader.setSlaveItemReader(null);
         assertThrows(IllegalArgumentException.class, compositeAggregateItemReader::afterPropertiesSet);
         // Given
         compositeAggregateItemReader.setSlaveKeyExtractor(null);

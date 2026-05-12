@@ -1,22 +1,19 @@
 package fr.training.springbatch.job.update;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import javax.sql.DataSource;
-
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import fr.training.springbatch.app.dto.Customer;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,9 +23,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Customer;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import javax.sql.DataSource;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
  * <b>Pattern #23</b> This job illustrates usage of the SQL Upsert command in a batch. <br>
@@ -76,7 +74,6 @@ public class UpsertJobConfig extends AbstractJobConfiguration {
     @Bean
     Job upsertJob(final Step upsertStep, final JobRepository jobRepository) {
         return new JobBuilder(UPSERT_JOB, jobRepository)
-                .incrementer(new RunIdIncrementer())
                 .validator(new JobParameterRequirementValidator("input-file", required().and(fileExist())))
                 .start(upsertStep)
                 .build();
@@ -87,7 +84,8 @@ public class UpsertJobConfig extends AbstractJobConfiguration {
             final FlatFileItemReader<Customer> fileReader, final JdbcBatchItemWriter<Customer> upsertWriter) {
 
         return new StepBuilder("upsert-step", jobRepository)
-                .<Customer, Customer> chunk(chunkSize, transactionManager)
+                .<Customer, Customer> chunk(chunkSize)
+                .transactionManager(transactionManager)
                 .reader(fileReader)
                 .writer(upsertWriter)
                 .build();

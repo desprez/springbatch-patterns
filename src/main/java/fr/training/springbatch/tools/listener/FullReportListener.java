@@ -1,18 +1,16 @@
 package fr.training.springbatch.tools.listener;
 
-import static org.springframework.batch.core.observability.BatchMetrics.calculateDuration;
-import static org.springframework.batch.core.observability.BatchMetrics.formatDuration;
-
-import java.util.Map.Entry;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.JobParameter;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameter;
+import org.springframework.batch.core.listener.JobExecutionListener;
+import org.springframework.batch.core.listener.StepExecutionListener;
+import org.springframework.batch.core.step.StepExecution;
+
+import static org.springframework.batch.core.observability.BatchMetrics.calculateDuration;
+import static org.springframework.batch.core.observability.BatchMetrics.formatDuration;
 
 /**
  * Listener used to log Job and Steps statistics.
@@ -36,8 +34,8 @@ public class FullReportListener implements JobExecutionListener, StepExecutionLi
         jobReport.append(SEPARATOR_LINE + NEW_LINE);
 
         jobReport.append("Job-Parameter:" + NEW_LINE);
-        for (final Entry<String, JobParameter<?>> entry : jobExecution.getJobParameters().getParameters().entrySet()) {
-            jobReport.append("  " + entry.getKey() + "=" + entry.getValue() + NEW_LINE);
+        for (final JobParameter<?> parameter : jobExecution.getJobParameters().parameters()) {
+            jobReport.append("  " + parameter.name() + "=" + parameter.value() + NEW_LINE);
         }
         jobReport.append(" executed in ").append(formatDuration(calculateDuration(jobExecution.getStartTime(), jobExecution.getEndTime())));
 
@@ -59,12 +57,12 @@ public class FullReportListener implements JobExecutionListener, StepExecutionLi
         final StringBuilder stepReport = new StringBuilder();
         stepReport.append(SEPARATOR_LINE + NEW_LINE);
         stepReport.append("Step [" + stepExecution.getStepName() + "]" + NEW_LINE);
-        stepReport.append("Read count: " + stepExecution.getReadCount() + NEW_LINE);
-        stepReport.append("Write count: " + stepExecution.getWriteCount() + NEW_LINE);
-        stepReport.append("Commits: " + stepExecution.getCommitCount() + NEW_LINE);
-        stepReport.append("Skip count: " + stepExecution.getSkipCount() + NEW_LINE);
-        stepReport.append("Rollbacks: " + stepExecution.getRollbackCount() + NEW_LINE);
-        stepReport.append("Filter: " + stepExecution.getFilterCount() + NEW_LINE);
+        stepReport.append("Read count: " + ((int) stepExecution.getReadCount()) + NEW_LINE);
+        stepReport.append("Write count: " + ((int) stepExecution.getWriteCount()) + NEW_LINE);
+        stepReport.append("Commits: " + ((int) stepExecution.getCommitCount()) + NEW_LINE);
+        stepReport.append("Skip count: " + ((int) stepExecution.getSkipCount()) + NEW_LINE);
+        stepReport.append("Rollbacks: " + ((int) stepExecution.getRollbackCount()) + NEW_LINE);
+        stepReport.append("Filter: " + ((int) stepExecution.getFilterCount()) + NEW_LINE);
         stepReport.append("Duration: " + formatDuration(calculateDuration(stepExecution.getStartTime(), stepExecution.getEndTime())));
         stepReport.append(SEPARATOR_LINE + NEW_LINE);
 

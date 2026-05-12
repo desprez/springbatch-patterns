@@ -1,11 +1,10 @@
 package fr.training.springbatch.tools.chaos.tasklet;
 
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
-
 import fr.training.springbatch.tools.chaos.BatchChaosException;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.StepContribution;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 
 /**
  * Tasklet used to mimimic unstable process by providing exception one in two.

@@ -1,31 +1,23 @@
 package fr.training.springbatch.job.complexml;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.job.complexml.model.OperationOrph;
+import fr.training.springbatch.job.complexml.model.Record;
+import fr.training.springbatch.job.complexml.model.RemiseBancaire;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import fr.training.springbatch.tools.writer.NoOpWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.xml.StaxEventItemReader;
-import org.springframework.batch.item.xml.builder.StaxEventItemReaderBuilder;
-import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.xml.StaxEventItemReader;
+import org.springframework.batch.infrastructure.item.xml.builder.StaxEventItemReaderBuilder;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -35,12 +27,13 @@ import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StreamUtils;
 
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.job.complexml.model.OperationOrph;
-import fr.training.springbatch.job.complexml.model.Record;
-import fr.training.springbatch.job.complexml.model.RemiseBancaire;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
-import fr.training.springbatch.tools.writer.NoOpWriter;
+import java.io.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 @Configuration
 @ConditionalOnProperty(name = "spring.batch.job.names", havingValue = ComplexmlJobConfig.COMPLEX_JOB)
@@ -56,7 +49,6 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
     @Bean
     Job complexmlJob(final Step fixXmlFileStep, final Step complexmlStep, final JobRepository jobRepository) {
         return new JobBuilder(COMPLEX_JOB, jobRepository)
-                .incrementer(new RunIdIncrementer()) // job can be launched as many times as desired
                 .validator(new JobParameterRequirementValidator("xml-file", required().and(fileExist())))
                 .start(fixXmlFileStep)
                 .next(complexmlStep).listener(reportListener())
@@ -98,7 +90,8 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
             final StaxEventItemReader<Record> complexmlReader) {
 
         return new StepBuilder("complexml-step", jobRepository) //
-                .<Record, Record> chunk(chunkSize, transactionManager) //
+                .<Record, Record> chunk(chunkSize)
+                .transactionManager(transactionManager)
                 .reader(complexmlReader)
                 .processor(processor())
                 .writer(complexmlWriter())
@@ -129,12 +122,10 @@ public class ComplexmlJobConfig extends AbstractJobConfiguration {
     ItemProcessor<Record, Record> processor() {
         return item -> {
 
-            if (item instanceof RemiseBancaire) {
-                final RemiseBancaire rb = (RemiseBancaire) item;
+            if (item instanceof RemiseBancaire rb) {
                 logger.info("Processing {}", rb);
             }
-            if (item instanceof OperationOrph) {
-                final OperationOrph oo = (OperationOrph) item;
+            if (item instanceof OperationOrph oo) {
                 logger.info("Processing {}", oo);
             }
             return item;

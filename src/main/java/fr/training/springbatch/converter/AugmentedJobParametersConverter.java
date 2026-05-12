@@ -1,10 +1,9 @@
 package fr.training.springbatch.converter;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.springframework.batch.core.converter.DefaultJobParametersConverter;
 import org.springframework.core.convert.converter.Converter;
+
+import java.nio.file.Path;
 
 public class AugmentedJobParametersConverter extends DefaultJobParametersConverter {
 
@@ -18,7 +17,7 @@ public class AugmentedJobParametersConverter extends DefaultJobParametersConvert
     public static class StringToPathConverter implements Converter<String, Path> {
         @Override
         public Path convert(final String source) {
-            return Paths.get(source);
+            return Path.of(source);
         }
     }
 

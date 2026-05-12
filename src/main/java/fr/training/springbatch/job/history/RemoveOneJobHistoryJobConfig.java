@@ -1,12 +1,12 @@
 package fr.training.springbatch.job.history;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import fr.training.springbatch.tools.tasklet.RemoveOneJobHistoryTasklet;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,8 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.tools.tasklet.RemoveOneJobHistoryTasklet;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
  * <b>Pattern #21</b> This job use the {@link RemoveOneJobHistoryTasklet} to remove the all entries in the Spring-batch metadatas tables for a given job name.

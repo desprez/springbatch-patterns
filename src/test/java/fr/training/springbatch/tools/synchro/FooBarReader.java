@@ -1,13 +1,8 @@
 package fr.training.springbatch.tools.synchro;
 
-import java.util.List;
+import org.springframework.batch.infrastructure.item.*;
 
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.NonTransientResourceException;
-import org.springframework.batch.item.ParseException;
-import org.springframework.batch.item.UnexpectedInputException;
+import java.util.List;
 
 public class FooBarReader implements ItemStreamReader<Foo> {
 

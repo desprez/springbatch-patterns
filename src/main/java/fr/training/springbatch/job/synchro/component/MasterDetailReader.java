@@ -1,16 +1,10 @@
 package fr.training.springbatch.job.synchro.component;
 
-import java.util.List;
-
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.NonTransientResourceException;
-import org.springframework.batch.item.ParseException;
-import org.springframework.batch.item.UnexpectedInputException;
-
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
+import org.springframework.batch.infrastructure.item.*;
+
+import java.util.List;
 
 /**
  * Read the Customer and Transaction records for a key and wrap them in a Customer object.

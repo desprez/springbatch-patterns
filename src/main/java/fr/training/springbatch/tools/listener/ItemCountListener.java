@@ -1,11 +1,11 @@
 package fr.training.springbatch.tools.listener;
 
-import java.text.MessageFormat;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.ChunkListener;
+import org.springframework.batch.core.listener.ChunkListener;
 import org.springframework.batch.core.scope.context.ChunkContext;
+
+import java.text.MessageFormat;
 
 /**
  * Log the count of items processed at a specified interval.
@@ -28,7 +28,7 @@ public class ItemCountListener implements ChunkListener {
     @Override
     public void afterChunk(final ChunkContext context) {
 
-        final long count = context.getStepContext().getStepExecution().getReadCount();
+        final long count = (int) context.getStepContext().getStepExecution().getReadCount();
 
         // If the number of records processed so far is a multiple of the logging
         // interval then output a log message.

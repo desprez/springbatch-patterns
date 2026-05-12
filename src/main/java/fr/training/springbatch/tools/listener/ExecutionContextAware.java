@@ -1,8 +1,8 @@
 package fr.training.springbatch.tools.listener;
 
-import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.core.listener.StepExecutionListener;
 import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
 
 /**
  * Interface with default <b>getExecutionContext()</b> method used to share datas between step of a same job.
@@ -17,7 +17,7 @@ import org.springframework.batch.item.ExecutionContext;
  * </ul>
  *
  * <p>
- * Could be used directly in {@link tasklet} execute() method or with {@link StepExecutionListener} in chunk oriented Step or any @Jobscope reader/processor
+ * Could be used directly in {@link Tasklet} execute() method or with {@link StepExecutionListener} in chunk oriented Step or any @Jobscope reader/processor
  * writer with @Value("#{jobExecutionContext['foo']}") parameter.
  */
 public interface ExecutionContextAware {

@@ -1,14 +1,15 @@
 package fr.training.springbatch.tools.listener;
 
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.listener.SkipListener;
+import org.springframework.batch.infrastructure.item.file.FlatFileParseException;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.SkipListener;
-import org.springframework.batch.item.file.FlatFileParseException;
 
 /**
  * A {@link SkipListener} that save skipped reader lines in rejection file. <br>
@@ -34,9 +35,8 @@ public class RejectFileSkipListener<T, S> implements SkipListener<T, S>, Closeab
      * @see org.springframework.batch.core.SkipListener#onSkipInRead(java.lang.Throwable)
      */
     @Override
-    public void onSkipInRead(final Throwable throwable) {
-        if (throwable instanceof FlatFileParseException) {
-            final FlatFileParseException ffpe = (FlatFileParseException) throwable;
+    public void onSkipInRead(final @NonNull Throwable throwable) {
+        if (throwable instanceof FlatFileParseException ffpe) {
             try {
                 logger.info("{}: {} -- {}", ffpe.getLineNumber(), ffpe.getInput(), ffpe.getMessage());
                 fileWriter.write(ffpe.getInput());

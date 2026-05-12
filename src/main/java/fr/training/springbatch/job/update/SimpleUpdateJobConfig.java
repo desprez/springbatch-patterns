@@ -1,31 +1,28 @@
 package fr.training.springbatch.job.update;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import java.io.File;
-import java.io.IOException;
-
-import javax.sql.DataSource;
-
+import fr.training.springbatch.app.dto.Customer;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.listener.ItemCountListener;
+import fr.training.springbatch.tools.listener.RejectFileSkipListener;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.database.BeanPropertyItemSqlParameterSourceProvider;
+import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -35,12 +32,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Customer;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.listener.ItemCountListener;
-import fr.training.springbatch.tools.listener.RejectFileSkipListener;
-import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import javax.sql.DataSource;
+import java.io.File;
+import java.io.IOException;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
  * <b>Pattern #22</b> The purpose of this Job is to update table from file data. It involve a {@link RejectFileSkipListener} to put rejected datas to a file.
@@ -64,7 +61,6 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
     @Bean
     Job simpleImportJob(final Step updateStep, final JobRepository jobRepository) {
         return new JobBuilder(SIMPLE_UPDATE_JOB, jobRepository)
-                .incrementer(new RunIdIncrementer())
                 .validator(new AdditiveJobParametersValidatorBuilder()
                         .addValidator(new JobParameterRequirementValidator("input-file", required().and(fileExist())))
                         .addValidator(new JobParameterRequirementValidator("rejectfile", required()))
@@ -79,7 +75,8 @@ public class SimpleUpdateJobConfig extends AbstractJobConfiguration {
             final ItemWriter<Customer> updateWriter, final RejectFileSkipListener<Customer, Customer> rejectListener) {
 
         return new StepBuilder("simple-update-step", jobRepository)
-                .<Customer, Customer> chunk(chunkSize, transactionManager)
+                .<Customer, Customer> chunk(chunkSize)
+                .transactionManager(transactionManager)
                 .reader(updateReader)
                 .processor(updateProcessor())
                 .writer(updateWriter)

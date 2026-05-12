@@ -1,12 +1,14 @@
 package fr.training.springbatch.job.multilinesrecord.dto;
 
-import java.time.LocalDate;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import java.io.Serial;
+import java.time.LocalDate;
+
 public class CustomerRecord extends Record {
 
+    @Serial
     private static final long serialVersionUID = 1;
 
     private Long number;

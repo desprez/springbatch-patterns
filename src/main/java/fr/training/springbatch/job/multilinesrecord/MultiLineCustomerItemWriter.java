@@ -1,20 +1,15 @@
 package fr.training.springbatch.job.multilinesrecord;
 
+import fr.training.springbatch.app.dto.Customer;
+import fr.training.springbatch.app.dto.Transaction;
+import org.jspecify.annotations.NonNull;
+import org.springframework.batch.infrastructure.item.*;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStream;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.lang.NonNull;
-
-import fr.training.springbatch.app.dto.Customer;
-import fr.training.springbatch.app.dto.Transaction;
 
 public class MultiLineCustomerItemWriter implements ItemWriter<Customer>, ItemStream {
 

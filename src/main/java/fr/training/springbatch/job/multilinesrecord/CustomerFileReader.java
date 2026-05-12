@@ -1,13 +1,8 @@
 package fr.training.springbatch.job.multilinesrecord;
 
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.ParseException;
-import org.springframework.batch.item.UnexpectedInputException;
-
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
+import org.springframework.batch.infrastructure.item.*;
 
 public class CustomerFileReader implements ItemStreamReader<Customer> {
 

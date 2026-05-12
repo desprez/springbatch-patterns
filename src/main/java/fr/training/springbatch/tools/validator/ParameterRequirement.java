@@ -1,19 +1,14 @@
 package fr.training.springbatch.tools.validator;
 
-import static org.springframework.util.StringUtils.quote;
+import org.springframework.batch.core.job.parameters.JobParameter;
+import org.springframework.util.Assert;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.batch.core.JobParameter;
-import org.springframework.util.Assert;
+import static org.springframework.util.StringUtils.quote;
 
 @FunctionalInterface
 public interface ParameterRequirement<T> {
@@ -43,7 +38,7 @@ public interface ParameterRequirement<T> {
     // Check null Value
     static ParameterRequirement<?> nullValue() {
         return jobParameter -> {
-            if (Objects.isNull(jobParameter.getValue())) {
+            if (Objects.isNull(jobParameter.value())) {
                 return null;
             }
             return " must have null value";
@@ -53,7 +48,7 @@ public interface ParameterRequirement<T> {
     // Check Not null Value
     static ParameterRequirement<?> notNullValue() {
         return jobParameter -> {
-            if (Objects.nonNull(jobParameter.getValue())) {
+            if (Objects.nonNull(jobParameter.value())) {
                 return null;
             }
             return " must have not null value";
@@ -63,7 +58,7 @@ public interface ParameterRequirement<T> {
     // Check
     static ParameterRequirement<?> expectedValue(final Object expectedValue) {
         return jobParameter -> {
-            if (Objects.equals(expectedValue, jobParameter.getValue())) {
+            if (Objects.equals(expectedValue, jobParameter.value())) {
                 return null;
             }
             return " must have expected '%s' value".formatted(expectedValue.toString());
@@ -72,12 +67,12 @@ public interface ParameterRequirement<T> {
 
     static ParameterRequirement<?> valueIn(final Collection<?> values) {
         return jobParameter -> {
-            if (values.contains(jobParameter.getValue())) {
+            if (values.contains(jobParameter.value())) {
                 return null;
             }
             return " must have value in "
                     + quote(values.stream().map(Objects::toString).collect(Collectors.joining(", ")))
-                    + " (current value is : " + quote(jobParameter.getValue().toString()) + ")";
+                    + " (current value is : " + quote(jobParameter.value().toString()) + ")";
         };
     }
 
@@ -109,7 +104,7 @@ public interface ParameterRequirement<T> {
 
     static ParameterRequirement<?> identifying() {
         return jobParameter -> {
-            if (!jobParameter.isIdentifying()) {
+            if (!jobParameter.identifying()) {
                 return " must be identifying";
             }
             return null;
@@ -118,7 +113,7 @@ public interface ParameterRequirement<T> {
 
     static ParameterRequirement<?> nonIdentifying() {
         return jobParameter -> {
-            if (jobParameter.isIdentifying()) {
+            if (jobParameter.identifying()) {
                 return " must be non-identifying";
             }
             return null;
@@ -128,9 +123,9 @@ public interface ParameterRequirement<T> {
     static ParameterRequirement<?> type(final Class<?> type) {
         Assert.notNull(type, "type must be not null");
         return jobParameter -> {
-            if (!jobParameter.getType().equals(type)) {
+            if (!jobParameter.type().equals(type)) {
                 final var jobParameterTypeName = Optional.ofNullable(jobParameter)
-                        .map(JobParameter::getType)
+                        .map(JobParameter::type)
                         .map(Class::getName)
                         .orElse("unknown");
                 return " must be of type '%s' (current type is : '%s')".formatted(type.getName(), jobParameterTypeName);
@@ -157,8 +152,8 @@ public interface ParameterRequirement<T> {
 
     static ParameterRequirement<? extends Number> gt(final Number requiredValue) {
         return jobParameter -> {
-            if ((Double) jobParameter.getValue() <= requiredValue.doubleValue()) {
-                return " has value '%s' but required value is greater than '%s'".formatted(jobParameter.getValue(), requiredValue);
+            if ((Double) jobParameter.value() <= requiredValue.doubleValue()) {
+                return " has value '%s' but required value is greater than '%s'".formatted(jobParameter.value(), requiredValue);
             }
             return null;
         };
@@ -166,8 +161,8 @@ public interface ParameterRequirement<T> {
 
     static ParameterRequirement<? extends Number> lt(final Number requiredValue) {
         return jobParameter -> {
-            if ((Double) jobParameter.getValue() >= requiredValue.doubleValue()) {
-                return " has value '%s' but required value is less than '%s'".formatted(jobParameter.getValue(), requiredValue);
+            if ((Double) jobParameter.value() >= requiredValue.doubleValue()) {
+                return " has value '%s' but required value is less than '%s'".formatted(jobParameter.value(), requiredValue);
             }
             return null;
         };
@@ -175,22 +170,19 @@ public interface ParameterRequirement<T> {
 
     static ParameterRequirement<?> before(final Date date) {
         return jobParameter -> {
-            if (jobParameter.getValue() instanceof final Date value) {
+            if (jobParameter.value() instanceof final Date value) {
                 if (value.before(date)) {
                     return null;
                 }
             }
-            if (jobParameter.getValue() instanceof final Date value) {
-
-            }
-            return " must be before '%s' (current type is : '%s')".formatted(date, jobParameter.getValue());
+            return " must be before '%s' (current type is : '%s')".formatted(date, jobParameter.value());
         };
     }
 
     // Check if a numeric value is positive
     static ParameterRequirement<? extends Number> positiveNumber() {
         return jobParameter -> {
-            if (jobParameter.getValue() instanceof final Number value) {
+            if (jobParameter.value() instanceof final Number value) {
                 if (value.doubleValue() > 0) {
                     return null;
                 }
@@ -202,10 +194,10 @@ public interface ParameterRequirement<T> {
     // Check if a file with value's path exist
     static ParameterRequirement<?> fileExist() {
         return notNullValue().and(jobParameter -> {
-            final String fileName = (String) jobParameter.getValue();
-            final Path filePath = Paths.get(fileName);
+            final String fileName = (String) jobParameter.value();
+            final Path filePath = Path.of(fileName);
             if (Files.notExists(filePath) || Files.isDirectory(filePath)) {
-                return String.format(" with path [%s] does not exist", fileName);
+                return " with path [%s] does not exist".formatted(fileName);
             }
             return null;
         });
@@ -214,36 +206,36 @@ public interface ParameterRequirement<T> {
     // Check if a file with value's path is readable
     static ParameterRequirement<?> fileReadable() {
         return notNullValue().and(jobParameter -> {
-            final String fileName = (String) jobParameter.getValue();
-            final Path filePath = Paths.get(fileName);
+            final String fileName = (String) jobParameter.value();
+            final Path filePath = Path.of(fileName);
             if (Files.isReadable(filePath)) {
                 return null;
             }
-            return String.format(" with path [%s] is not readable", fileName);
+            return " with path [%s] is not readable".formatted(fileName);
         });
     }
 
     // Check if a file with value's path is writable
     static ParameterRequirement<?> fileWritable() {
         return notNullValue().and(jobParameter -> {
-            final String fileName = (String) jobParameter.getValue();
-            final Path filePath = Paths.get(fileName);
+            final String fileName = (String) jobParameter.value();
+            final Path filePath = Path.of(fileName);
             if (Files.isWritable(filePath)) {
                 return null;
             }
-            return String.format(" with path [%s] is not Writable", fileName);
+            return " with path [%s] is not Writable".formatted(fileName);
         });
     }
 
     // Check if a directory with value's path exist
     static ParameterRequirement<?> directoryExist() {
         return notNullValue().and(jobParameter -> {
-            final String fileName = (String) jobParameter.getValue();
-            final Path path = Paths.get(fileName);
+            final String fileName = (String) jobParameter.value();
+            final Path path = Path.of(fileName);
             if (Files.isDirectory(path)) {
                 return null;
             }
-            return String.format(" with path [%s] is not a valid directory", fileName);
+            return " with path [%s] is not a valid directory".formatted(fileName);
         });
     }
 

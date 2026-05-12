@@ -1,27 +1,25 @@
 package fr.training.springbatch.job.extract.processindicator;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import fr.training.springbatch.app.dto.Transaction;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.tasklet.JdbcTasklet;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.database.JdbcPagingItemReader;
-import org.springframework.batch.item.database.Order;
-import org.springframework.batch.item.database.PagingQueryProvider;
-import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
-import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.database.JdbcPagingItemReader;
+import org.springframework.batch.infrastructure.item.database.Order;
+import org.springframework.batch.infrastructure.item.database.PagingQueryProvider;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcPagingItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.database.support.SqlPagingQueryProviderFactoryBean;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,9 +32,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Transaction;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.tasklet.JdbcTasklet;
+import javax.sql.DataSource;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * <b>Pattern #13</b> This pattern use a process indicator to flag processed records (unlike the staging job Processed Column is present in the table)
@@ -95,7 +93,7 @@ public class ExtractProcessIndicatorJobConfig extends AbstractJobConfiguration {
      */
     @Bean
     @DependsOnDatabaseInitialization
-    JdbcPagingItemReader<Transaction> unprocessedReader(final DataSource dataSource, final PagingQueryProvider queryProvider) {
+    JdbcPagingItemReader<Transaction> unprocessedReader(final DataSource dataSource, final PagingQueryProvider queryProvider) throws Exception {
 
         return new JdbcPagingItemReaderBuilder<Transaction>()
                 .name("unprocessedReader")

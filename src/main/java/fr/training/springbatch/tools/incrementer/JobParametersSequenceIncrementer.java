@@ -1,23 +1,23 @@
 package fr.training.springbatch.tools.incrementer;
 
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.JobParametersIncrementer;
+import org.jspecify.annotations.Nullable;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.job.parameters.JobParametersIncrementer;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
-import org.springframework.lang.Nullable;
 
 /**
  * In case of new {@code JobInstance}, this implementation provides an extra job parameter by using a database sequence. The main advantage of this
  * implementation over the {@code RunIdIncrementer} is that in concurrent situation a database sequence call is <b>thread-safe</b> (ensure uniqueness of the
  * returned ids).
  *
- * @see org.springframework.batch.core.launch.support.RunIdIncrementer
+ * @see org.springframework.batch.core.job.parameters.RunIdIncrementer
  * @author Almex
  */
 public class JobParametersSequenceIncrementer implements JobParametersIncrementer {
 
     /**
-     * For legacy support we use the same name as the default one provided by {@link org.springframework.batch.core.launch.support.RunIdIncrementer}
+     * For legacy support we use the same name as the default one provided by {@link org.springframework.batch.core.job.parameters.RunIdIncrementer}
      */
     public static final String INCREMENTER_PARAMETER_NAME = "run.id";
 

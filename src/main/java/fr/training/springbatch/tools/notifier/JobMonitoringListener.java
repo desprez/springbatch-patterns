@@ -1,8 +1,8 @@
 package fr.training.springbatch.tools.notifier;
 
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.listener.JobExecutionListener;
 
 /**
  * {@link Listener} who send notification via a NotificationService

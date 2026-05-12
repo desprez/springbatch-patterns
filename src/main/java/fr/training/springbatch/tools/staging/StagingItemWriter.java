@@ -1,22 +1,22 @@
 package fr.training.springbatch.tools.staging;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ListIterator;
-
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.StepExecutionListener;
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.core.listener.StepExecutionListener;
+import org.springframework.batch.core.step.StepExecution;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.SerializationUtils;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ListIterator;
 
 /**
  * Database {@link ItemWriter} implementing the process indicator pattern.
@@ -73,7 +73,7 @@ public class StagingItemWriter<T> extends JdbcDaoSupport implements StepExecutio
                 Assert.state(itemIterator.nextIndex() == i, "Item ordering must be preserved in batch sql update");
 
                 ps.setLong(1, incrementer.nextLongValue());
-                ps.setLong(2, stepExecution.getJobExecution().getJobId());
+                ps.setLong(2, stepExecution.getJobExecution().getId());
                 ps.setBytes(3, SerializationUtils.serialize(itemIterator.next()));
                 ps.setString(4, NEW);
             }

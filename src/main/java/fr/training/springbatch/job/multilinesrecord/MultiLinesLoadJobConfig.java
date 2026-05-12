@@ -1,34 +1,30 @@
 package fr.training.springbatch.job.multilinesrecord;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.job.multilinesrecord.dto.CustomerRecord;
+import fr.training.springbatch.job.multilinesrecord.dto.Record;
+import fr.training.springbatch.job.multilinesrecord.dto.TransactionRecord;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
-import org.springframework.batch.item.file.mapping.FieldSetMapper;
-import org.springframework.batch.item.file.mapping.PatternMatchingCompositeLineMapper;
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.batch.item.file.transform.LineTokenizer;
-import org.springframework.batch.item.support.ClassifierCompositeItemWriter;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.infrastructure.item.file.mapping.FieldSetMapper;
+import org.springframework.batch.infrastructure.item.file.mapping.PatternMatchingCompositeLineMapper;
+import org.springframework.batch.infrastructure.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.infrastructure.item.file.transform.LineTokenizer;
+import org.springframework.batch.infrastructure.item.support.ClassifierCompositeItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -39,11 +35,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.job.multilinesrecord.dto.CustomerRecord;
-import fr.training.springbatch.job.multilinesrecord.dto.Record;
-import fr.training.springbatch.job.multilinesrecord.dto.TransactionRecord;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
  * <b>Pattern #19</b> This job allows to load records of different types from the same file and load them into their respective tables.
@@ -73,7 +70,6 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     Job multilinesLoadJob(final Step multilinesLoadStep, final JobRepository jobRepository) {
         return new JobBuilder(MULTILINES_LOAD_JOB, jobRepository)
                 .validator(new JobParameterRequirementValidator("input-file", required().and(fileExist())))
-                .incrementer(new RunIdIncrementer())
                 .flow(multilinesLoadStep)
                 .end()
                 .listener(reportListener())
@@ -103,29 +99,22 @@ public class MultiLinesLoadJobConfig extends AbstractJobConfiguration {
     @StepScope
     @Bean
     FlatFileItemReader<Record> realFileReader(@Value("#{jobParameters['input-file']}") final String inputFile) {
-        final FlatFileItemReader<Record> fileReader = new FlatFileItemReader<>();
-        fileReader.setResource(new FileSystemResource(inputFile));
-        fileReader.setLineMapper(lineMapper());
+        final FlatFileItemReader<Record> fileReader = new FlatFileItemReader<>(new FileSystemResource(inputFile), lineMapper());
         fileReader.setEncoding("UTF-8");
         return fileReader;
     }
 
     public PatternMatchingCompositeLineMapper<Record> lineMapper() {
-        final PatternMatchingCompositeLineMapper<Record> mapper = new PatternMatchingCompositeLineMapper<>();
 
         final Map<String, LineTokenizer> tokenizers = new HashMap<>(2);
         tokenizers.put("*,C,*", customerLineTokenizer());
         tokenizers.put("*,T,*", transactionLineTokenizer());
 
-        mapper.setTokenizers(tokenizers);
-
         final Map<String, FieldSetMapper<Record>> mappers = new HashMap<>(2);
         mappers.put("*,C,*", customerFieldSetMapper());
         mappers.put("*,T,*", transactionFieldSetMapper());
 
-        mapper.setFieldSetMappers(mappers);
-
-        return mapper;
+        return new PatternMatchingCompositeLineMapper<>(tokenizers, mappers);
     }
 
     public LineTokenizer customerLineTokenizer() {

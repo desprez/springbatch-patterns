@@ -1,21 +1,20 @@
 package fr.training.springbatch.tools.tasklet;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import fr.training.springbatch.job.BatchTestConfiguration;
+import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.core.step.StepContribution;
+import org.springframework.batch.core.step.StepExecution;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
+import org.springframework.batch.test.MetaDataInstanceFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest;
+import org.springframework.test.context.ContextConfiguration;
 
 import javax.sql.DataSource;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.scope.context.StepContext;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.batch.test.MetaDataInstanceFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
-import org.springframework.test.context.ContextConfiguration;
-
-import fr.training.springbatch.job.BatchTestConfiguration;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration(classes = { BatchTestConfiguration.class })
 @JdbcTest

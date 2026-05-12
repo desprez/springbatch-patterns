@@ -1,10 +1,10 @@
 package fr.training.springbatch.tools.writer;
 
-import static org.springframework.util.Assert.notNull;
+import org.jspecify.annotations.NonNull;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ItemWriter;
 
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.lang.NonNull;
+import static org.springframework.util.Assert.notNull;
 
 /**
  * Generic {@link ItemWriter} that write conditionaly by delegating to a real ItemWriter if a dryrun flag is set.

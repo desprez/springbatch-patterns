@@ -1,24 +1,23 @@
 package fr.training.springbatch.tools.staging;
 
-import java.util.Iterator;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.StepExecutionListener;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ReaderNotOpenException;
+import org.springframework.batch.core.listener.StepExecutionListener;
+import org.springframework.batch.core.step.StepExecution;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.ReaderNotOpenException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.SerializationUtils;
+
+import javax.sql.DataSource;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Thread-safe database {@link ItemReader} implementing the process indicator pattern.
@@ -64,7 +63,7 @@ public class StagingItemReader<T> implements ItemReader<ProcessIndicatorItemWrap
 
                     (rs, rowNum) -> rs.getLong(1),
 
-                    stepExecution.getJobExecution().getJobId(), StagingItemWriter.NEW);
+                    stepExecution.getJobExecution().getId(), StagingItemWriter.NEW);
         }
 
     }

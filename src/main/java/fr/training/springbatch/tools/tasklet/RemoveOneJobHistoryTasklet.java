@@ -1,23 +1,23 @@
 package fr.training.springbatch.tools.tasklet;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.launch.NoSuchJobInstanceException;
 import org.springframework.batch.core.repository.dao.AbstractJdbcBatchMetadataDao;
 import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+
 public class RemoveOneJobHistoryTasklet implements Tasklet, InitializingBean {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RemoveSpringBatchHistoryTasklet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RemoveOneJobHistoryTasklet.class);
 
     /**
      * SQL statements removing step and job executions for a given job name.
@@ -83,7 +83,7 @@ public class RemoveOneJobHistoryTasklet implements Tasklet, InitializingBean {
 
         final List<Long> instanceIdList = jdbcTemplate.queryForList(getQuery(SQL_FIND_JOB_INSTANCE_ID), Long.class, jobName);
         if (instanceIdList.isEmpty()) {
-            throw new NoSuchJobInstanceException(String.format("No job instance with jobName=%s", jobName));
+            throw new NoSuchJobInstanceException("No job instance with jobName=%s".formatted(jobName));
         }
 
         final Long instanceId = instanceIdList.get(0);

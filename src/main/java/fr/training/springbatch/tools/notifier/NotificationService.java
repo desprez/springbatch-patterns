@@ -1,6 +1,6 @@
 package fr.training.springbatch.tools.notifier;
 
-import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.job.JobExecution;
 
 /**
  *

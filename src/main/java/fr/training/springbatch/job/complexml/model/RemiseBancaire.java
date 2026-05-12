@@ -1,9 +1,9 @@
 package fr.training.springbatch.job.complexml.model;
 
-import java.util.List;
-
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+
+import java.util.List;
 
 @XmlRootElement(name = "RemiseBancaire")
 public class RemiseBancaire extends Record {

@@ -1,15 +1,11 @@
 package fr.training.springbatch.job.controlbreak;
 
+import org.springframework.batch.infrastructure.item.*;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.support.SingleItemPeekableItemReader;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.ParseException;
-import org.springframework.batch.item.UnexpectedInputException;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.support.SingleItemPeekableItemReader;
 
 /**
  * An {@link ItemReader} that delivers a list as its item, storing up objects from the injected {@link ItemReader} that are part of the same group.
@@ -54,8 +50,7 @@ public class ItemListPeekableItemReader<T> implements ItemStreamReader<List<T>> 
     }
 
     public void setDelegate(final FlatFileItemReader<T> delegate) {
-        this.delegate = new SingleItemPeekableItemReader<>();
-        this.delegate.setDelegate(delegate);
+        this.delegate = new SingleItemPeekableItemReader<>(delegate);
     }
 
     public void setBreakKeyStrategy(final BreakKeyStrategy<T> breakKeyStrategy) {

@@ -21,8 +21,8 @@ spring:
  
 logging:
   level:
-    org.springframework.jdbc.core.JdbcTemplate: debug
-    org.springframework.batch.item.database.JdbcCursorItemReader: trace
+    org.springframework.jdbc.core.JdbcTemplate: warn
+    org.springframework.batch.infrastructure.item.database.JdbcCursorItemReader: trace
     fr.training.springbatch: info
     org.springframework.batch: debug
     org.springframework.jdbc: info
@@ -36,4 +36,7 @@ logging:
 decorator:
   datasource:
     p6spy:
+      enable-logging: true
+      multiline: false
       log-file: spy.log
+      appender: com.p6spy.engine.spy.appender.FileLogger

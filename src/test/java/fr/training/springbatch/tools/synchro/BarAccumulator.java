@@ -1,6 +1,6 @@
 package fr.training.springbatch.tools.synchro;
 
-import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.infrastructure.item.ItemReader;
 
 public class BarAccumulator extends ItemAccumulator<Bar, Integer> {
 

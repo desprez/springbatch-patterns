@@ -1,21 +1,23 @@
 package fr.training.springbatch.job.synchro;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.File;
-
+import fr.training.springbatch.job.BatchTestConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.test.JobLauncherTestUtils;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.step.StepExecution;
+import org.springframework.batch.test.JobOperatorTestUtils;
+import org.springframework.batch.test.MetaDataInstanceFactory;
 import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import fr.training.springbatch.job.BatchTestConfiguration;
+import java.io.File;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
 @SpringBatchTest
@@ -30,20 +32,26 @@ class File2TableSynchroJobTest {
     private static final String EXPECTED_FILE = "src/test/resources/datas/csv/customer-expected.csv";
 
     @Autowired
-    private JobLauncherTestUtils testUtils;
+    private JobOperatorTestUtils testUtils;
+
+    @Autowired
+    private Job job;
 
     @Test
-    void file2DBSynchroStep_should_produce_expected_file() throws Exception {
+    void file2DBSynchroStep_should_produce_expected_file() {
         // Given
         final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters()) //
                 .addString("customer-file", CUSTOMER_FILE) //
                 .addString("output-file", OUTPUT_FILE) //
                 .toJobParameters();
+        testUtils.setJob(job);
+        StepExecution fixtureExecution = MetaDataInstanceFactory.createStepExecution();
+
         // When
-        final JobExecution jobExecution = testUtils.launchStep("file2tablesynchro-step", jobParameters);
+        final JobExecution execution = testUtils.startStep("file2tablesynchro-step", jobParameters, fixtureExecution.getExecutionContext());
 
         // Then
-        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         assertThat(new File(OUTPUT_FILE)).hasSameTextualContentAs(new File(EXPECTED_FILE));
     }

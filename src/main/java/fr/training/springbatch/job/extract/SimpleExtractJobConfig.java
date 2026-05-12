@@ -1,26 +1,21 @@
 package fr.training.springbatch.job.extract;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.directoryExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import java.io.File;
-
-import javax.sql.DataSource;
-
+import fr.training.springbatch.app.dto.Transaction;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.database.JdbcCursorItemReader;
-import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.database.JdbcCursorItemReader;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -32,9 +27,11 @@ import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
 
-import fr.training.springbatch.app.dto.Transaction;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import javax.sql.DataSource;
+import java.io.File;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.directoryExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
  * <b>Pattern #1</b> This is the simplest job configuration (no really innovation here). One step use the reader / processor / writer pattern to read a database
@@ -64,7 +61,6 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
     Job simpleExtractJob(final Step extractStep, final JobRepository jobRepository) {
         return new JobBuilder(SIMPLE_EXTRACT_JOB, jobRepository)
                 .validator(new JobParameterRequirementValidator("output-dir", required().and(directoryExist())))
-                .incrementer(new RunIdIncrementer())
                 .flow(extractStep)
                 .end()
                 .listener(reportListener())
@@ -76,7 +72,8 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
             final FlatFileItemWriter<Transaction> extractWriter) {
 
         return new StepBuilder("simple-extract-step", jobRepository)
-                .<Transaction, Transaction> chunk(chunkSize, transactionManager)
+                .<Transaction, Transaction> chunk(chunkSize)
+                .transactionManager(transactionManager)
                 .reader(simpleExtractReader())
                 .processor(simpleExtractProcessor())
                 .writer(extractWriter)
@@ -150,7 +147,7 @@ public class SimpleExtractJobConfig extends AbstractJobConfiguration {
         final String extension = StringUtils.getFilenameExtension(FILENAME);
 
         final File dir = new File(outputdir);
-        final String name = String.format("%s-%s.%s", baseFilename, runId, extension);
+        final String name = "%s-%s.%s".formatted(baseFilename, runId, extension);
         final File file = new File(dir, name);
 
         logger.info("fileName={}", file.getAbsoluteFile());

@@ -1,11 +1,11 @@
 package fr.training.springbatch.tools.validator;
 
+import org.springframework.batch.core.job.parameters.InvalidJobParametersException;
+import org.springframework.batch.core.job.parameters.JobParametersValidator;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.springframework.batch.core.JobParametersInvalidException;
-import org.springframework.batch.core.JobParametersValidator;
 
 public class AdditiveJobParametersValidatorBuilder {
 
@@ -31,14 +31,14 @@ public class AdditiveJobParametersValidatorBuilder {
             for (final JobParametersValidator jobParametersValidator : validators) {
                 try {
                     jobParametersValidator.validate(parameters);
-                } catch (final JobParametersInvalidException e) {
+                } catch (final InvalidJobParametersException e) {
                     errors.add(e.getMessage());
                 }
             }
 
             if (!errors.isEmpty()) {
                 final String errorMessages = errors.stream().collect(Collectors.joining(",\n"));
-                throw new JobParametersInvalidException(errorMessages.concat("."));
+                throw new InvalidJobParametersException(errorMessages.concat("."));
             }
         };
     }

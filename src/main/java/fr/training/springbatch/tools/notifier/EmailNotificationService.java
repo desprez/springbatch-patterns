@@ -1,12 +1,12 @@
 package fr.training.springbatch.tools.notifier;
 
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.List;
-
-import org.springframework.batch.core.JobExecution;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 
 /**
  * Send Email implementation of the NotificationService.

@@ -1,18 +1,17 @@
 package fr.training.springbatch.job.synchro;
 
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.support.AbstractItemStreamItemReader;
-import org.springframework.context.annotation.Bean;
-
 import fr.training.springbatch.app.dto.Customer;
 import fr.training.springbatch.app.dto.Transaction;
 import fr.training.springbatch.app.job.AbstractJobConfiguration;
 import fr.training.springbatch.job.synchro.component.MasterDetailReader;
 import fr.training.springbatch.tools.synchro.CompositeAggregateReader;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.support.AbstractItemStreamItemReader;
+import org.springframework.context.annotation.Bean;
 
 public abstract class AbstractSynchroJob extends AbstractJobConfiguration {
 
-    public AbstractSynchroJob() {
+    protected AbstractSynchroJob() {
     }
 
     /**

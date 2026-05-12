@@ -1,15 +1,15 @@
 package fr.training.springbatch.tools.chaos;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.job.UnexpectedJobExecutionException;
+import org.springframework.batch.infrastructure.item.support.ListItemReader;
+import org.springframework.batch.infrastructure.repeat.context.RepeatContextSupport;
+import org.springframework.batch.infrastructure.repeat.support.RepeatSynchronizationManager;
 
 import java.util.ArrayList;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.batch.core.UnexpectedJobExecutionException;
-import org.springframework.batch.item.support.ListItemReader;
-import org.springframework.batch.repeat.context.RepeatContextSupport;
-import org.springframework.batch.repeat.support.RepeatSynchronizationManager;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ExceptionThrowingItemReaderProxyTest {
 

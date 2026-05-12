@@ -1,10 +1,10 @@
 package fr.training.springbatch.tools.chaos;
 
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.UnexpectedJobExecutionException;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.lang.NonNull;
+import org.springframework.batch.core.job.UnexpectedJobExecutionException;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 
 public class ExceptionThrowingProcessor<T> implements ItemProcessor<T, T> {
 

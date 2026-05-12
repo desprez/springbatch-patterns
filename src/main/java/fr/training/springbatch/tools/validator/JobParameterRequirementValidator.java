@@ -1,9 +1,9 @@
 package fr.training.springbatch.tools.validator;
 
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersInvalidException;
-import org.springframework.batch.core.JobParametersValidator;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.springframework.batch.core.job.parameters.InvalidJobParametersException;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersValidator;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -26,11 +26,11 @@ public class JobParameterRequirementValidator implements JobParametersValidator 
     }
 
     @Override
-    public void validate(final @Nullable JobParameters jobParameters) throws JobParametersInvalidException {
+    public void validate(final @Nullable JobParameters jobParameters) throws InvalidJobParametersException {
         Assert.notNull(jobParameters, "jobParameters must be not null");
         final String violation = requirement.validate(jobParameters.getParameter(parameterKey));
         if (violation != null) {
-            throw new JobParametersInvalidException(formatMessage(violation, parameterKey));
+            throw new InvalidJobParametersException(formatMessage(violation, parameterKey));
         }
     }
 

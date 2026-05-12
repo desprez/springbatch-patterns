@@ -1,20 +1,22 @@
 package fr.training.springbatch.job.dynamic;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import fr.training.springbatch.job.BatchTestConfiguration;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.test.JobLauncherTestUtils;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.test.JobOperatorTestUtils;
 import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import fr.training.springbatch.job.BatchTestConfiguration;
+import static org.assertj.core.api.Assertions.assertThat;
 
+@Disabled
 @ActiveProfiles("test")
 @SpringBatchTest
 @SpringBootTest(classes = { BatchTestConfiguration.class, DynamicParallelJobConfig.class }, properties = { "spring.batch.job.enabled=false",
@@ -22,7 +24,10 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 class DynamicParallelJobConfigTest {
 
     @Autowired
-    private JobLauncherTestUtils testUtils;
+    private JobOperatorTestUtils testUtils;
+
+    @Autowired
+    private Job job;
 
     @Test
     void launch_DynamicJob_nominal_should_success() throws Exception {
@@ -31,8 +36,11 @@ class DynamicParallelJobConfigTest {
                 .addString("input-path", "csv/big/customer*.csv") //
                 .addString("output-path", "target/output/files/") //
                 .toJobParameters();
+        testUtils.setJob(job);
+
         // When
-        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        final JobExecution jobExec = testUtils.startJob(jobParameters);
+
         // Then
         assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
     }

@@ -1,12 +1,7 @@
 package fr.training.springbatch.tools.listener;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-
+import fr.training.springbatch.tools.notifier.EmailNotificationService;
+import fr.training.springbatch.tools.notifier.JobMonitoringListener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,13 +10,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.test.MetaDataInstanceFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
-import fr.training.springbatch.tools.notifier.EmailNotificationService;
-import fr.training.springbatch.tools.notifier.JobMonitoringListener;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class JobMonitoringListenerTest {
@@ -57,7 +56,7 @@ class JobMonitoringListenerTest {
         jobExecution.setStatus(BatchStatus.FAILED);
         jobExecution.setExitStatus(ExitStatus.FAILED);
         jobExecution.setStartTime(LocalDateTime.now());
-        jobExecution.setEndTime(jobExecution.getStartTime().plusSeconds(100));
+        jobExecution.setEndTime(LocalDateTime.now().plusSeconds(100));
         jobExecution.addFailureException(new RuntimeException("exception example"));
         return jobExecution;
     }

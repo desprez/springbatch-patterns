@@ -1,14 +1,14 @@
 package fr.training.springbatch.tools.synchro;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemStream;
-import org.springframework.batch.item.ItemStreamException;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.ItemStream;
+import org.springframework.batch.infrastructure.item.ItemStreamException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Methods for finding and reading items from an ItemReader and accumulating them according to a key value.
@@ -28,7 +28,7 @@ public abstract class ItemAccumulator<T, K extends Comparable<K>> implements Ite
     private T lastItem;
     private List<T> lastItemList;
 
-    public ItemAccumulator(final ItemReader<T> reader) {
+    protected ItemAccumulator(final ItemReader<T> reader) {
         this.reader = reader;
     }
 
@@ -36,6 +36,7 @@ public abstract class ItemAccumulator<T, K extends Comparable<K>> implements Ite
      * Extract the key of an item.
      *
      * @param item
+     *
      * @return the key value for the item
      */
     public abstract K getKey(T item);
@@ -193,22 +194,22 @@ public abstract class ItemAccumulator<T, K extends Comparable<K>> implements Ite
 
     @Override
     public void open(final ExecutionContext executionContext) throws ItemStreamException {
-        if (reader instanceof ItemStream) {
-            ((ItemStream) reader).open(executionContext);
+        if (reader instanceof ItemStream stream) {
+            stream.open(executionContext);
         }
     }
 
     @Override
     public void update(final ExecutionContext executionContext) throws ItemStreamException {
-        if (reader instanceof ItemStream) {
-            ((ItemStream) reader).update(executionContext);
+        if (reader instanceof ItemStream stream) {
+            stream.update(executionContext);
         }
     }
 
     @Override
     public void close() throws ItemStreamException {
-        if (reader instanceof ItemStream) {
-            ((ItemStream) reader).close();
+        if (reader instanceof ItemStream stream) {
+            stream.close();
         }
     }
 

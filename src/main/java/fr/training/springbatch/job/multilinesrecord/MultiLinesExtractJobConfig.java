@@ -1,26 +1,22 @@
 package fr.training.springbatch.job.multilinesrecord;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import java.util.List;
-
-import javax.sql.DataSource;
-
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import fr.training.springbatch.app.dto.Customer;
+import fr.training.springbatch.app.dto.Transaction;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JdbcCursorItemReader;
-import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.database.JdbcCursorItemReader;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,10 +27,10 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Customer;
-import fr.training.springbatch.app.dto.Transaction;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import javax.sql.DataSource;
+import java.util.List;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
  * <b>Pattern #18</b> This job allows you to write records of different types from 2 tables to a file. The records from the master table are read by the
@@ -62,8 +58,7 @@ public class MultiLinesExtractJobConfig extends AbstractJobConfiguration {
     Job multilinesExtractJob(final Step multilinesExtractStep, final JobRepository jobRepository) {
 
         return new JobBuilder(MULTILINES_EXTRACT_JOB, jobRepository)
-                .validator(new JobParameterRequirementValidator("output-file", required().and(fileWritable())))
-                .incrementer(new RunIdIncrementer())
+                .validator(new JobParameterRequirementValidator("output-file", required()))
                 .flow(multilinesExtractStep)
                 .end()
                 .listener(reportListener())

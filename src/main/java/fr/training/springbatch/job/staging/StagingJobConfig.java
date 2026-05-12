@@ -1,30 +1,32 @@
 package fr.training.springbatch.job.staging;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import javax.sql.DataSource;
-
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import fr.training.springbatch.app.dto.Transaction;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.listener.ItemCountListener;
+import fr.training.springbatch.tools.staging.ProcessIndicatorItemWrapper;
+import fr.training.springbatch.tools.staging.StagingItemProcessor;
+import fr.training.springbatch.tools.staging.StagingItemReader;
+import fr.training.springbatch.tools.staging.StagingItemWriter;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.database.support.DataFieldMaxValueIncrementerFactory;
-import org.springframework.batch.item.database.support.DefaultDataFieldMaxValueIncrementerFactory;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.RecordFieldSetMapper;
-import org.springframework.batch.item.validator.SpringValidator;
-import org.springframework.batch.item.validator.ValidatingItemProcessor;
-import org.springframework.batch.support.DatabaseType;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.database.support.DataFieldMaxValueIncrementerFactory;
+import org.springframework.batch.infrastructure.item.database.support.DefaultDataFieldMaxValueIncrementerFactory;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.mapping.RecordFieldSetMapper;
+import org.springframework.batch.infrastructure.item.validator.SpringValidator;
+import org.springframework.batch.infrastructure.item.validator.ValidatingItemProcessor;
+import org.springframework.batch.infrastructure.support.DatabaseType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,14 +41,10 @@ import org.springframework.jdbc.support.MetaDataAccessException;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Transaction;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.listener.ItemCountListener;
-import fr.training.springbatch.tools.staging.ProcessIndicatorItemWrapper;
-import fr.training.springbatch.tools.staging.StagingItemProcessor;
-import fr.training.springbatch.tools.staging.StagingItemReader;
-import fr.training.springbatch.tools.staging.StagingItemWriter;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import javax.sql.DataSource;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
  * <b>Pattern #10</b> This pattern is a java configuration adaptation of the [Spring-batch
@@ -65,7 +63,6 @@ public class StagingJobConfig extends AbstractJobConfiguration {
     @Bean
     Job stagingJob(final Step stagingStep, final Step loadingStep, final JobRepository jobRepository) {
         return new JobBuilder(STAGING_JOB, jobRepository)
-                .incrementer(new RunIdIncrementer())
                 .validator(new JobParameterRequirementValidator("input-file", required().and(fileExist())))
                 .start(stagingStep)
                 .next(loadingStep)

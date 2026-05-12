@@ -1,18 +1,17 @@
 package fr.training.springbatch.tools.synchro;
 
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.NonTransientResourceException;
-import org.springframework.batch.item.ParseException;
-import org.springframework.batch.item.UnexpectedInputException;
-import org.springframework.batch.item.support.AbstractItemStreamItemReader;
-import org.springframework.batch.item.support.SingleItemPeekableItemReader;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.support.AbstractItemStreamItemReader;
+import org.springframework.batch.infrastructure.item.support.SingleItemPeekableItemReader;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
+
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -51,7 +50,7 @@ public class CompositeAggregateReader<M, S, K extends Comparable<K>> extends Abs
     private BiConsumer<M, S> masterAggregator;
 
     @Override
-    public M read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+    public M read() throws Exception {
 
         final M item = masterItemReader.read();
 
@@ -93,13 +92,13 @@ public class CompositeAggregateReader<M, S, K extends Comparable<K>> extends Abs
     }
 
     @Override
-    public void open(final ExecutionContext executionContext) {
+    public void open(final @NonNull ExecutionContext executionContext) {
         masterItemReader.open(executionContext);
         peekableItemReader.open(executionContext);
     }
 
     @Override
-    public void update(final ExecutionContext executionContext) {
+    public void update(final @NonNull ExecutionContext executionContext) {
         masterItemReader.update(executionContext);
         peekableItemReader.update(executionContext);
     }
@@ -116,7 +115,7 @@ public class CompositeAggregateReader<M, S, K extends Comparable<K>> extends Abs
     /**
      * Establishes the {@link AbstractItemStreamItemReader<M>} reader that will read master items.
      *
-     * @param reader
+     * @param masterItemReader
      *            {@link AbstractItemStreamItemReader<M>} reader that will read master items.
      */
     public void setMasterItemReader(final AbstractItemStreamItemReader<M> masterItemReader) {
@@ -126,13 +125,12 @@ public class CompositeAggregateReader<M, S, K extends Comparable<K>> extends Abs
     /**
      * Establishes the {@link AbstractItemStreamItemReader<S>} reader that will read slave items.
      *
-     * @param reader
+     * @param slaveItemReader
      *            {@link AbstractItemStreamItemReader<S>} reader that will read slave items.
      */
     public void setSlaveItemReader(final AbstractItemStreamItemReader<S> slaveItemReader) {
         this.slaveItemReader = slaveItemReader;
-        peekableItemReader = new SingleItemPeekableItemReader<>();
-        peekableItemReader.setDelegate(slaveItemReader);
+        peekableItemReader = new SingleItemPeekableItemReader<>(slaveItemReader);
     }
 
     /**
@@ -158,7 +156,7 @@ public class CompositeAggregateReader<M, S, K extends Comparable<K>> extends Abs
     /**
      * The {@link BiConsumer<M, S>} function to add/set the slave Item to the master Item.
      * <p>
-     * Typicaly a collection <b>add method</b> if the relation between master & slave items is one-to-many and a <b>set method</b> if the relation between
+     * Typically a collection <b>add method</b> if the relation between master & slave items is one-to-many and a <b>set method</b> if the relation between
      * master & slave items is one-to-one.
      * </p>
      *

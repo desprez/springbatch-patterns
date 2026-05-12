@@ -1,11 +1,11 @@
 package fr.training.springbatch.job.controlbreak;
 
 import org.springframework.batch.core.annotation.AfterRead;
-import org.springframework.batch.item.NonTransientResourceException;
-import org.springframework.batch.item.PeekableItemReader;
-import org.springframework.batch.repeat.RepeatContext;
-import org.springframework.batch.repeat.context.RepeatContextSupport;
-import org.springframework.batch.repeat.policy.CompletionPolicySupport;
+import org.springframework.batch.infrastructure.item.NonTransientResourceException;
+import org.springframework.batch.infrastructure.item.PeekableItemReader;
+import org.springframework.batch.infrastructure.repeat.RepeatContext;
+import org.springframework.batch.infrastructure.repeat.context.RepeatContextSupport;
+import org.springframework.batch.infrastructure.repeat.policy.CompletionPolicySupport;
 
 /**
  * using a custom CompletionPolicy and a PeekableItemReader. The idea behind the code is to peek next item, perform next element read and check from value

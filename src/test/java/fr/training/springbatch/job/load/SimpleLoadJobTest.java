@@ -1,26 +1,25 @@
 package fr.training.springbatch.job.load;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
+import fr.training.springbatch.job.BatchTestConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.test.JobLauncherTestUtils;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.step.StepExecution;
+import org.springframework.batch.test.JobOperatorTestUtils;
 import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import fr.training.springbatch.job.BatchTestConfiguration;
+import java.io.File;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
 @SpringBatchTest
@@ -31,10 +30,13 @@ class SimpleLoadJobTest {
     private static final String REJECT_FILE_PATH = "target/output/reject.csv";
 
     @Autowired
-    private JobLauncherTestUtils testUtils;
+    private JobOperatorTestUtils testUtils;
+
+    @Autowired
+    private Job job;
 
     @BeforeEach
-    void cleanUp() throws IOException {
+    void cleanUp() {
         final File rejectFile = new File(REJECT_FILE_PATH);
         if (rejectFile.exists()) {
             FileUtils.deleteQuietly(rejectFile);
@@ -48,19 +50,22 @@ class SimpleLoadJobTest {
                 .addString("input-file", "src/main/resources/csv/transaction.csv")
                 .addString("rejectfile", REJECT_FILE_PATH)
                 .toJobParameters();
+        testUtils.setJob(job);
+
         // When
-        final JobExecution jobExec = testUtils.launchJob(jobParameters);
+        final JobExecution jobExec = testUtils.startJob(jobParameters);
+
         // Then
         assertThat(jobExec.getStatus()).isEqualTo(BatchStatus.COMPLETED);
         assertThat(new File(REJECT_FILE_PATH)).doesNotExist();
 
         // And expected read / write counts
         final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> "simple-load-step".equals(e.getStepName())).findFirst();
-        assertThat(executionOpt.isPresent()).isTrue();
+        assertThat(executionOpt).isPresent();
         final StepExecution stepExec = executionOpt.get();
 
-        assertThat(stepExec.getReadCount()).isEqualTo(310);
-        assertThat(stepExec.getWriteCount()).isEqualTo(310);
+        assertThat((int) stepExec.getReadCount()).isEqualTo(310);
+        assertThat((int) stepExec.getWriteCount()).isEqualTo(310);
     }
 
     @Test
@@ -79,12 +84,12 @@ class SimpleLoadJobTest {
 
         // And expected read / write / skip counts
         final Optional<StepExecution> executionOpt = jobExec.getStepExecutions().stream().filter(e -> "simple-load-step".equals(e.getStepName())).findFirst();
-        assertThat(executionOpt.isPresent()).isTrue();
+        assertThat(executionOpt).isPresent();
         final StepExecution stepExec = executionOpt.get();
 
-        assertThat(stepExec.getReadCount()).isEqualTo(308);
-        assertThat(stepExec.getWriteCount()).isEqualTo(308);
-        assertThat(stepExec.getSkipCount()).isEqualTo(2);
+        assertThat((int) stepExec.getReadCount()).isEqualTo(308);
+        assertThat((int) stepExec.getWriteCount()).isEqualTo(308);
+        assertThat((int) stepExec.getSkipCount()).isEqualTo(2);
     }
 
 }

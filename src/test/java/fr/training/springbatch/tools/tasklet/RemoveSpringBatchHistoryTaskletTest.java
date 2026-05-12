@@ -1,18 +1,13 @@
 package fr.training.springbatch.tools.tasklet;
 
-import java.util.List;
-
-import javax.sql.DataSource;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import fr.training.springbatch.job.BatchTestConfiguration;
 import org.junit.jupiter.api.Test;
-import org.springframework.batch.core.JobInstance;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.job.JobInstance;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.core.step.StepContribution;
+import org.springframework.batch.core.step.StepExecution;
 import org.springframework.batch.test.MetaDataInstanceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,7 +17,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 
-import fr.training.springbatch.job.BatchTestConfiguration;
+import javax.sql.DataSource;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Unit test of the {@link RemoveSpringBatchHistoryTasklet}
@@ -33,7 +31,7 @@ import fr.training.springbatch.job.BatchTestConfiguration;
 class RemoveSpringBatchHistoryTaskletTest {
 
     @Autowired
-    protected JobExplorer jobExplorer;
+    protected JobRepository jobExplorer;
 
     @Autowired
     protected DataSource dataSource;

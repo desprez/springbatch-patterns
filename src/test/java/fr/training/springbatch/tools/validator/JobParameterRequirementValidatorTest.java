@@ -1,23 +1,15 @@
 package fr.training.springbatch.tools.validator;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.directoryExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileReadable;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.fileWritable;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.identifying;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.optional;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.type;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.valueIn;
+import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.job.parameters.InvalidJobParametersException;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.job.parameters.JobParametersValidator;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.JobParametersInvalidException;
-import org.springframework.batch.core.JobParametersValidator;
 
 class JobParameterRequirementValidatorTest {
 
@@ -52,7 +44,7 @@ class JobParameterRequirementValidatorTest {
         final JobParametersValidator validator = new JobParameterRequirementValidator("otherParam", required().and(identifying()));
 
         // When
-        final JobParametersInvalidException exception = assertThrows(JobParametersInvalidException.class, () -> {
+        final InvalidJobParametersException exception = assertThrows(InvalidJobParametersException.class, () -> {
             validator.validate(jobParameters);
         });
         // Then
@@ -68,7 +60,7 @@ class JobParameterRequirementValidatorTest {
         final JobParametersValidator validator = new JobParameterRequirementValidator("otherParam", optional().and(valueIn("one", "two", "three")));
 
         // When
-        final JobParametersInvalidException exception = assertThrows(JobParametersInvalidException.class, () -> {
+        final InvalidJobParametersException exception = assertThrows(InvalidJobParametersException.class, () -> {
             validator.validate(jobParameters);
         });
         // Then
@@ -84,7 +76,7 @@ class JobParameterRequirementValidatorTest {
         final JobParametersValidator validator = new JobParameterRequirementValidator("output-file", required().and(fileExist().and(fileWritable())));
 
         // Then
-        final Throwable exceptionThatWasThrown = assertThrows(JobParametersInvalidException.class, () -> {
+        final Throwable exceptionThatWasThrown = assertThrows(InvalidJobParametersException.class, () -> {
             // When
             validator.validate(jobParameters);
         });
@@ -101,7 +93,7 @@ class JobParameterRequirementValidatorTest {
         final JobParametersValidator validator = new JobParameterRequirementValidator("input-file", fileExist());
 
         // Then
-        final Throwable exceptionThatWasThrown = assertThrows(JobParametersInvalidException.class, () -> {
+        final Throwable exceptionThatWasThrown = assertThrows(InvalidJobParametersException.class, () -> {
             // When
             validator.validate(jobParameters);
         });

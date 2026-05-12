@@ -1,27 +1,25 @@
 package fr.training.springbatch.job.partition.file;
 
-import static fr.training.springbatch.tools.validator.ParameterRequirement.directoryExist;
-import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-
+import fr.training.springbatch.app.dto.Customer;
+import fr.training.springbatch.app.job.AbstractJobConfiguration;
+import fr.training.springbatch.tools.listener.OutputFileListener;
+import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
+import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.partition.support.MultiResourcePartitioner;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemWriterBuilder;
+import org.springframework.batch.infrastructure.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -32,14 +30,14 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import fr.training.springbatch.app.dto.Customer;
-import fr.training.springbatch.app.job.AbstractJobConfiguration;
-import fr.training.springbatch.tools.listener.OutputFileListener;
-import fr.training.springbatch.tools.validator.AdditiveJobParametersValidatorBuilder;
-import fr.training.springbatch.tools.validator.JobParameterRequirementValidator;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+
+import static fr.training.springbatch.tools.validator.ParameterRequirement.required;
 
 /**
- * <b>Pattern #14</b>
+ * <b>Pattern #14</b> This pattern use {@link MultiResourcePartitioner} to create partitions upon files presents in a folder.
  *
  * @author Desprez
  */
@@ -59,7 +57,7 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
         return new JobBuilder(PARTITION_JOB, jobRepository)
                 .validator(new AdditiveJobParametersValidatorBuilder()
                         .addValidator(new JobParameterRequirementValidator("input-path", required()))
-                        .addValidator(new JobParameterRequirementValidator("output-path", required().and(directoryExist())))
+                        .addValidator(new JobParameterRequirementValidator("output-path", required()))
                         .build())
                 .start(masterStep)//
                 .build();
@@ -67,7 +65,7 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
 
     // Master
     @Bean
-    Step masterStep(final JobRepository jobRepository, final Step slaveStep, final MultiResourcePartitioner partitioner) throws IOException {
+    Step masterStep(final JobRepository jobRepository, final Step slaveStep, final MultiResourcePartitioner partitioner) {
 
         return new StepBuilder("master-step", jobRepository)
                 .partitioner(slaveStep.getName(), partitioner)
@@ -79,7 +77,7 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
 
     @StepScope // Mandatory for using jobParameters
     @Bean
-    MultiResourcePartitioner partitioner(@Value("#{jobParameters['input-path']}") final Resource[] inputResources) throws IOException {
+    MultiResourcePartitioner partitioner(@Value("#{jobParameters['input-path']}") final Resource[] inputResources) {
         final MultiResourcePartitioner partitioner = new MultiResourcePartitioner();
         partitioner.partition(10);
         partitioner.setResources(inputResources);
@@ -96,7 +94,8 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
             final OutputFileListener fileNameListener) {
 
         return new StepBuilder("slave-step", jobRepository)
-                .<Customer, Customer> chunk(10, transactionManager)
+                .<Customer, Customer> chunk(10)
+                .transactionManager(transactionManager)
                 .reader(itemReader)
                 .processor(processor)
                 .writer(itemWriter)
@@ -124,12 +123,8 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
                 .delimiter(";")
                 .names("number", "firstName", "lastName", "address", "city", "postCode", "state", "birthDate")
                 // .linesToSkip(1)
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {
-                    {
-                        setTargetType(Customer.class);
-                        setConversionService(localDateConverter());
-                    }
-                }).build();
+                .fieldSetMapper(new CustomerBeanWrapperFieldSetMapper())
+                .build();
     }
 
     @Bean
@@ -149,4 +144,10 @@ public class FilePartitionJobConfig extends AbstractJobConfiguration {
                 .build();
     }
 
+    private class CustomerBeanWrapperFieldSetMapper extends BeanWrapperFieldSetMapper<Customer> {
+        {
+            setTargetType(Customer.class);
+            setConversionService(localDateConverter());
+        }
+    }
 }
