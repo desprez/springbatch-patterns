@@ -57,7 +57,7 @@ The **MasterDetailReader**, **TransactionAccumulator** and **CustomerAccumulator
 
 ![alt text](./images/table2FileSynchroJob.svg "table2FileSynchroJob")
 
-[Table2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/Table2FileSynchroJobConfig.java)
+[Table2FileSynchroJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/synchro/Table2FileSynchroJobConfig.java)
 
 Another variation of the previous patterns. This time, the "Master" data comes from a table in the database and the "Details" data comes from a csv file.
 
@@ -65,7 +65,7 @@ Another variation of the previous patterns. This time, the "Master" data comes f
 
 ![alt text](./images/groupingRecordJob.svg "groupingRecordJob")
 
-[GroupingRecordsJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/GroupingRecordsJobConfig.java)
+[GroupingRecordsJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/synchro/GroupingRecordsJobConfig.java)
 
 This pattern reads items packets that share the same key and returns lists that can be summed or whatever... (this is a "read  many and write one" example)
 
@@ -85,7 +85,7 @@ No processor usage.
 
 [ControlBreakJobConfig.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/controlbreak/ControlBreakJobConfig.java)
 
-Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a __Strategy pattern__ (see [BreakKeyStrategy.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/controlbreak/BreakKeyStrategy.java)) to groups records that have same "group" key (ie the customer number) in a easy configurable way (to sum records in this example).
+Another way to return Transactions list from the reader (similar to groupingRecordJob) but use the **ItemListPeekableItemReader** that use a __Strategy pattern__ (see [BreakKeyStrategy.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/job/controlbreak/BreakKeyStrategy.java)) to groups records that have same "group" key (ie the customer number) in a easy configurable way (to sum records in this example).
 
 ## Pattern 9 : Multi records Fixed Job
 
@@ -245,7 +245,23 @@ These tasklet can be used to simulate fails during batch execution.
 
 ### Listeners
 
-TO DO
+All the listener classes below implement the **Observer/Listener pattern** (behavioral design pattern) to react to batch job and step lifecycle events.
+
+- **[ElapsedTimeJobListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/ElapsedTimeJobListener.java)** - Measures and logs the total elapsed time of a job execution using a StopWatch. Implements `JobExecutionListener` to track time from job start to completion.
+
+- **[FullReportListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/FullReportListener.java)** - Comprehensive listener that logs detailed job and step statistics including start/end times, exit codes, job parameters, read/write counts, commits, rollbacks, skips, and duration. Implements both `JobExecutionListener` and `StepExecutionListener`.
+
+- **[ItemCountListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/ItemCountListener.java)** - Logs the count of items processed at a specified interval (default: 1000 items). Useful for monitoring progress in long-running batch jobs. Implements `ChunkListener` with thread-safe counting using AtomicLong.
+
+- **[JobReportListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/JobReportListener.java)** - Simple listener that logs job and step summaries at the beginning and end of execution. Lighter alternative to FullReportListener. Implements both `JobExecutionListener` and `StepExecutionListener`.
+
+- **[OutputFileListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/OutputFileListener.java)** - Automatically generates and configures output file paths in the execution context before a step begins. Dynamically determines output file locations based on input file names or step names. Implements `StepExecutionListener`.
+
+- **[ProcessShutdownListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/ProcessShutdownListener.java)** - Listens to OS shutdown signals (CTRL-C, system shutdown) and gracefully stops running jobs using a JVM shutdown hook. Prevents jobs from being left in hanging state. Implements `JobExecutionListener`.
+
+- **[ProgressListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/ProgressListener.java)** - Calculates and logs job progress as a percentage based on total records and read count. Requires a `LongSupplier` to provide the total number of records. Implements both `JobExecutionListener` and `ChunkListener`.
+
+- **[RejectFileSkipListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/RejectFileSkipListener.java)** - Saves skipped reader lines to a rejection file for later analysis. Handles read, write, and process skip events. Must be used as a bean to properly close the FileWriter. Implements `SkipListener` and `Closeable`.
 
 ### JobParametersValidators
 
