@@ -94,14 +94,25 @@ public class FrenchHolidaysUtil {
     }
 
     /**
+     * Returns the name of the French public holiday on the given date, or {@code null} if the
+     * date is not a public holiday.
+     *
+     * @param date the date to look up
+     * @return the French name of the public holiday (e.g. {@code "Noël"}, {@code "Fête du travail"}),
+     *         or {@code null} if the date is not a public holiday
+     */
+    public static String getHolidayName(LocalDate date) {
+        return getHolidays(date.getYear()).get(date);
+    }
+
+    /**
      * Checks if the given date is a French public holiday.
      *
      * @param date the date to check
      * @return {@code true} if the given date is a French public holiday; {@code false} otherwise
      */
     public static boolean isHoliday(LocalDate date) {
-        Map<LocalDate, String> yearHolidays = getHolidays(date.getYear());
-        return yearHolidays.containsKey(date);
+        return getHolidayName(date) != null;
     }
 
     /**

@@ -89,7 +89,8 @@ public class BusinessDayDecider implements JobExecutionDecider {
             LOGGER.info("{} is business day : CONTINUE", today);
             return new FlowExecutionStatus("CONTINUE");
         }
-        LOGGER.info("{} isn't business day : STOP", today);
+        String holidayName = FrenchHolidaysUtil.getHolidayName(today);
+        LOGGER.warn("{} is {}, isn't business day : STOP", today, holidayName);
         return FlowExecutionStatus.COMPLETED;
     }
 

@@ -91,7 +91,8 @@ public class WorkingDayDecider implements JobExecutionDecider {
             LOGGER.info("{} is working day : CONTINUE", today);
             return new FlowExecutionStatus("CONTINUE");
         }
-        LOGGER.info("{} isn't working day : STOP", today);
+        String holidayName = FrenchHolidaysUtil.getHolidayName(today);
+        LOGGER.info("{} is {}, isn't working day : STOP", today, holidayName);
         return FlowExecutionStatus.COMPLETED;
     }
 

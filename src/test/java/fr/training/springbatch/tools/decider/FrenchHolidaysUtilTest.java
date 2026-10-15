@@ -455,4 +455,64 @@ class FrenchHolidaysUtilTest {
         assertEquals(LocalDate.of(2024, 1, 5), result);
     }
 
+    @Test
+    void getHolidayName_returns_name_for_fixed_holiday() {
+        // Given — Fête du travail: Wednesday 2024-05-01
+        LocalDate laborDay = LocalDate.of(2024, 5, 1);
+
+        // When
+        String name = FrenchHolidaysUtil.getHolidayName(laborDay);
+
+        // Then
+        assertEquals("Fête du travail", name);
+    }
+
+    @Test
+    void getHolidayName_returns_name_for_christmas() {
+        // Given — Noël: Wednesday 2024-12-25
+        LocalDate christmas = LocalDate.of(2024, 12, 25);
+
+        // When
+        String name = FrenchHolidaysUtil.getHolidayName(christmas);
+
+        // Then
+        assertEquals("Noël", name);
+    }
+
+    @Test
+    void getHolidayName_returns_name_for_variable_holiday() {
+        // Given — Lundi de Pâques 2024: Monday 2024-04-01
+        LocalDate easterMonday = LocalDate.of(2024, 4, 1);
+
+        // When
+        String name = FrenchHolidaysUtil.getHolidayName(easterMonday);
+
+        // Then
+        assertEquals("Lundi de Pâques", name);
+    }
+
+    @Test
+    void getHolidayName_returns_null_for_regular_weekday() {
+        // Given — a regular Tuesday
+        LocalDate tuesday = LocalDate.of(2024, 3, 12);
+
+        // When
+        String name = FrenchHolidaysUtil.getHolidayName(tuesday);
+
+        // Then
+        assertNull(name);
+    }
+
+    @Test
+    void getHolidayName_returns_null_for_weekend() {
+        // Given — a Saturday (not a holiday by itself)
+        LocalDate saturday = LocalDate.of(2024, 3, 16);
+
+        // When
+        String name = FrenchHolidaysUtil.getHolidayName(saturday);
+
+        // Then
+        assertNull(name);
+    }
+
 }
