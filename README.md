@@ -263,6 +263,22 @@ All the listener classes below implement the **Observer/Listener pattern** (beha
 
 - **[RejectFileSkipListener.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/listener/RejectFileSkipListener.java)** - Saves skipped reader lines to a rejection file for later analysis. Handles read, write, and process skip events. Must be used as a bean to properly close the FileWriter. Implements `SkipListener` and `Closeable`.
 
+### Deciders
+
+`JobExecutionDecider` implementations that control flow branching based on the current date.
+Both classes use the `Europe/Paris` time zone by default and accept an injectable `Clock` for testing.
+
+| Return value | Meaning |
+|---|---|
+| `"CONTINUE"` | Today qualifies — proceed to the next step |
+| `COMPLETED` | Today does not qualify — skip silently and end the job |
+
+- **[BusinessDayDecider.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/decider/BusinessDayDecider.java)** — returns `CONTINUE` when today is a **business day** (Monday–Saturday, excluding French public holidays). Returns `COMPLETED` on Sundays and public holidays.
+
+- **[WorkingDayDecider.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/decider/WorkingDayDecider.java)** — returns `CONTINUE` when today is a **working day** (Monday–Friday, excluding French public holidays). Returns `COMPLETED` on weekends and public holidays.
+
+Both rely on **[FrenchHolidaysUtil.java](https://github.com/desprez/springbatch-patterns/blob/master/src/main/java/fr/training/springbatch/tools/decider/FrenchHolidaysUtil.java)** which computes the eleven French public holidays for any given year, including variable-date holidays (Easter Monday, Ascension, Pentecost Monday) via the Meeus/Jones/Butcher algorithm.
+
 ### JobParametersValidators
 
 TO DO
